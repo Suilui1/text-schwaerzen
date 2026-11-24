@@ -60,7 +60,8 @@ jobs:
           if ($exe) {
             Write-Host "Tesseract gefunden: $($exe.FullName)"
             New-Item -ItemType Directory -Force -Path tesseractpaket | Out-Null
-            Copy-Item -Recurse -Force $exe.Directory.FullName\* tesseractpaket\
+            $quelle = $exe.Directory.FullName
+            Copy-Item -Recurse -Force "$quelle\*" tesseractpaket\
             Copy-Item "tessdata\deu.traineddata" tesseractpaket\tessdata\deu.traineddata -Force -ErrorAction SilentlyContinue
           } else {
             Write-Host "WARNUNG: tesseract.exe nicht gefunden"
