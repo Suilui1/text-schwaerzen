@@ -12,17 +12,10 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
-    inputs:
-      systeme:
-        description: "Was bauen?"
-        type: choice
-        default: alle
-        options: [alle, windows, android, linux, macos, keine]
 
 jobs:
   bauen:
     name: ${{ matrix.system }}
-    if: github.event_name != 'workflow_dispatch' || inputs.systeme == 'alle' || inputs.systeme == matrix.system
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -199,7 +192,6 @@ jobs:
 
   android:
     name: android
-    if: github.event_name != 'workflow_dispatch' || inputs.systeme == 'alle' || inputs.systeme == 'android' 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
