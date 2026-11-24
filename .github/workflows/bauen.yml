@@ -1,0 +1,273 @@
+name: Bauten
+
+# Baut Windows, Linux und macOS aus demselben Quelltext.
+# Android braucht ein eigenes Programm (Kotlin) — folgt getrennt.
+permissions:
+  contents: write
+
+# Minuten sparen (25.11.2026): GitHub meldete 1.800 von 2.000 Minuten verbraucht.
+# Jeder Push startete vorher VIER Bauten. Jetzt baut nur noch ein Tag oder ein
+# ausdrücklicher Start — und dann nur die gewählten Systeme.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      systeme:
+        description: "Was bauen?"
+        type: choice
+        default: alle
+        options: [alle, windows, android, linux, macos, keine]
+
+jobs:
+  bauen:
+    name: ${{ matrix.system }}
+    if: github.event_name != 'workflow_dispatch' || inputs.systeme == 'alle' || inputs.systeme == matrix.system
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: windows
+            runner: windows-latest
+            paket: Text-schwaerzen-windows.zip
+          - system: linux
+            runner: ubuntu-latest
+            paket: Text-schwaerzen-linux.tar.gz
+          - system: macos
+            runner: macos-latest
+            paket: Text-schwaerzen-macos.zip
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pillow pymupdf pytesseract pyinstaller
+
+      # Tesseract mit deutscher Sprachdatei mitliefern, damit der Nutzer nichts
+      # nachinstallieren muß. Windows: Chocolatey, Linux: apt, macOS: brew.
+      - name: Tesseract und Sprachdatei (Windows)
+        if: matrix.system == 'windows'
+        shell: powershell
+        run: |
+          choco install tesseract --yes --no-progress
+          New-Item -ItemType Directory -Force -Path "C:\Program Files\Tesseract-OCR\tessdata" | Out-Null
+          New-Item -ItemType Directory -Force -Path tessdata | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/tesseract-ocr/tessdata_fast/raw/main/deu.traineddata" -OutFile "tessdata\deu.traineddata"
+          Copy-Item "tessdata\deu.traineddata" "C:\Program Files\Tesseract-OCR\tessdata\deu.traineddata" -Force
+          # Der feste Pfad war nicht verlaesslich: im Paket vom 24.11.2026 fehlten
+          # tesseract.exe und die DLLs, das Paket schrumpfte von 135 auf 92 MB.
+          $exe = Get-ChildItem "C:\Program Files","C:\Program Files (x86)" -Filter tesseract.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($exe) {
+            Write-Host "Tesseract gefunden: $($exe.FullName)"
+            New-Item -ItemType Directory -Force -Path tesseractpaket | Out-Null
+            Copy-Item -Recurse -Force $exe.Directory.FullName\* tesseractpaket\
+            Copy-Item "tessdata\deu.traineddata" tesseractpaket\tessdata\deu.traineddata -Force -ErrorAction SilentlyContinue
+          } else {
+            Write-Host "WARNUNG: tesseract.exe nicht gefunden"
+          }
+
+      - name: Tesseract und Sprachdatei (Linux)
+        if: matrix.system == 'linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-deu
+          # Der Ordner muß im Bau vorhanden sein, sonst bricht PyInstaller ab
+          # („Unable to find …/tessdata", 24.11.2026).
+          mkdir -p tessdata
+          cp /usr/share/tesseract-ocr/*/tessdata/deu.traineddata tessdata/ 2>/dev/null || \
+            curl -L -o tessdata/deu.traineddata "https://github.com/tesseract-ocr/tessdata_fast/raw/main/deu.traineddata"
+
+      - name: Tesseract und Sprachdatei (macOS)
+        if: matrix.system == 'macos'
+        run: |
+          brew install tesseract
+          mkdir -p tessdata
+          curl -L -o tessdata/deu.traineddata "https://github.com/tesseract-ocr/tessdata_fast/raw/main/deu.traineddata"
+          cp tessdata/deu.traineddata "$(brew --prefix)/share/tessdata/" || true
+
+      - name: Paket bauen (Windows)
+        if: matrix.system == 'windows'
+        shell: powershell
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --name "Text-schwaerzen" `
+            --add-data "tessdata;tessdata" start.py
+
+      - name: Paket bauen (Linux/macOS)
+        if: matrix.system != 'windows'
+        run: |
+          mkdir -p tessdata
+          pyinstaller --noconfirm --onefile --windowed --name "Text-schwaerzen" \
+            --add-data "tessdata:tessdata" start.py
+
+      - name: Zusammenpacken (Windows)
+        if: matrix.system == 'windows'
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path paket | Out-Null
+          Copy-Item "dist\Text-schwaerzen.exe" paket\
+          Copy-Item -Recurse tessdata paket\tessdata
+          Copy-Item README.md paket\
+          Copy-Item selbsttest.bat paket\
+          New-Item -ItemType Directory -Force -Path paket\pruefung | Out-Null
+          Copy-Item vorlage\test.png paket\pruefung\
+          Copy-Item vorlage\test-international.png paket\pruefung\
+          Copy-Item vorlage\text.txt paket\pruefung\
+          Copy-Item vorlage\ANLEITUNG.txt paket\pruefung\
+          # Tesseract mitliefern, damit der Nutzer nichts installieren muss
+          if (Test-Path tesseractpaket) {
+            New-Item -ItemType Directory -Force -Path paket\tesseract | Out-Null
+            Copy-Item -Recurse -Force tesseractpaket\* paket\tesseract\
+          }
+          Copy-Item tessdata\deu.traineddata paket\tesseract\tessdata\ -Force
+          if (-not (Test-Path paket\tesseract\tesseract.exe)) {
+            Write-Host "FEHLER: tesseract.exe fehlt im Paket"
+            exit 1
+          }
+          Write-Host "Tesseract im Paket: ja"
+          Compress-Archive -Path paket\* -DestinationPath "${{ matrix.paket }}"
+
+      - name: Zusammenpacken (Linux)
+        if: matrix.system == 'linux'
+        run: |
+          mkdir -p paket && cp "dist/Text-schwaerzen" paket/
+          cp -r tessdata paket/ && cp README.md paket/
+          tar -czf "${{ matrix.paket }}" -C paket .
+
+      - name: Zusammenpacken (macOS)
+        if: matrix.system == 'macos'
+        run: |
+          mkdir -p paket && cp -R "dist/Text-schwaerzen.app" paket/
+          cp -r tessdata paket/ && cp README.md paket/
+          cd paket && zip -r "../${{ matrix.paket }}" . >/dev/null
+
+      # Linux wird hier auch AUSGEFÜHRT, nicht nur gebaut (24.11.2026). Bisher galt die
+      # Fassung als „gebaut, aber nie gelaufen" — Julius fragte zu Recht nach Win und Linux.
+      - name: Linux-Paket wirklich laufen lassen
+        if: matrix.system == 'linux'
+        run: |
+          set -e
+          echo "=== Gegenprobe: deutsche Zeile ==="
+          ./dist/Text-schwaerzen --bild vorlage/test.png --modus gezielt \
+            --aus /tmp/pruef-gezielt.png --bericht /tmp/linux-gezielt.txt || true
+          cat /tmp/linux-gezielt.txt || true
+          echo "=== Gegenprobe: alles ==="
+          ./dist/Text-schwaerzen --bild vorlage/test.png --modus alles \
+            --aus /tmp/pruef-alles.png --bericht /tmp/linux-alles.txt || true
+          cat /tmp/linux-alles.txt || true
+          echo "=== Gegenprobe: PDF ==="
+          ./dist/Text-schwaerzen --pdf vorlage/pdf/a4-11pt.pdf --modus gezielt \
+            --aus /tmp/pruef.pdf --bericht /tmp/linux-pdf.txt || true
+          cat /tmp/linux-pdf.txt || true
+          echo "=== Dateien ==="
+          ls -l /tmp/pruef-gezielt.png /tmp/pruef-alles.png /tmp/pruef.pdf 2>/dev/null || true
+          echo "=== Fassung der Erkennung ==="
+          tesseract --version | head -2 || true
+          echo "=== Prüfsummen der Bildpunkte (Vergleich mit dem Mac) ==="
+          # PNG-Bytes unterscheiden sich je nach Packprogramm; vergleichbar sind die Punkte.
+          python3 - <<'PY'
+          from PIL import Image
+          import hashlib
+          for name in ["/tmp/pruef-gezielt.png", "/tmp/pruef-alles.png"]:
+              with Image.open(name) as b:
+                  roh = b.convert("L").tobytes()
+              print("  ", name, hashlib.sha256(roh).hexdigest()[:24], "Bildpunkte", len(roh))
+          PY
+          echo "=== Textdatei ==="
+          printf '%s\n' "Julius Krause" "Mail: julius@example.org" \
+            "Bismarckallee 3, 79093 Freiburg" "Der Termin ist am Dienstag." > /tmp/probe.txt
+          ./dist/Text-schwaerzen --text /tmp/probe.txt --modus gezielt \
+            --aus /tmp/probe-geschwaerzt.txt --bericht /tmp/linux-text.txt || true
+          cat /tmp/linux-text.txt || true
+          echo "--- Ergebnis der Textdatei ---"
+          cat /tmp/probe-geschwaerzt.txt || true
+          echo "=== Ausländische Adressen ==="
+          ./dist/Text-schwaerzen --bild vorlage/test-international.png --modus gezielt \
+            --aus /tmp/pruef-int.png --bericht /tmp/linux-int.txt || true
+          cat /tmp/linux-int.txt || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.paket }}
+          path: ${{ matrix.paket }}
+
+  android:
+    name: android
+    if: github.event_name != 'workflow_dispatch' || inputs.systeme == 'alle' || inputs.systeme == 'android' 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Gradle bereitstellen
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Signaturschluessel aus dem Geheimnis bereitlegen
+        env:
+          LAGER: ${{ secrets.SCHWAERZEN_KEYSTORE_BASE64 }}
+        run: |
+          # Im Repository liegt kein Schluessel mehr. Der Bau holt ihn aus einem
+          # GitHub-Secret; fehlt es, wird ohne eigene Signatur gebaut (Debug).
+          mkdir -p "$RUNNER_TEMP/signatur"
+          if [ -n "$LAGER" ]; then
+            echo "$LAGER" | base64 -d > "$RUNNER_TEMP/signatur/schwaerzen.jks"
+            echo "Schluessel bereitgestellt"
+          else
+            echo "Kein Schluessel hinterlegt - Bau ohne feste Signatur"
+          fi
+
+      - name: Android-Paket bauen
+        env:
+          SCHWAERZEN_KEYSTORE: ${{ runner.temp }}/signatur/schwaerzen.jks
+          SCHWAERZEN_STORE_PASS: ${{ secrets.SCHWAERZEN_STORE_PASS }}
+          SCHWAERZEN_KEY_ALIAS: ${{ secrets.SCHWAERZEN_KEY_ALIAS }}
+        working-directory: android
+        run: gradle :app:assembleDebug --no-daemon
+
+      - name: Zusammenpacken
+        run: |
+          mkdir -p paket
+          cp android/app/build/outputs/apk/debug/app-debug.apk "Text-schwaerzen-android.apk"
+          cp "Text-schwaerzen-android.apk" paket/
+          cp README.md paket/ || true
+          ls -lh paket
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Text-schwaerzen-android.apk
+          path: Text-schwaerzen-android.apk
+
+  # Eine Veröffentlichung, wenn ein Kennzeichen (Tag v*) gesetzt ist.
+  veroeffentlichen:
+    needs: [bauen, android]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: pakete
+          merge-multiple: true
+      - name: Alle Fassungen in ein ZIP
+        run: |
+          cd pakete
+          ls -l
+          zip -r "Text-schwaerzen-alle-systeme.zip" .
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pakete/Text-schwaerzen-*.zip
+            pakete/Text-schwaerzen-linux.tar.gz
+            pakete/Text-schwaerzen-android.apk
+          body: |
+            Text schwärzen — Fassungen für Windows, Linux und macOS.
+            Jede Datei enthält das Programm und die deutsche Sprachdatei.

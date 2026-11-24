@@ -1,0 +1,14 @@
+Prüfung auf diesem Rechner
+==========================
+
+1  selbsttest.bat doppelklicken (im Ordner darüber)
+2  nach ein paar Sekunden steht der Bericht im Fenster und in bericht.txt
+3  bericht.txt in den Chat ziehen
+
+Was geprüft wird:
+  gezielt  Adressen, Namen, Codes, Telefon
+  alles    jede erkannte Zeile
+  worte    nur „Krause"
+
+Die drei Ergebnisbilder liegen anschließend in diesem Ordner (aus-gezielt.png,
+aus-alles.png, aus-krause.png). Sie sind der eigentliche Beweis — bitte auch ansehen.
