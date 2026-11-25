@@ -117,7 +117,14 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) {
         }
         val liste = verlaufLesen()
-        liste.removeAll { it.split("|").getOrNull(1) == uri.toString() }
+        // Doppelte Einträge vermeiden: jedes Speichern erzeugt eine NEUE URI, auch wenn
+        // der Name gleich bleibt. Deshalb zusätzlich nach Name und Art entdoppeln
+        // (Julius' Bildschirmfoto zeigte denselben Namen siebenmal, 25.11.2026).
+        liste.removeAll { eintrag ->
+            val teile = eintrag.split("|")
+            teile.getOrNull(1) == uri.toString() ||
+                (teile.getOrNull(2) == name && teile.getOrNull(0) == typ)
+        }
         // neueste vorn: Zeitstempel, Typ, URI, Name
         liste.add(0, typ + "|" + uri + "|" + name + "|" + System.currentTimeMillis())
         verlaufSchreiben(liste)
