@@ -218,6 +218,14 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · Preisfrage offen (Vorschlag: kostenlos mit Spendenlink oder 3,99 € einmalig).
 · F-Droid geht nicht: ML Kit ist nicht frei.
 
+11. EIGENE SEITE (seit 25.11.2026)
+https://www.julius-k.de/text/ — Seite zum Weitergeben, ohne GitHub-Konto. Liegt in
+julius-k-neu/text/ (index.html + fenster.png). Reihenfolge der Knöpfe: macOS zuerst,
+dann Android, Windows, Linux. Eintrag im Kasten „Werkzeuge" der Startseite und in der
+sitemap.xml. **Nach jeder neuen Fassung:** die vier Adressen dort auf die neue
+Kennzeichnung umziehen (sonst laden Tester die alte!). Bild: eigenes Musterbild mit
+erfundenen Angaben — nie echte Unterlagen.
+
 9. VERHALTEN GEGENÜBER JULIUS
 Deutsch, kurz, mit gemessenen Zahlen. Er entscheidet Umfang und Tempo. Nichts löschen,
 ohne die neue Kopie geprüft zu haben (Prüfsumme). Fehler offen benennen: sagen, beheben,
