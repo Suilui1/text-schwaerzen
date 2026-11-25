@@ -228,6 +228,11 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · F-Droid geht nicht: ML Kit ist nicht frei.
 
 11. EIGENE SEITE (seit 25.11.2026)
+Knopf-Beschriftung (Julius, 25.11.2026: „das mac os zip muss eindeutig die lauffähige app
+bezeichnen, notfalls intel mac daneben"): erster Knopf heißt **„macOS-App (.zip)"** mit der
+Zeile **„Apple Silicon + Intel"**; darunter eine Legende, die die ZWEI macOS-Downloads
+trennt — App (beide Bauarten, nichts nötig) gegen Rechner-Fassung
+(`Text-schwaerzen-macos.zip`: nur Apple Silicon, braucht Tesseract).
 https://www.julius-k.de/text/ — Seite zum Weitergeben, ohne GitHub-Konto. Liegt in
 julius-k-neu/text/ (index.html + fenster.png). Reihenfolge der Knöpfe: macOS zuerst,
 dann Android, Windows, Linux. Eintrag im Kasten „Werkzeuge" der Startseite und in der
