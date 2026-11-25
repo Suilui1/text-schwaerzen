@@ -94,7 +94,7 @@ class MarkierActivity : Activity() {
                             val arten = arrayOf("hervorheben", "unterstreichen", "durchstreichen")
                             val namen = arrayOf("Hervorheben (gelb)", "Unterstreichen",
                                                 "Durchstreichen")
-                            AlertDialog.Builder(this)
+                            AlertDialog.Builder(this@MarkierActivity)
                                 .setTitle("Markieren")
                                 .setItems(namen) { _, welcher ->
                                     werkzeug = arten[welcher]
@@ -226,7 +226,7 @@ class MarkierActivity : Activity() {
         stapel.addView(dickenWahl)
         farbReihe(stapel, "Farbe", pfeilFarbe) { pfeilFarbe = it }
 
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this@MarkierActivity)
             .setTitle("Pfeil")
             .setView(stapel)
             .setPositiveButton("OK") { _, _ ->
@@ -280,7 +280,7 @@ class MarkierActivity : Activity() {
         stapel.addView(regler)
         farbReihe(stapel, "Farbe", textFarbe) { textFarbe = it }
 
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this@MarkierActivity)
             .setTitle("Text")
             .setView(stapel)
             .setPositiveButton("OK") { _, _ ->
@@ -338,7 +338,7 @@ class MarkierActivity : Activity() {
         farbReihe(stapel, "Rahmenfarbe", stempelRahmen) { stempelRahmen = it }
         farbReihe(stapel, "Schriftfarbe", stempelFarbe) { stempelFarbe = it }
 
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this@MarkierActivity)
             .setTitle("Stempel")
             .setView(stapel)
             .setPositiveButton("OK") { _, _ ->
