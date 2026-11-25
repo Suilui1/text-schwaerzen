@@ -11,7 +11,7 @@ import org.json.JSONArray
 /** Eine Form aus dem Markier-Editor; Koordinaten 0…1 (seitenunabhängig). */
 data class Form(
     val typ: String,
-    val x0: Float, val y0: Float, val x1: Float, val y1: Float,
+    var x0: Float, var y0: Float, var x1: Float, var y1: Float,
     val text: String = "",
     /** Schriftgröße als Anteil der Bildhöhe (0 = Standard 0,03). */
     val groesse: Float = 0f,
@@ -96,16 +96,23 @@ object Formen {
                 "durchstreichen" -> z.drawRect(links, (oben + unten) / 2f - dicke, rechts,
                     (oben + unten) / 2f + dicke, Paint().apply { color = Color.BLACK })
                 "pfeil" -> {
+                    // Wichtig: Start- und Endpunkt getrennt behandeln. Vorher wurden die
+                    // Koordinaten zu einem Rechteck sortiert — dadurch zeigte der Pfeil
+                    // immer nach rechts unten, egal wie gezogen wurde (25.11.2026).
+                    val sx = f.x0 * bild.width
+                    val sy = f.y0 * bild.height
+                    val ex = f.x1 * bild.width
+                    val ey = f.y1 * bild.height
                     val stift = Paint().apply {
                         color = f.farbe; strokeWidth = dicke; style = Paint.Style.STROKE
                     }
-                    z.drawLine(links, oben, rechts, unten, stift)
+                    z.drawLine(sx, sy, ex, ey, stift)
                     val voll = Paint().apply { color = f.farbe }
                     if (f.richtung == "rechts" || f.richtung == "beide") {
-                        z.drawPath(spitze(links, oben, rechts, unten, dicke * 6f), voll)
+                        z.drawPath(spitze(sx, sy, ex, ey, dicke * 6f), voll)
                     }
                     if (f.richtung == "links" || f.richtung == "beide") {
-                        z.drawPath(spitze(rechts, unten, links, oben, dicke * 6f), voll)
+                        z.drawPath(spitze(ex, ey, sx, sy, dicke * 6f), voll)
                     }
                 }
                 "text" -> {

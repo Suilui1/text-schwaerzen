@@ -58,7 +58,8 @@ class MarkierActivity : Activity() {
         "pfeil" to "Pfeil…",
         "text" to "Text…",
         "stempel" to "Stempel…",
-        "verwischen" to "Verwischen"
+        "verwischen" to "Verwischen",
+        "anfassen" to "Anfassen…"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -158,6 +159,7 @@ class MarkierActivity : Activity() {
         "stempel" -> " — Stempel: " + stempel
         "markieren" -> " — Hervorheben, Unterstreichen oder Durchstreichen wählen."
         "verwischen" -> " — Bereich wird unleserlich."
+        "anfassen" -> " — Pfeil oder Form antippen, dann am Ende ziehen: drehen und verlängern."
         else -> ""
     }
 
@@ -395,6 +397,7 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var startX = 0f
     private var startY = 0f
     private var aktuell: RectF? = null
+    private var ausgewaehlt: Int? = null
     private var werkzeug = "schwaerzen"
     private var stempelText = "GEPRÜFT"
     private var textStil = "normal"
@@ -446,6 +449,20 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                 color = Color.GREEN; style = Paint.Style.STROKE; strokeWidth = 4f
             })
         }
+        ausgewaehlt?.let { i ->
+            val f = formen.getOrNull(i) ?: return@let
+            val x0 = z.left + f.x0 * z.width()
+            val y0 = z.top + f.y0 * z.height()
+            val x1 = z.left + f.x1 * z.width()
+            val y1 = z.top + f.y1 * z.height()
+            canvas.drawCircle(x1, y1, 14f, Paint().apply {
+                color = Color.argb(200, 0, 160, 255); style = Paint.Style.FILL
+            })
+            canvas.drawLine(x0, y0, x1, y1, Paint().apply {
+                color = Color.argb(160, 0, 160, 255); strokeWidth = 3f
+                style = Paint.Style.STROKE
+            })
+        }
     }
 
     private fun zeichne(canvas: Canvas, f: Form, z: RectF) {
@@ -464,15 +481,19 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
             "durchstreichen" -> canvas.drawRect(links, (oben + unten) / 2f - dicke, rechts,
                 (oben + unten) / 2f + dicke, Paint().apply { color = Color.BLACK })
             "pfeil" -> {
-                canvas.drawLine(links, oben, rechts, unten, Paint().apply {
+                val sx = z.left + f.x0 * z.width()
+                val sy = z.top + f.y0 * z.height()
+                val ex = z.left + f.x1 * z.width()
+                val ey = z.top + f.y1 * z.height()
+                canvas.drawLine(sx, sy, ex, ey, Paint().apply {
                     color = f.farbe; strokeWidth = dicke; style = Paint.Style.STROKE
                 })
                 val voll = Paint().apply { color = f.farbe }
                 if (f.richtung == "rechts" || f.richtung == "beide") {
-                    canvas.drawPath(Formen.spitze(links, oben, rechts, unten, dicke * 6f), voll)
+                    canvas.drawPath(Formen.spitze(sx, sy, ex, ey, dicke * 6f), voll)
                 }
                 if (f.richtung == "links" || f.richtung == "beide") {
-                    canvas.drawPath(Formen.spitze(rechts, unten, links, oben, dicke * 6f), voll)
+                    canvas.drawPath(Formen.spitze(ex, ey, sx, sy, dicke * 6f), voll)
                 }
             }
             "text" -> canvas.drawText(f.text.ifBlank { "Text" }, links, unten - 4f,
@@ -511,7 +532,45 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
         }
     }
 
+    /** Auswählen und am Endpunkt ziehen: dreht und verlängert die Form. */
+    private fun anfassen(ereignis: MotionEvent): Boolean {
+        val z = ziel()
+        fun nx(x: Float) = ((x - z.left) / z.width()).coerceIn(0f, 1f)
+        fun ny(y: Float) = ((y - z.top) / z.height()).coerceIn(0f, 1f)
+        when (ereignis.action) {
+            MotionEvent.ACTION_DOWN -> {
+                // nächste Form suchen, deren Bereich den Finger enthält
+                var gefunden: Int? = null
+                for (i in formen.indices.reversed()) {
+                    val f = formen[i]
+                    val x0 = z.left + f.x0 * z.width()
+                    val x1 = z.left + f.x1 * z.width()
+                    val y0 = z.top + f.y0 * z.height()
+                    val y1 = z.top + f.y1 * z.height()
+                    val links = minOf(x0, x1) - 24f
+                    val rechts = maxOf(x0, x1) + 24f
+                    val oben = minOf(y0, y1) - 24f
+                    val unten = maxOf(y0, y1) + 24f
+                    if (ereignis.x in links..rechts && ereignis.y in oben..unten) {
+                        gefunden = i
+                        break
+                    }
+                }
+                ausgewaehlt = gefunden
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val i = ausgewaehlt ?: return true
+                val f = formen.getOrNull(i) ?: return true
+                f.x1 = nx(ereignis.x)
+                f.y1 = ny(ereignis.y)
+            }
+        }
+        invalidate()
+        return true
+    }
+
     override fun onTouchEvent(ereignis: MotionEvent): Boolean {
+        if (werkzeug == "anfassen") return anfassen(ereignis)
         when (ereignis.action) {
             MotionEvent.ACTION_DOWN -> {
                 startX = ereignis.x; startY = ereignis.y
@@ -548,14 +607,23 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                             "stempel" -> stempelText
                             else -> ""
                         }
+                        // Pfeile behalten Start und Ende; alle anderen werden sortiert.
+                        val istPfeil = werkzeug == "pfeil"
                         val formGroesse = if (werkzeug == "stempel") stempelGroesse else 0f
                         val stil = if (werkzeug == "stempel") stempelStil else textStil
                         val farbe = if (werkzeug == "stempel") stempelFarbe else pfeilFarbe
                         val rahmen = if (werkzeug == "stempel") stempelRahmen else farbe
-                        formen.add(Form(werkzeug, nx(r.left), ny(r.top),
-                                        nx(r.right), ny(r.bottom), text,
-                                        formGroesse, stil, pfeilDicke, pfeilRichtung,
-                                        farbe, rahmen))
+                        if (istPfeil) {
+                            formen.add(Form(werkzeug, nx(startX), ny(startY),
+                                            nx(ereignis.x), ny(ereignis.y), "",
+                                            formGroesse, stil, pfeilDicke, pfeilRichtung,
+                                            farbe, rahmen))
+                        } else {
+                            formen.add(Form(werkzeug, nx(r.left), ny(r.top),
+                                            nx(r.right), ny(r.bottom), text,
+                                            formGroesse, stil, pfeilDicke, pfeilRichtung,
+                                            farbe, rahmen))
+                        }
                         invalidate()
                     }
                 }
