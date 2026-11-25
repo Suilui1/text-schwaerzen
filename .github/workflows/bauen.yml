@@ -190,6 +190,9 @@ jobs:
         with:
           name: ${{ matrix.paket }}
           path: ${{ matrix.paket }}
+          # Ein Tag genügt: die Veröffentlichung hängt die Dateien an das Release,
+          # dort kosten sie keinen Speicher. 90 Tage füllten das Kontingent.
+          retention-days: 1
 
   android:
     name: android
@@ -243,6 +246,7 @@ jobs:
         with:
           name: Text-schwaerzen-android.apk
           path: Text-schwaerzen-android.apk
+          retention-days: 1
 
   # Eine Veröffentlichung, wenn ein Kennzeichen (Tag v*) gesetzt ist.
   veroeffentlichen:
@@ -265,6 +269,4 @@ jobs:
             pakete/Text-schwaerzen-*.zip
             pakete/Text-schwaerzen-linux.tar.gz
             pakete/Text-schwaerzen-android.apk
-          body: |
-            Text schwärzen — Fassungen für Windows, Linux und macOS.
-            Jede Datei enthält das Programm und die deutsche Sprachdatei.
+          body_path: notizen/RELEASE.md
