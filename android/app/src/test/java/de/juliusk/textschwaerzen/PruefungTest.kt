@@ -56,7 +56,7 @@ class PruefungTest {
     fun textdateiWirdZeilenweiseGeschwaerzt() {
         val inhalt = "Julius Krause\nMail: julius@example.org\nDer Termin ist am Dienstag.\n"
         val (neu, zaehler, getroffen) = TextVerarbeitung.schwaerzeInhalt(inhalt, "gezielt")
-        assertEquals(99, getroffen)   // ABSICHTLICH FALSCH — prüft, ob die Sperre greift
+        assertEquals(2, getroffen)
         assertTrue("Mail nicht erkannt: $zaehler", zaehler.containsKey("mail"))
         assertTrue("Balken fehlen", neu.contains("█"))
         assertTrue("Harmlose Zeile verändert", neu.contains("Der Termin ist am Dienstag."))
