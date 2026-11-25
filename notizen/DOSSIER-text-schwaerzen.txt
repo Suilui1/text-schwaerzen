@@ -73,6 +73,11 @@ macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selb
           · Vorwahl beim Markieren: Farbwahl steht auf Gelb, eine gewählte rote Farbe bleibt
         Gegenproben (25.11.2026 gebaut): alte feste Gelb-Farbe → Unterschied 0,00; alte rote
         Stempel-Vorschau → Vorschau blau+rot+schwarz gegen Ergebnis blau+schwarz, 1 Abweichung.
+        Dazu zwei Abschnitte zu den Abläufen:
+          · Verwischen versteckt den Text — dieselbe Texterkennung (Vision) zählt die Wörter
+            vor und nach dem Verwischen: 16 → 0, und in der Vorschau ebenfalls 0
+          · Nur aus der Liste — Eintrag vorher gemerkt ja / nachher nein, Datei noch da ja;
+            Knopf bei „Letzte Dateien" ja, bei „Ergebnisse" nein
 Tk:     Selbsttest braucht PyMuPDF; im Bündel-Python fehlt fitz → kopflos nur teilweise prüfbar.
         Der Zwei-Schritt-Ablauf wird eigens geprüft:
           python3 werkzeuge/pruefe_tk_ablauf.py   # startet sich selbst mit dem Python
@@ -107,6 +112,19 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
   Werkzeuge mit Farbe.
 · Eine Prüfung mit EINEM Meßpunkt war blind: sie fand beim Stempel den blauen Text und übersah den
   roten Rahmen, meldete „gleich". Erst der Vergleich der vorkommenden Farben schlägt an.
+· Verwischen war zu schwach UND rechnete zweimal verschieden (25.11.2026, Julius: „nicht optimal"):
+  Ergebnis verpixelte mit Blöcken 16, die Vorschau mit 22 — der Kommentar im Code sagte „gleicher
+  Wert wie in der Vorschau (22)", der Wert war aber 16. Mit der Texterkennung auf drei
+  Schriftgrößen gemessen (14/30/60 Punkt), Wörter im Klartext: Blöcke 0/6/8 — also ab 30 Punkt
+  LESBAR. Jetzt: echter Weichzeichner (CIGaussianBlur), Radius = max(8, kurze Seite / 6) in
+  Bildpunkten; Vorschau rechnet denselben Wert auf die Anzeige um. Gemessen: 0/0/0.
+  **Retina-Falle dabei:** `cgImage` zählt Bildpunkte, die Ansicht Punkte — ohne Umrechnung
+  (Faktor = cg.width / image.size.width) verwischt die Vorschau die falsche Stelle.
+· „Letzte Dateien": Löschen löscht die DATEI. Wer nur den Eintrag weghaben wollte, hatte bis
+  25.11.2026 keine Möglichkeit — jetzt „Nur aus der Liste" (nur UserDefaults, Datei unberührt).
+  Beim Bauen: `? :` mit Closure direkt im Argument geht nicht („expected expression"), und
+  mehrere nachgestellte Blöcke erlauben kein Wert-Argument am Ende — alle Rückrufe als
+  benannte Argumente übergeben.
 · Kein Teilneuzeichnen beim Ziehen — das erzeugt Rastermuster.
 · Android: Signaturschlüssel seit 2.1.x gleich; neue APK installiert über die alte.
 
