@@ -1,6 +1,6 @@
 DOSSIER — Text schwärzen
 ========================
-Stand: 25.11.2026 · gedacht als Übergabe an eine neue Sitzung.
+Stand: 25.11.2026, abends · gedacht als Übergabe an eine neue Sitzung.
 Satz zum Beginnen: „Lies notizen/DOSSIER-text-schwaerzen.txt und arbeite weiter."
 
 1. WORUM ES GEHT
@@ -40,6 +40,7 @@ Im Finder/Dateimanager      ja        ja            ja
 Regeln (Adressen usw.)      ja        ja            ja (Vision)
 Wortauswahl                 ja        ja            ja
 Textdateien                 ja        ja            nein
+Zwei-Schritt-Ablauf         nein      ja (seit 25.11.) ja (25.11.)
 
 5. BAUEN UND AUSLIEFERN
 Desktop + Android (öffentliches Repository, kostet Minuten, nicht Speicher):
@@ -62,6 +63,14 @@ macOS-App (lokal):
 macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selbstpruefung
         Erwartung: gezielt 3 · alles 4 · rahmen 1 Flächen; PDF 2 Seiten geschrieben und lesbar.
 Tk:     Selbsttest braucht PyMuPDF; im Bündel-Python fehlt fitz → kopflos nur teilweise prüfbar.
+        Der Zwei-Schritt-Ablauf wird eigens geprüft:
+          python3 werkzeuge/pruefe_tk_ablauf.py   # Python des Harness hat Tk und Pillow — keine Hilfsumgebung nötig
+        Es fährt Startfenster und Rückfragen, drückt die Knöpfe (invoke) und erwartet
+        Schritt 1 = Automatisch · Selbst markieren, Schritt 2 = vier Möglichkeiten
+        (bei PDF drei), Textdatei direkt. 16 Erwartungen, deutsch und englisch.
+        Gegenprobe: TS_REPO=<alte Fassung> schlägt mit 8 Abweichungen an.
+        Grenze: PyMuPDF lädt im Python des Harness nicht (Signaturprüfung des Systems),
+        deshalb setzt das Skript einen Platzhalter — geprüft werden Fenster, nicht PDF.
 Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 
 7. FALLEN, DIE SCHON ZUGESCHLAGEN HABEN
@@ -78,7 +87,10 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · Android: Signaturschlüssel seit 2.1.x gleich; neue APK installiert über die alte.
 
 8. OFFENE PUNKTE
-· Tk-Fassung auf den Zwei-Schritt-Ablauf bringen (Automatisch | Selbst markieren → Details).
+· Veröffentlichung 2.9.1 (Tk-Zwei-Schritt-Ablauf) ist gebaut, aber nicht entschieden:
+  Fassung steht noch auf 2.9.0, es gibt keinen Tag. Offen ist Julius' Wort.
+· Die Rechner-Fassung hat den Editor-Einstieg jetzt im ersten Schritt; die Android-Fassung
+  fragt weiter in ihrer eigenen Form (kein Zwei-Schritt). Angleichung nicht entschieden.
 · Windows und Linux sind gebaut, aber nie auf einem echten Gerät gelaufen.
 · macOS-App: Maus/Tastatur im Editor hat noch niemand länger benutzt.
 · Play Store im Dezember: Texte (notizen/play-store-texte.txt), Symbol 512, Feature-Grafik,
