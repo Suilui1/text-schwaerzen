@@ -128,6 +128,10 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.CreateDocument("application/pdf")
     ) { ziel -> if (ziel != null) kopiereLetzteNach(ziel) }
 
+    private val speichernText = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain")
+    ) { ziel -> if (ziel != null) kopiereLetzteNach(ziel) }
+
     private val bereichAuswahl = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { ergebnis ->
@@ -615,18 +619,35 @@ class MainActivity : AppCompatActivity() {
 
     /** Dialog nach dem Speichern: mehr Möglichkeiten als nur "Öffnen". */
     private fun abschlussDialog(titel: String, text: String) {
+        // Vier Möglichkeiten als Liste: mit drei Knöpfen ließ sich „Löschen" nicht
+        // unterbringen — und Julius fand es nicht (25.11.2026).
         AlertDialog.Builder(this)
             .setTitle(titel)
             .setMessage(text)
-            .setPositiveButton("Oeffnen") { _, _ -> oeffneLetzte() }
-            .setNeutralButton("Speichern unter…") { _, _ ->
-                val name = if (letzterTyp == "application/pdf")
-                    nameDerDatei(letzteDatei ?: android.net.Uri.EMPTY) + ".pdf"
-                else "geschwaerzt.png"
-                if (letzterTyp == "application/pdf") speichernPdf.launch("geschwaerzt.pdf")
-                else speichernBild.launch("geschwaerzt.png")
+            .setItems(arrayOf("Öffnen", "Speichern unter…", "Teilen", "Löschen")) { _, was ->
+                when (was) {
+                    0 -> oeffneLetzte()
+                    1 -> {
+                        if (letzterTyp == "application/pdf") {
+                            speichernPdf.launch("geschwaerzt.pdf")
+                        } else if (letzterTyp == "text/plain") {
+                            speichernText.launch("geschwaerzt.txt")
+                        } else {
+                            speichernBild.launch("geschwaerzt.png")
+                        }
+                    }
+                    2 -> teileLetzte()
+                    else -> {
+                        val uri = letzteDatei
+                        if (uri == null) {
+                            Toast.makeText(this, "Keine Datei zum Löschen", Toast.LENGTH_SHORT).show()
+                        } else {
+                            loescheErgebnis(uri, "Ergebnis")
+                        }
+                    }
+                }
             }
-            .setNegativeButton("Teilen") { _, _ -> teileLetzte() }
+            .setNegativeButton("Schließen", null)
             .show()
     }
 
