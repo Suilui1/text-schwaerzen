@@ -132,15 +132,10 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Noch keine Datei geöffnet", Toast.LENGTH_SHORT).show()
             return
         }
+        // Nur der Dateiname: der Vorsatz („fertig", „PDF") sah unschön aus
+        // (Julius, 25.11.2026). Die Art steckt ohnehin in der Endung.
         val namen = eintraege.map { teil ->
-            val stuecke = teil.split("|")
-            val art = when (stuecke[0]) {
-                "pdf" -> "PDF   "
-                "text" -> "Text  "
-                "bild" -> "Bild  "
-                else -> "fertig "
-            }
-            art + stuecke.getOrElse(2) { "?" }
+            teil.split("|").getOrElse(2) { "?" }
         }.toTypedArray()
         AlertDialog.Builder(this)
             .setTitle("Letzte Dateien")
@@ -881,6 +876,18 @@ class MainActivity : AppCompatActivity() {
             } catch (fehler: Throwable) {
                 // weiter zur Meldung
             }
+        }
+        // 3. Rückfall: Dateiauswahl mit der DATEI als Startpunkt. Die Auswahl öffnet
+        //    dann den Ordner, in dem sie liegt — auch wenn sich kein Ordner bauen ließ.
+        try {
+            val auswahl = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, uri)
+            }
+            startActivity(Intent.createChooser(auswahl, "Ordner zeigen"))
+            return
+        } catch (fehler: Throwable) {
         }
         Toast.makeText(this, "Ordner nicht auffindbar", Toast.LENGTH_LONG).show()
     }
