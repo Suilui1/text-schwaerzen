@@ -4,6 +4,12 @@ Schwärzt Text in Bildern und PDFs — auf macOS, Windows und Linux.
 
 Der Name sagt, was es tut: geschwärzt wird der **Text im Bild**, nicht das Bild.
 
+**Vorab-Fassung zum Ausprobieren:** [Text schwärzen 2.9.0-alpha.1](https://github.com/Suilui1/text-schwaerzen/releases/tag/v2.9.0-alpha.1)
+— Android (.apk), Windows (.zip), Linux (.tar.gz) und die Rechner-Fassung für macOS (.zip).
+Die Alpha steht nicht im Play Store; Android fragt deshalb einmal nach der Erlaubnis,
+Apps aus dieser Quelle zu installieren. Die macOS-App mit den Markier-Werkzeugen ist
+nicht im Paket enthalten.
+
 ## Was es kann
 
 - **Automatisch gezielt:** Adressen, Telefonnummern, IBANs, Schlüssel, Kopfzeilen,
