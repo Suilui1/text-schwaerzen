@@ -391,7 +391,7 @@ class App:
 
     def textdatei_schwaerzen(self, datei: Path) -> None:
         """Textdatei schwärzen und daneben ablegen."""
-        modus = self.frage_modus_text()
+        modus = self.frage_modus_text(datei.name)
         if modus is None:
             return
         from .textdatei import schwærze_datei
@@ -405,11 +405,11 @@ class App:
         messagebox.showinfo(self.t["titel"],
                             "%s\n%s\n\n%s" % (ziel.name, teile, getroffen))
 
-    def frage_modus_text(self) -> str | None:
-        """Nur zwei Stufen — einen Rahmen gibt es bei Text nicht."""
+    def frage_modus_text(self, dateiname: str = "") -> str | None:
+        """Nur zwei Stufen — einen Rahmen und Markieren gibt es bei Text nicht."""
         return self.frage_knopf(self.t["was_schwaerzen"],
                                 [("gezielt", self.t["k_gezielt"]),
-                                 ("alles", self.t["k_alles"])])
+                                 ("alles", self.t["k_alles"])], dateiname)
 
     def frage_knopf(self, titel: str, optionen: list[tuple[str, str]],
                     dateiname: str = "") -> str | None:

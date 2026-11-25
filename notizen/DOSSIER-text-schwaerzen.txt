@@ -64,7 +64,8 @@ macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selb
         Erwartung: gezielt 3 · alles 4 · rahmen 1 Flächen; PDF 2 Seiten geschrieben und lesbar.
 Tk:     Selbsttest braucht PyMuPDF; im Bündel-Python fehlt fitz → kopflos nur teilweise prüfbar.
         Der Zwei-Schritt-Ablauf wird eigens geprüft:
-          python3 werkzeuge/pruefe_tk_ablauf.py   # Python des Harness hat Tk und Pillow — keine Hilfsumgebung nötig
+          python3 werkzeuge/pruefe_tk_ablauf.py   # startet sich selbst mit dem Python
+                                                  des Harness neu (Homebrew-Python hat kein Tk)
         Es fährt Startfenster und Rückfragen, drückt die Knöpfe (invoke) und erwartet
         Schritt 1 = Automatisch · Selbst markieren, Schritt 2 = vier Möglichkeiten
         (bei PDF drei), Textdatei direkt. 16 Erwartungen, deutsch und englisch.
