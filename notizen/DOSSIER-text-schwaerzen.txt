@@ -31,7 +31,10 @@ Hinweise dazu: notizen/RELEASE.md (der Bau zieht den Text von dort)
 4. WAS DIE PLATTFORMEN KÖNNEN
                         Android   Rechner(Tk)   macOS(Swift)
 Werkzeuge                    6        10             8
-Farbe · Größe · Stil        ja        ja            ja
+Farbe                       ja        nein          ja
+                            (Markieren            (Markieren seit
+                             fest gelb)            25.11. auch)
+Größe · Stil                ja        ja            ja
 Verschieben / Drehen        ja        ja            ja
 PDF-Formen je Seite         ja        ja            ja
 Rückgängig                  ja        ja            ja
@@ -84,6 +87,11 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · PDF-Weg: Formen müssen an verarbeiteFormen gehen, nicht an das Bild.
 · Verwischen: Vorschau 22-fach, Ergebnis 16-fach (Julius: Vorschau gut, Ergebnis war zu stark).
 · Stempel: Schriftgröße aus Kasten (Höhe UND Breite), sonst quillt der Text heraus.
+· Markieren nahm immer Gelb: die Farbe stand im Swift-Zeichenweg fest verdrahtet — an ZWEI
+  Stellen (Vorschau in `zeichne`, Ergebnis in `anwenden`), und in der Farbwahl fehlte ausgerechnet
+  Gelb. Behoben 25.11.2026: gewählte Farbe mit `markerDeckkraft` 0,45; Gelb in der Liste; beim
+  Umschalten auf „Markieren" wird Gelb vorgewählt, wenn noch Schwarz gilt. Geprüft in
+  `--selbstpruefung` (Farbe gemessen, Gegenprobe mit fester Farbe: Unterschied 0,00).
 · Kein Teilneuzeichnen beim Ziehen — das erzeugt Rastermuster.
 · Android: Signaturschlüssel seit 2.1.x gleich; neue APK installiert über die alte.
 
