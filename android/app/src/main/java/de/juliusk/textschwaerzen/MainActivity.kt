@@ -1003,6 +1003,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         abstuerzeMitschreiben()
         super.onCreate(savedInstanceState)
+        Darstellung.anwenden(this)
 
         val rahmen = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1013,6 +1014,7 @@ class MainActivity : AppCompatActivity() {
             textSize = 22f
         }
         bericht = TextView(this).apply {
+            setTextColor(Darstellung.farben(this).text)
             text = "Ein Bild wählen — erkannt wird der Text darauf, nicht das Bild."
             textSize = 15f
             setPadding(0, 12, 0, 12)
@@ -1071,6 +1073,10 @@ class MainActivity : AppCompatActivity() {
             text = "Selbsttest"
             setOnClickListener { selbsttestLaufen() }
         }
+        val darstellungKnopf = Button(this).apply {
+            text = "Darstellung"
+            setOnClickListener { darstellungWaehlen() }
+        }
         val infoKnopf = Button(this).apply {
             text = "Info"
             setOnClickListener { infoZeigen() }
@@ -1099,11 +1105,17 @@ class MainActivity : AppCompatActivity() {
         rahmen.addView(ergebnisKnopf)
         rahmen.addView(schriftKnopf)
         rahmen.addView(selbsttest)
+        rahmen.addView(darstellungKnopf)
         rahmen.addView(infoKnopf)
         rahmen.addView(beenden)
         rahmen.addView(ScrollView(this).apply { addView(bildAnzeige) })
 
         setContentView(rahmen)
+        // Einheitliches Aussehen: runde Knöpfe, Akzentfarbe, Abstände
+        for (i in 0 until rahmen.childCount) {
+            (rahmen.getChildAt(i) as? Button)?.let { Darstellung.knopf(it, this) }
+        }
+        Darstellung.titel(titel, this)
         zeigeLetztenAbsturz()
     }
 
@@ -1159,6 +1171,22 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent.createChooser(absicht, "Absturz schicken"))
             }
             .setNegativeButton("Löschen") { _, _ -> datei.delete() }
+            .show()
+    }
+
+    /** Hell, Dunkel oder wie das Gerät. */
+    private fun darstellungWaehlen() {
+        val namen = arrayOf("Wie das Gerät", "Hell", "Dunkel")
+        val reihenfolge = arrayOf(Darstellung.Modus.SYSTEM, Darstellung.Modus.HELL,
+                                  Darstellung.Modus.DUNKEL)
+        val jetzt = reihenfolge.indexOf(Darstellung.modus(this)).coerceAtLeast(0)
+        AlertDialog.Builder(this)
+            .setTitle("Darstellung")
+            .setSingleChoiceItems(namen, jetzt) { _, welcher ->
+                Darstellung.setzeModus(this, reihenfolge[welcher])
+                recreate()
+            }
+            .setNegativeButton("Schließen", null)
             .show()
     }
 
