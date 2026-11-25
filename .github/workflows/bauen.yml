@@ -33,7 +33,9 @@ jobs:
             paket: Text-schwaerzen-linux.tar.gz
           - system: macos
             runner: macos-latest
-            paket: Text-schwaerzen-macos.zip
+            # Eindeutig (25.11.2026, Julius): „…-macos.zip" war nicht zu unterscheiden von
+            # der Mac-App (-macos-app.zip). Die Rechner-Fassung heißt jetzt „-rechner".
+            paket: Text-schwaerzen-macos-rechner.zip
 
     steps:
       - uses: actions/checkout@v4

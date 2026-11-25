@@ -228,6 +228,15 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · F-Droid geht nicht: ML Kit ist nicht frei.
 
 11. EIGENE SEITE (seit 25.11.2026)
+DATEINAMEN (25.11.2026, Julius: „bei den dateinamen muss eindeutig die lauffähige app
+deutlich sein"): Die App heißt **Text-schwaerzen-macos-app.zip**, die Rechner-Fassung
+**Text-schwaerzen-macos-rechner.zip** — vorher standen „-mac-app" neben „-macos" und waren
+zu verwechseln. Der Bauablauf vergibt den Rechner-Namen jetzt selbst
+(`.github/workflows/bauen.yml`, Matrix `paket:`), sonst liefen Datei und Seite auseinander.
+Umbenannt wurde über die Schnittstelle (`gh api -X PATCH …/releases/assets/<nr> -f name=…`),
+die Inhalte blieben unangetastet.
+Jeder Knopf auf der Seite trägt zwei Zeilen: System/Bauart und was nötig ist.
+
 Knopf-Beschriftung (Julius, 25.11.2026: „das mac os zip muss eindeutig die lauffähige app
 bezeichnen, notfalls intel mac daneben"): erster Knopf heißt **„macOS-App (.zip)"** mit der
 Zeile **„Apple Silicon + Intel"**; darunter eine Legende, die die ZWEI macOS-Downloads
