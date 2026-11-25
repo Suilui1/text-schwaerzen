@@ -94,10 +94,15 @@ macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selb
           Größe   nur Text und Stempel        Stil  nur Text und Stempel
           Stempel nur Stempel                 Seitenpfeile  nur PDF
         dazu Rückgängig (ohne Form grau). Erwartung „Werkzeuge mit falscher Schaltung: 0".
-        Dazu die Listen (25.11.2026): „Letzte Dateien" hat jetzt BEIDE Knöpfe —
+        Dazu die Listen (25.11.2026): „Letzte Dateien" hat BEIDE Knöpfe —
           „Nur aus der Liste" (Datei bleibt, nur der Merkeintrag fällt) und „Löschen"
-          (Datei weg, mit Rückfrage samt ganzem Pfad). Beim Löschen wird der Merkeintrag
-          mit aufgeräumt, sonst stünde die Datei beim nächsten Start noch da.
+          (Datei weg, mit Rückfrage samt ganzem Pfad). **„Löschen" ist bei Originalen
+          AUSGEGRAUT** — dieselbe Regel wie in der Android-Fassung
+          (`istErgebnis = stufe.endsWith("-aus")`): löschbar ist nur, was die App erzeugt hat,
+          also `<name>-geschwaerzt.*` oder `<name>-markiert.*` (Funktion `istErgebnis` in
+          Liste.swift). Beim Löschen wird der Merkeintrag mit aufgeräumt.
+          Geprüft: „Löschen beim Original: aus (grau) · beim Ergebnis: an"; erkannt werden
+          -geschwaerzt und -markiert, ein Original nicht.
         Sichtprüfung der Liste ohne Klicken:  --letzte
         Sichtprüfung mit vorgewähltem Werkzeug:
           "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" \
