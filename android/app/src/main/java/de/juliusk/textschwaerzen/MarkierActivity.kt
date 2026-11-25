@@ -54,9 +54,7 @@ class MarkierActivity : Activity() {
 
     private val werkzeuge = listOf(
         "schwaerzen" to "Schwärzen",
-        "hervorheben" to "Hervorheben",
-        "unterstreichen" to "Unterstreichen",
-        "durchstreichen" to "Durchstreichen",
+        "markieren" to "Markieren...",
         "pfeil" to "Pfeil…",
         "text" to "Text…",
         "stempel" to "Stempel…",
@@ -92,6 +90,21 @@ class MarkierActivity : Activity() {
                         "pfeil" -> pfeilWaehlen()
                         "text" -> textStilWaehlen()
                         "stempel" -> stempelWaehlen()
+                        "markieren" -> {
+                            val arten = arrayOf("hervorheben", "unterstreichen", "durchstreichen")
+                            val namen = arrayOf("Hervorheben (gelb)", "Unterstreichen",
+                                                "Durchstreichen")
+                            AlertDialog.Builder(this)
+                                .setTitle("Markieren")
+                                .setItems(namen) { _, welcher ->
+                                    werkzeug = arten[welcher]
+                                    ansicht.setzeWerkzeug(werkzeug)
+                                    bericht.text = "Werkzeug: " + namen[welcher]
+                                }
+                                .setNegativeButton("Abbrechen", null)
+                                .show()
+                            return@setOnClickListener
+                        }
                     }
                     werkzeug = wert
                     ansicht.setzeWerkzeug(wert)
@@ -143,6 +156,7 @@ class MarkierActivity : Activity() {
         "pfeil" -> " — Richtung und Dicke wurden gewählt."
         "text" -> " — Größe und Stil wurden gewählt; Text kommt nach dem Ziehen."
         "stempel" -> " — Stempel: " + stempel
+        "markieren" -> " — Hervorheben, Unterstreichen oder Durchstreichen wählen."
         "verwischen" -> " — Bereich wird unleserlich."
         else -> ""
     }

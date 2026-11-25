@@ -1098,16 +1098,18 @@ class MainActivity : AppCompatActivity() {
         // Reihenfolge nach Julius' Wunsch (24.11.2026): Bild, PDF, Text,
         // Letzte Dateien, Selbsttest, Beenden. „Bereich ziehen" und „Schwärzen"
         // sind keine eigenen Knöpfe mehr — sie stehen im Dialog nach der Auswahl.
+        // Keine Ueberfrachtung (25.11.2026): eine Hauptaktion, zwei Listen,
+        // alles Seltene hinter einem Knopf.
+        val mehrKnopf = Button(this).apply {
+            text = "Mehr..."
+            setOnClickListener { mehrZeigen() }
+        }
         rahmen.addView(titel)
         rahmen.addView(bericht)
         rahmen.addView(bildWaehlen)
         rahmen.addView(letzteKnopf)
         rahmen.addView(ergebnisKnopf)
-        rahmen.addView(schriftKnopf)
-        rahmen.addView(selbsttest)
-        rahmen.addView(darstellungKnopf)
-        rahmen.addView(infoKnopf)
-        rahmen.addView(beenden)
+        rahmen.addView(mehrKnopf)
         rahmen.addView(ScrollView(this).apply { addView(bildAnzeige) })
 
         setContentView(rahmen)
@@ -1174,6 +1176,36 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Alles Seltene an einem Ort statt auf acht Knoepfen. */
+    private fun mehrZeigen() {
+        AlertDialog.Builder(this)
+            .setTitle("Mehr")
+            .setItems(arrayOf("Schrift wählen", "Darstellung", "Selbsttest", "Info",
+                              "Beenden")) { _, was ->
+                when (was) {
+                    0 -> schriftWaehlen()
+                    1 -> darstellungWaehlen()
+                    2 -> selbsttestLaufen()
+                    3 -> infoZeigen()
+                    else -> { threads.shutdown(); finish() }
+                }
+            }
+            .setNegativeButton("Schließen", null)
+            .show()
+    }
+
+    private fun schriftWaehlen() {
+        val schriften = Erkennung.Schrift.values()
+        AlertDialog.Builder(this)
+            .setTitle("Schriftsystem wählen")
+            .setItems(schriften.map { it.anzeige }.toTypedArray()) { _, welcher ->
+                erkennung.setzeSchrift(schriften[welcher])
+                bericht.text = "Schrift: " + schriften[welcher].anzeige
+            }
+            .setNegativeButton("Abbrechen", null)
+            .show()
+    }
+
     /** Hell, Dunkel oder wie das Gerät. */
     private fun darstellungWaehlen() {
         val namen = arrayOf("Wie das Gerät", "Hell", "Dunkel")
@@ -1182,9 +1214,28 @@ class MainActivity : AppCompatActivity() {
         val jetzt = reihenfolge.indexOf(Darstellung.modus(this)).coerceAtLeast(0)
         AlertDialog.Builder(this)
             .setTitle("Darstellung")
-            .setSingleChoiceItems(namen, jetzt) { _, welcher ->
-                Darstellung.setzeModus(this, reihenfolge[welcher])
-                recreate()
+            .setItems(arrayOf("Farbschema: " + namen[jetzt],
+                              "Stil: " + Darstellung.stil(this).anzeige)) { _, was ->
+                if (was == 0) {
+                    AlertDialog.Builder(this)
+                        .setTitle("Farbschema")
+                        .setSingleChoiceItems(namen, jetzt) { _, welcher ->
+                            Darstellung.setzeModus(this, reihenfolge[welcher])
+                            recreate()
+                        }
+                        .setNegativeButton("Abbrechen", null)
+                        .show()
+                } else {
+                    val stile = Darstellung.Stil.values()
+                    AlertDialog.Builder(this)
+                        .setTitle("Stil")
+                        .setItems(stile.map { it.anzeige }.toTypedArray()) { _, welcher ->
+                            Darstellung.setzeStil(this, stile[welcher])
+                            recreate()
+                        }
+                        .setNegativeButton("Abbrechen", null)
+                        .show()
+                }
             }
             .setNegativeButton("Schließen", null)
             .show()
