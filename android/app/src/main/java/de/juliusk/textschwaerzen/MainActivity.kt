@@ -61,83 +61,128 @@ class MainActivity : AppCompatActivity() {
 
     /** Liest den Verlauf und wirft Einträge weg, deren Datei nicht mehr existiert. */
     private fun verlaufSaeubern(): List<String> {
-        val roh = (verlauf.getStringSet("dateien", emptySet()) ?: emptySet()).toList()
+        val roh = verlaufLesen()
         val gut = roh.filter { eintrag ->
-            val teile = eintrag.split("|")
-            val uri = teile.getOrNull(1)?.let { android.net.Uri.parse(it) }
+            val uri = eintrag.split("|").getOrNull(1)?.let { android.net.Uri.parse(it) }
             uri != null && existiert(uri)
         }
-        if (gut.size != roh.size) {
-            verlauf.edit().putStringSet("dateien", gut.toSet()).apply()
-        }
+        if (gut.size != roh.size) verlaufSchreiben(gut)
         return gut
     }
 
+    /** Nimmt einen Eintrag aus der Liste, ohne die Datei zu löschen. */
+    private fun ausListeEntfernen(eintrag: String) {
+        val liste = verlaufLesen()
+        liste.removeAll { it == eintrag }
+        verlaufSchreiben(liste)
+        Toast.makeText(this, "Aus der Liste entfernt", Toast.LENGTH_SHORT).show()
+    }
+
     /** Merkt sich die zuletzt geöffneten Dateien (höchstens acht). */
+    /**
+     * Verlauf als geordnete Liste (JSON): neueste zuerst.
+     *
+     * Vorher lag er als Set vor — ein Set hat keine Reihenfolge, deshalb war die Liste
+     * „Letzte Dateien" nicht chronologisch (Julius, 25.11.2026).
+     */
+    private fun verlaufLesen(): MutableList<String> {
+        val roh = verlauf.getString("verlauf_json", "")
+        if (roh.isNullOrBlank()) {
+            // einmalige Übernahme des alten Sets, falls vorhanden
+            val alt = (verlauf.getStringSet("dateien", emptySet()) ?: emptySet()).toList()
+            if (alt.isNotEmpty()) {
+                verlaufSchreiben(alt)
+                verlauf.edit().remove("dateien").apply()
+            }
+            return alt.toMutableList()
+        }
+        return try {
+            val reihe = org.json.JSONArray(roh)
+            MutableList(reihe.length()) { reihe.getString(it) }
+        } catch (fehler: Throwable) {
+            mutableListOf()
+        }
+    }
+
+    private fun verlaufSchreiben(eintraege: List<String>) {
+        val reihe = org.json.JSONArray()
+        eintraege.take(12).forEach { reihe.put(it) }
+        verlauf.edit().putString("verlauf_json", reihe.toString()).apply()
+    }
+
     private fun merken(uri: android.net.Uri, name: String, typ: String) {
         try {
             contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         } catch (_: Exception) {
         }
-        val alt = verlauf.getStringSet("dateien", emptySet())?.toMutableSet()
-            ?: mutableSetOf<String>()
-        alt.removeAll { it.split("|").getOrNull(1) == uri.toString() }
-        alt.add(typ + "|" + uri + "|" + name)
-        val gekuerzt = alt.toList().takeLast(8).toSet()
-        verlauf.edit().putStringSet("dateien", gekuerzt).apply()
+        val liste = verlaufLesen()
+        liste.removeAll { it.split("|").getOrNull(1) == uri.toString() }
+        // neueste vorn: Zeitstempel, Typ, URI, Name
+        liste.add(0, typ + "|" + uri + "|" + name + "|" + System.currentTimeMillis())
+        verlaufSchreiben(liste)
     }
 
     /** Zeigt die zuletzt geöffneten Bilder und Dokumente. */
     private fun letzteZeigen() {
-        val eintraege = verlaufSaeubern().sortedDescending()
+        // Der Verlauf liegt geordnet vor (neueste zuerst) — alphabetisches Sortieren
+        // machte die Liste unchronologisch (Julius, 25.11.2026).
+        val eintraege = verlaufSaeubern()
         if (eintraege.isEmpty()) {
             Toast.makeText(this, "Noch keine Datei geöffnet", Toast.LENGTH_SHORT).show()
             return
         }
         val namen = eintraege.map { teil ->
             val stuecke = teil.split("|")
-            when (stuecke[0]) {
+            val art = when (stuecke[0]) {
                 "pdf" -> "PDF   "
                 "text" -> "Text  "
                 "bild" -> "Bild  "
                 else -> "fertig "
-            } + stuecke.getOrElse(2) { "?" }
+            }
+            art + stuecke.getOrElse(2) { "?" }
         }.toTypedArray()
         AlertDialog.Builder(this)
             .setTitle("Letzte Dateien")
             .setItems(namen) { _, welcher ->
-                val stuecke = eintraege[welcher].split("|")
+                val eintrag = eintraege[welcher]
+                val stuecke = eintrag.split("|")
                 val uri = android.net.Uri.parse(stuecke[1])
-                val art = stuecke[0]
-                if (art.endsWith("-aus")) {
-                    // Geschwärzte Ergebnisse: öffnen oder löschen (Julius' Wunsch, 25.11.2026).
-                    AlertDialog.Builder(this)
-                        .setTitle(stuecke.getOrElse(2) { "Ergebnis" })
-                        .setItems(arrayOf("Öffnen", "Löschen")) { _, was ->
-                            if (was == 0) {
-                                oeffneExtern(uri, when (art) {
-                                    "pdf-aus" -> "application/pdf"
-                                    "text-aus" -> "text/plain"
-                                    else -> "image/png"
-                                })
-                            } else {
-                                loescheErgebnis(uri, stuecke.getOrElse(2) { "Ergebnis" })
-                            }
+                val name = stuecke.getOrElse(2) { "Datei" }
+                val istErgebnis = stuecke[0].endsWith("-aus")
+                val auswahl = if (istErgebnis) {
+                    arrayOf("Öffnen", "Aus Liste entfernen", "Löschen")
+                } else {
+                    arrayOf("Öffnen", "Aus Liste entfernen")
+                }
+                AlertDialog.Builder(this)
+                    .setTitle(name)
+                    .setItems(auswahl) { _, was ->
+                        when {
+                            was == 0 -> oeffneOderVerarbeite(stuecke[0], uri)
+                            was == 1 -> ausListeEntfernen(eintrag)
+                            else -> loescheErgebnis(uri, name)
                         }
-                        .setNegativeButton("Abbrechen", null)
-                        .show()
-                    return@setItems
-                }
-                when (art) {
-                    "pdf" -> pdfGewaehlt(uri)
-                    "text" -> textGewaehlt(uri)
-                    else -> ladeBild(uri)
-                }
+                    }
+                    .setNegativeButton("Abbrechen", null)
+                    .show()
             }
             .setNegativeButton("Schliessen", null)
             .show()
     }
+
+    /** Öffnet Ergebnisse in einer anderen App, Quellen wieder im Programm. */
+    private fun oeffneOderVerarbeite(art: String, uri: android.net.Uri) {
+        when (art) {
+            "pdf" -> pdfGewaehlt(uri)
+            "text" -> textGewaehlt(uri)
+            "bild" -> ladeBild(uri)
+            "pdf-aus" -> oeffneExtern(uri, "application/pdf")
+            "text-aus" -> oeffneExtern(uri, "text/plain")
+            else -> oeffneExtern(uri, "image/png")
+        }
+    }
+
     private var fortschrittDialog: AlertDialog? = null
     private var fortschrittBalken: android.widget.ProgressBar? = null
     private var fortschrittText: android.widget.TextView? = null
