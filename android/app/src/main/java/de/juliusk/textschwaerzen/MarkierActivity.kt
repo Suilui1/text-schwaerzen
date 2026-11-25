@@ -334,7 +334,6 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var stempelGroesse = 0.032f
 
     fun setzeWerkzeug(wert: String) { werkzeug = wert }
-    private var stempelGroesse = 0.032f
     fun setzeStempel(wert: String, groesse: Float = 0.032f) {
         stempelText = wert
         stempelGroesse = groesse
