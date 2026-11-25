@@ -80,6 +80,14 @@ Nach v2.9.0-alpha.2 blieben deshalb 369 MB liegen. Recht ergänzt; der Schritt e
 Prüfen und räumen:  python3 werkzeuge/github_speicher.py --bericht
                      python3 werkzeuge/github_speicher.py --raeumen --probe
 
+Mac-App als Paket (seit 25.11.2026): `testversion/Text-schwaerzen-mac-app.zip` (984 KB),
+gehängt an die Veröffentlichung. Gebaut für **beide Bauarten** (arm64 + x86_64) mit
+**Mindestsystem macOS 14.0** — vorher war sie arm64 und verlangte macOS 27.3, also nur
+auf diesem Rechner startbar. Braucht kein brew, kein Tesseract, kein Python (Apple Vision).
+Gatekeeper lehnt sie ab (nicht notarisiert, kein bezahltes Entwicklerkonto) → Tester:
+Rechtsklick → Öffnen. Gebaut wird sie mit `werkzeuge/baue_mac_app.sh` (beide Bauarten,
+lipo), das auch signiert und den Start prüft.
+
 macOS-App (lokal):
   bash werkzeuge/baue_mac_app.sh      # übersetzt, kopiert ins Bündel, setzt Fassung 2.9.0,
                                       # signiert ad-hoc, macht Kopflauf und Startprobe
