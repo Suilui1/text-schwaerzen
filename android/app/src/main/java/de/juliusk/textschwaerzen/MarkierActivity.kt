@@ -46,6 +46,7 @@ class MarkierActivity : Activity() {
     private var stempel = "GEPRÜFT"
     private var pfeilRichtung = "rechts"
     private var pfeilDicke = 0.006f
+    private var stempelGroesse = 0.032f
 
     private val werkzeuge = listOf(
         "schwaerzen" to "Schwärzen",
@@ -243,16 +244,47 @@ class MarkierActivity : Activity() {
             .show()
     }
 
+    /** Stempel: Text und Größe in einem Dialog (wie beim Text-Werkzeug). */
     private fun stempelWaehlen() {
         val liste = arrayOf("GEPRÜFT", "VERTRAULICH", "KOPIE", "ENTWURF",
                             "UNGÜLTIG", "BEZAHLT", "ERLEDIGT")
+        val stapel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(40, 20, 40, 10)
+        }
+        stapel.addView(TextView(this).apply { text = "Stempeltext" })
+        val wahl = RadioGroup(this)
+        for (i in liste.indices) {
+            wahl.addView(android.widget.RadioButton(this).apply {
+                id = 300 + i
+                text = liste[i]
+                isChecked = i == 0
+            })
+        }
+        stapel.addView(wahl)
+        val beschriftung = TextView(this).apply { text = "Größe: 4"; setPadding(0, 16, 0, 0) }
+        stapel.addView(beschriftung)
+        val regler = SeekBar(this).apply { max = 9; progress = 3 }
+        regler.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, wert: Int, vonNutzer: Boolean) {
+                beschriftung.text = "Größe: " + (wert + 1)
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
+        stapel.addView(regler)
+
         AlertDialog.Builder(this)
             .setTitle("Stempel")
-            .setItems(liste) { _, welcher ->
-                stempel = liste[welcher]
-                ansicht.setzeStempel(stempel)
+            .setView(stapel)
+            .setPositiveButton("OK") { _, _ ->
+                val gewaehlt = wahl.checkedRadioButtonId - 300
+                stempel = liste[if (gewaehlt in liste.indices) gewaehlt else 0]
+                stempelGroesse = (regler.progress + 1) * 0.008f
+                ansicht.setzeStempel(stempel, stempelGroesse)
+                bericht.text = "Stempel: $stempel, Größe ${regler.progress + 1}"
             }
-            .setNegativeButton("OK", null)
+            .setNegativeButton("Abbrechen", null)
             .show()
     }
 
@@ -299,9 +331,14 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var textGroesse = 0.024f
     private var pfeilRichtung = "rechts"
     private var pfeilDicke = 0.006f
+    private var stempelGroesse = 0.032f
 
     fun setzeWerkzeug(wert: String) { werkzeug = wert }
-    fun setzeStempel(wert: String) { stempelText = wert }
+    private var stempelGroesse = 0.032f
+    fun setzeStempel(wert: String, groesse: Float = 0.032f) {
+        stempelText = wert
+        stempelGroesse = groesse
+    }
     fun setzeText(stil: String, groesse: Float) { textStil = stil; textGroesse = groesse }
     fun setzePfeil(richtung: String, dicke: Float) { pfeilRichtung = richtung; pfeilDicke = dicke }
 
@@ -367,9 +404,12 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                 canvas.drawRect(links, oben, rechts, unten, Paint().apply {
                     color = Color.RED; style = Paint.Style.STROKE; strokeWidth = dicke
                 })
-                canvas.drawText(f.text.ifBlank { "GEPRÜFT" }, links + 8f, (oben + unten) / 2f + 10f,
+                val stempelGroesse = if (f.groesse > 0f) f.groesse * z.height()
+                                     else ((unten - oben) * 0.6f).coerceAtLeast(18f)
+                canvas.drawText(f.text.ifBlank { "GEPRÜFT" }, links + 8f,
+                    (oben + unten) / 2f + stempelGroesse / 3f,
                     Paint().apply {
-                        color = Color.RED; textSize = ((unten - oben) * 0.6f).coerceAtLeast(18f)
+                        color = Color.RED; textSize = stempelGroesse
                         typeface = Formen.schrift(f.stil)
                     })
             }
@@ -424,9 +464,10 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                             "stempel" -> stempelText
                             else -> ""
                         }
+                        val formGroesse = if (werkzeug == "stempel") stempelGroesse else 0f
                         formen.add(Form(werkzeug, nx(r.left), ny(r.top),
                                         nx(r.right), ny(r.bottom), text,
-                                        0f, textStil, pfeilDicke, pfeilRichtung))
+                                        formGroesse, textStil, pfeilDicke, pfeilRichtung))
                         invalidate()
                     }
                 }

@@ -112,7 +112,8 @@ object Formen {
                         })
                 }
                 "stempel" -> {
-                    val groesse = (unten - oben).coerceAtLeast(30f)
+                    val groesse = if (f.groesse > 0f) f.groesse * hoehe
+                                  else (unten - oben).coerceAtLeast(30f)
                     z.drawRect(links, oben, rechts, unten,
                         Paint().apply { color = Color.argb(210, 255, 255, 255) })
                     z.drawRect(links, oben, rechts, unten,
