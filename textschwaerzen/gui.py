@@ -21,7 +21,7 @@ from .pdf import schwaeze_pdf
 from .__main__ import lade_einstellungen, speichere_einstellungen, ziel_pfad, bericht
 
 TEXTE = {
-    "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_ergebnisse": "Ergebnisse", "keine_ergebnisse": "Noch keine geschwärzte Datei in der Ablage.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info", "info_text": """Text schwärzen — was die App tut
+    "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_zeigen": "Im Dateimanager zeigen", "k_ergebnisse": "Ergebnisse", "keine_ergebnisse": "Noch keine geschwärzte Datei in der Ablage.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info", "info_text": """Text schwärzen — was die App tut
 
 Schwärzt Text in Bildern, PDFs und Textdateien. Alles geschieht auf diesem Rechner; nichts wird verschickt.
 
@@ -53,7 +53,7 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen", "f
            "seite": "Seite", "von": "von", "fertig": "Fertig",
            "bild_waehlen": "Welches Bild oder PDF schwärzen?",
            "k_markieren": "Markieren von Hand"},
-    "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info", "info_text": """Redact text — what this app does
+    "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_zeigen": "Show in file manager", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info", "info_text": """Redact text — what this app does
 
 Redacts text in images, PDFs and text files. Everything happens on this machine; nothing is sent anywhere.
 
@@ -280,8 +280,12 @@ class App:
                 fenster.destroy()
                 self.datei_oeffnen(p)
 
-            ttk.Button(rahmen, text=pfad.name, width=44,
-                       command=oeffne).pack(pady=2)
+            zeile = ttk.Frame(rahmen)
+            zeile.pack(fill="x", pady=2)
+            ttk.Button(zeile, text=pfad.name, width=40,
+                       command=oeffne).pack(side="left")
+            ttk.Button(zeile, text=self.t.get("k_zeigen", "Im Dateimanager zeigen"),
+                       command=lambda d=pfad: self.zeige_im_ordner(d)).pack(side="left", padx=2)
         ttk.Button(rahmen, text=self.t.get("k_fertig", "Fertig"),
                    command=fenster.destroy).pack(pady=(10, 0))
 
@@ -316,10 +320,31 @@ class App:
             ttk.Label(zeile, text=datei.name, width=42).pack(side="left")
             ttk.Button(zeile, text=self.t.get("k_oeffnen", "Öffnen"),
                        command=lambda d=datei: self.oeffne_extern(d)).pack(side="left", padx=2)
+            ttk.Button(zeile, text=self.t.get("k_zeigen", "Im Dateimanager zeigen"),
+                       command=lambda d=datei: self.zeige_im_ordner(d)).pack(side="left", padx=2)
             ttk.Button(zeile, text=self.t.get("k_loeschen", "Löschen"),
                        command=lambda d=datei, z=zeile: self.loesche_datei(d, z)).pack(side="left")
         ttk.Button(rahmen, text=self.t.get("k_fertig", "Fertig"),
                    command=fenster.destroy).pack(pady=(10, 0))
+
+    def zeige_im_ordner(self, datei: Path) -> None:
+        """Oeffnet den Ordner mit der Datei - je System mit eigenem Befehl.
+
+        Julius' Wunsch vom 25.11.2026; auf Android heisst es "Ordner im
+        Dateimanager zeigen". macOS und Windows markieren die Datei gleich,
+        Linux oeffnet nur den Ordner.
+        """
+        import subprocess
+        import sys
+        try:
+            if sys.platform == "darwin":
+                subprocess.Popen(["open", "-R", str(datei)])
+            elif sys.platform.startswith("win"):
+                subprocess.Popen(["explorer", "/select,", str(datei)])
+            else:
+                subprocess.Popen(["xdg-open", str(datei.parent)])
+        except Exception as fehler:  # noqa: BLE001
+            messagebox.showerror(self.t.get("k_zeigen", "Im Dateimanager zeigen"), str(fehler))
 
     def oeffne_extern(self, datei: Path) -> None:
         import subprocess
