@@ -66,8 +66,16 @@ class MainActivity : AppCompatActivity() {
             val uri = eintrag.split("|").getOrNull(1)?.let { android.net.Uri.parse(it) }
             uri != null && existiert(uri)
         }
-        if (gut.size != roh.size) verlaufSchreiben(gut)
-        return gut
+        // Auch DOPPELTE Namen entfernen: alte Einträge aus früheren Fassungen liegen
+        // sonst weiter in der Liste (Julius' Bildschirmfoto zeigte eine Datei siebenmal).
+        val gesehen = mutableSetOf<String>()
+        val eindeutig = gut.filter { eintrag ->
+            val teile = eintrag.split("|")
+            val schluessel = (teile.getOrNull(0) ?: "") + "|" + (teile.getOrNull(2) ?: "")
+            gesehen.add(schluessel)
+        }
+        if (eindeutig.size != roh.size) verlaufSchreiben(eindeutig)
+        return eindeutig
     }
 
     /** Nimmt einen Eintrag aus der Liste, ohne die Datei zu löschen. */
