@@ -1,47 +1,66 @@
 Text schwärzen — Kurzanleitung für Tester
 =========================================
-Fassung 2.8.4 · Stand 25.11.2026
+Fassung 2.9.0 · Stand 25.11.2026
 
 INSTALLATION
-Die Datei Text-schwaerzen-android-2.8.4.apk antippen. Android fragt nach der
-Erlaubnis, Apps aus dieser Quelle zu installieren — die muß einmal erteilt werden.
-(Wir sind nicht im Play Store; deshalb diese Nachfrage.)
+Die Datei „Text-schwaerzen-android-2.9.0.apk" antippen. Android fragt einmal, ob Apps
+aus dieser Quelle installiert werden dürfen — erlauben. (Die App ist noch nicht im
+Play Store; daher diese Nachfrage.)
 
 WAS DIE APP TUT
-Sie schwärzt Text auf Bildern und in PDFs. Bei PDFs wird jede Seite als Bild neu
-geschrieben — der Text ist danach wirklich weg, nicht nur übermalt.
+Sie schwärzt Text auf Bildern, in PDFs und in Textdateien. Bei PDFs wird jede Seite
+als Bild neu geschrieben — der Text ist danach wirklich weg, nicht nur übermalt.
 
-BITTE DIESE VIER DINGE TESTEN
+DIE OBERFLÄCHE
+   Datei wählen      Bild, PDF oder Textdatei auswählen
+   Letzte Dateien    zuletzt geöffnete Dateien
+   Ergebnisse        was die App erzeugt hat
+   Mehr...           Schrift, Darstellung, Selbsttest, Info, Beenden
+Die Einträge in den Listen: antippen öffnet ein Menü mit Öffnen · Ordner im
+Dateimanager zeigen · Aus Liste entfernen · Löschen.
+
+BITTE DIESE FÜNF DINGE TESTEN
 
 1  Bild schwärzen
-   „Datei wählen" → ein Foto mit Text → „Nur Adressen und Namen" oder „Alles"
-   → Ergebnis ansehen: sind wirklich alle Namen, Nummern und Adressen weg?
+   „Datei wählen" → Foto mit Text → „Nur Adressen und Namen" oder „Alles".
+   Danach ansehen: sind alle Namen, Nummern und Adressen weg?
 
 2  Von Hand markieren
-   Im Bild „Bereich ziehen" → Werkzeug oben wählen → im Bild ziehen
-   → „Fertig". Besonders: Pfeil (beide Enden ziehbar), Text (Größe und Stil),
-   Stempel, Verwischen.
+   Im Bild „Bereich ziehen" → Werkzeug oben wählen → im Bild ziehen → „Fertig".
+   Werkzeuge: Schwärzen · Markieren... (Hervorheben, Unterstreichen,
+   Durchstreichen) · Pfeil... · Text... · Stempel... · Verwischen.
 
-3  PDF
-   „Datei wählen" → eine PDF → „Alles" → Ergebnis öffnen und prüfen:
-   läßt sich der Text noch markieren oder kopieren? (Er sollte es NICHT.)
+3  Verschieben, drehen, zurücknehmen
+   Eine Form INNEN anfassen und ziehen → sie wandert mit.
+   Am orangen Punkt (Anfang) oder blauen Punkt (Ende) ziehen → Richtung und Länge.
+   „Rückgängig" nimmt die letzte Form zurück.
+   Bitte besonders prüfen: Text und Stempel verschieben, Pfeil drehen.
 
-4  Alltag
-   Ergebnis speichern, wiederfinden unter „Letzte Dateien"/„Ergebnisse",
-   teilen, löschen. Auch: App während des Speicherns verlassen.
+4  PDF bearbeiten
+   „Datei wählen" → PDF → „Bereich ziehen" → Formen setzen → „Fertig".
+   Es muß eine neue Datei „<name>-geschwaerzt.pdf" in „Ergebnisse" stehen.
+   Dann öffnen und prüfen: läßt sich Text noch markieren oder kopieren?
+   (Er sollte es NICHT.) Die Formen gelten auf jeder Seite.
+
+5  Alltag
+   Ergebnis speichern („Mehr..." im Abschlußdialog: Speichern unter, Teilen, Löschen),
+   wiederfinden, Ordner im Dateimanager zeigen.
+   Auch: die App während des Speicherns verlassen (darf nicht abstürzen).
 
 WAS BEKANNT IST (nicht melden nötig)
-· Bei PDFs wirkt von den Markier-Werkzeugen nur die Schwärzung, keine Pfeile
-  oder Stempel.
 · Kyrillisch, Griechisch, Arabisch, Hebräisch erkennt die Texterkennung nicht.
 · Das Ergebnis ist ein Bild-PDF: nicht mehr durchsuchbar (das ist Absicht).
+· Bilder landen unter „Bilder", PDFs und Textdateien unter „Downloads".
+· Die App schickt nichts ins Netz und sammelt nichts.
 
 WENN ETWAS SCHIEFGEHT
-„Mehr… → Info" zeigt die Fassung — bitte mitschreiben.
-Stürzt die App ab, erscheint beim nächsten Start ein Bericht mit Datum und
-Fassung; der läßt sich mit „Kopieren" weitergeben.
+Die Fassung steht unter „Mehr... → Info" — bitte mitschreiben.
+Stürzt die App ab, erscheint beim nächsten Start „Letzter Absturz" mit Datum und
+Fassung; der Text läßt sich mit „Kopieren" weitergeben.
 
 WAS ICH WISSEN WILL
 · Was hast du versucht, was ist passiert, was hast du erwartet?
 · Gerät und Android-Fassung (Einstellungen → Über das Telefon)
 · Ein Bildschirmfoto hilft mehr als eine Beschreibung.
+
+DANKE — jede Meldung, auch „hat funktioniert", hilft.
