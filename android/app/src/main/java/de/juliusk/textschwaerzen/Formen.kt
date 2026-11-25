@@ -16,6 +16,24 @@ data class Form(
 
 object Formen {
 
+    /** Dreieck an einem Ende; Richtung ergibt sich aus (x0,y0) → (x1,y1). */
+    fun vorschauSpitze(zx: Float, zy: Float, vonX: Float, vonY: Float): Path = spitze(vonX, vonY, zx, zy, 30f)
+
+    private fun spitze(x0: Float, y0: Float, x1: Float, y1: Float, laenge: Float): Path {
+        val winkel = Math.atan2((y1 - y0).toDouble(), (x1 - x0).toDouble())
+        val links = winkel + Math.PI * 0.85
+        val rechts = winkel - Math.PI * 0.85
+        return Path().apply {
+            moveTo(x1, y1)
+            lineTo(x1 + (laenge * Math.cos(links)).toFloat(),
+                   y1 + (laenge * Math.sin(links)).toFloat())
+            lineTo(x1 + (laenge * Math.cos(rechts)).toFloat(),
+                   y1 + (laenge * Math.sin(rechts)).toFloat())
+            close()
+        }
+    }
+
+
     fun vonJson(roh: String?): List<Form> {
         if (roh.isNullOrBlank()) return emptyList()
         return try {
@@ -51,18 +69,18 @@ object Formen {
                     Paint().apply { color = Color.BLACK })
                 "durchstreichen" -> z.drawRect(links, (oben + unten) / 2f - 3f, rechts,
                     (oben + unten) / 2f + 3f, Paint().apply { color = Color.BLACK })
-                "pfeil" -> {
+                "pfeil", "pfeil_links", "pfeil_beide", "linie" -> {
                     val stift = Paint().apply {
                         color = Color.BLACK; strokeWidth = 6f; style = Paint.Style.STROKE
                     }
                     z.drawLine(links, oben, rechts, unten, stift)
-                    val kopf = Path().apply {
-                        moveTo(rechts, unten)
-                        lineTo(rechts - 30f, unten - 8f)
-                        lineTo(rechts - 8f, unten - 30f)
-                        close()
+                    val spitze = Paint().apply { color = Color.BLACK }
+                    if (f.typ == "pfeil" || f.typ == "pfeil_beide") {
+                        z.drawPath(spitze(rechts, unten, rechts, unten, 30f), spitze)
                     }
-                    z.drawPath(kopf, Paint().apply { color = Color.BLACK })
+                    if (f.typ == "pfeil_links" || f.typ == "pfeil_beide") {
+                        z.drawPath(spitze(links, oben, links, oben, 30f), spitze)
+                    }
                 }
                 "text" -> z.drawText(f.text.ifBlank { "Text" }, links, unten - 6f,
                     Paint().apply { color = Color.BLACK; textSize = bild.height * 0.03f })

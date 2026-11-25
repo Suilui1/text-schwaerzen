@@ -45,7 +45,10 @@ class MarkierActivity : Activity() {
         "hervorheben" to "Hervorheben",
         "unterstreichen" to "Unterstreichen",
         "durchstreichen" to "Durchstreichen",
-        "pfeil" to "Pfeil",
+        "pfeil" to "Pfeil →",
+        "pfeil_links" to "Pfeil ←",
+        "pfeil_beide" to "Pfeil ↔",
+        "linie" to "Linie",
         "text" to "Text",
         "stempel" to "Stempel",
         "verwischen" to "Verwischen"
@@ -80,9 +83,7 @@ class MarkierActivity : Activity() {
             val knopf = Button(this).apply {
                 text = anzeige
                 setOnClickListener {
-                    if (wert == "stempel") stempelWaehlen() else if (wert == "text") {
-                        hinweisText()
-                    }
+                    if (wert == "stempel") stempelWaehlen()
                     werkzeug = wert
                     ansicht.setzeWerkzeug(wert)
                     if (wert == "stempel") ansicht.setzeStempel(stempel)
@@ -135,7 +136,10 @@ class MarkierActivity : Activity() {
         "hervorheben" -> " — Bereich wird gelb."
         "unterstreichen" -> " — Linie unter dem Bereich."
         "durchstreichen" -> " — Linie durch die Mitte."
-        "pfeil" -> " — Pfeil von links oben nach rechts unten."
+        "pfeil" -> " — Pfeil zum Ende der Bewegung."
+        "pfeil_links" -> " — Pfeil zum Anfang der Bewegung."
+        "pfeil_beide" -> " — Pfeil an beiden Enden."
+        "linie" -> " — einfache Linie."
         "text" -> " — Text auf den Bereich."
         "stempel" -> " — Stempeltext im Kasten."
         "verwischen" -> " — Bereich wird grob (unleserlich)."
@@ -245,18 +249,18 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                 Paint().apply { color = Color.BLACK })
             "durchstreichen" -> canvas.drawRect(links, (oben + unten) / 2f - 2f, rechts,
                 (oben + unten) / 2f + 2f, Paint().apply { color = Color.BLACK })
-            "pfeil" -> {
+            "pfeil", "pfeil_links", "pfeil_beide", "linie" -> {
                 val stift = Paint().apply {
                     color = Color.BLACK; strokeWidth = 4f; style = Paint.Style.STROKE
                 }
                 canvas.drawLine(links, oben, rechts, unten, stift)
-                val pfeil = Path().apply {
-                    moveTo(rechts, unten)
-                    lineTo(rechts - 24f, unten - 6f)
-                    lineTo(rechts - 6f, unten - 24f)
-                    close()
+                val farbe = Paint().apply { color = Color.BLACK }
+                if (f.typ == "pfeil" || f.typ == "pfeil_beide") {
+                    canvas.drawPath(Formen.vorschauSpitze(rechts, unten, links, oben), farbe)
                 }
-                canvas.drawPath(pfeil, Paint().apply { color = Color.BLACK })
+                if (f.typ == "pfeil_links" || f.typ == "pfeil_beide") {
+                    canvas.drawPath(Formen.vorschauSpitze(links, oben, rechts, unten), farbe)
+                }
             }
             "text" -> canvas.drawText(f.text.ifBlank { "Text" }, links, unten - 4f,
                 Paint().apply { color = Color.BLACK; textSize = 34f })
@@ -301,14 +305,27 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                     val z = ziel()
                     fun nx(x: Float) = ((x - z.left) / z.width()).coerceIn(0f, 1f)
                     fun ny(y: Float) = ((y - z.top) / z.height()).coerceIn(0f, 1f)
-                    val text = when (werkzeug) {
-                        "text" -> naechsterText.ifBlank { "Text" }
-                        "stempel" -> stempelText
-                        else -> ""
+                    if (werkzeug == "text") {
+                        // Text erst NACH dem Ziehen abfragen - vorher blieb das Feld leer
+                        // und im Bild erschien nichts (Julius, 25.11.2026).
+                        val feld = EditText(context)
+                        android.app.AlertDialog.Builder(context)
+                            .setTitle("Text in den Rahmen")
+                            .setView(feld)
+                            .setPositiveButton("OK") { _, _ ->
+                                formen.add(Form("text", nx(r.left), ny(r.top),
+                                                nx(r.right), ny(r.bottom),
+                                                feld.text.toString().ifBlank { "Text" }))
+                                invalidate()
+                            }
+                            .setNegativeButton("Abbrechen", null)
+                            .show()
+                    } else {
+                        val text = if (werkzeug == "stempel") stempelText else ""
+                        formen.add(Form(werkzeug, nx(r.left), ny(r.top),
+                                        nx(r.right), ny(r.bottom), text))
+                        invalidate()
                     }
-                    formen.add(Form(werkzeug, nx(r.left), ny(r.top),
-                                                    nx(r.right), ny(r.bottom), text))
-                    invalidate()
                 }
             }
         }
