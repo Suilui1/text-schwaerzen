@@ -82,7 +82,7 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · Windows und Linux sind gebaut, aber nie auf einem echten Gerät gelaufen.
 · macOS-App: Maus/Tastatur im Editor hat noch niemand länger benutzt.
 · Play Store im Dezember: Texte (notizen/play-store-texte.txt), Symbol 512, Feature-Grafik,
-  fünf Screenshots liegen in lieferung/play/. Es fehlen: Datenschutzseite, Data-Safety,
+  fünf Screenshots liegen in text-schwaerzen-oeffentlich/lieferung/play/. Es fehlen: Datenschutzseite, Data-Safety,
   Altersfreigabe, AAB statt APK, Entwicklerkonto (25 $).
 · Preisfrage offen (Vorschlag: kostenlos mit Spendenlink oder 3,99 € einmalig).
 · F-Droid geht nicht: ML Kit ist nicht frei.
