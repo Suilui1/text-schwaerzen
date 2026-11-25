@@ -651,6 +651,51 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Zeigt alle geschwärzten Ergebnisse mit Öffnen und Löschen. */
+    private fun ergebnisseZeigen() {
+        val eintraege = (verlauf.getStringSet("dateien", emptySet()) ?: emptySet())
+            .filter { it.startsWith("bild-aus|") || it.startsWith("pdf-aus|")
+                      || it.startsWith("text-aus|") }
+            .toList()
+        if (eintraege.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("Ergebnisse")
+                .setMessage("Noch keine geschwärzte Datei gespeichert.\n\nNach dem Schwärzen " +
+                            "liegt sie unter Bilder bzw. Downloads und erscheint hier.")
+                .setPositiveButton("Gut", null)
+                .show()
+            return
+        }
+        val namen = eintraege.map { teil ->
+            val stuecke = teil.split("|")
+            (stuecke.getOrElse(2) { "Ergebnis" })
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Ergebnisse")
+            .setItems(namen) { _, welcher ->
+                val stuecke = eintraege[welcher].split("|")
+                val uri = android.net.Uri.parse(stuecke[1])
+                val name = stuecke.getOrElse(2) { "Ergebnis" }
+                AlertDialog.Builder(this)
+                    .setTitle(name)
+                    .setItems(arrayOf("Öffnen", "Löschen")) { _, was ->
+                        if (was == 0) {
+                            oeffneExtern(uri, when (stuecke[0]) {
+                                "pdf-aus" -> "application/pdf"
+                                "text-aus" -> "text/plain"
+                                else -> "image/png"
+                            })
+                        } else {
+                            loescheErgebnis(uri, name)
+                        }
+                    }
+                    .setNegativeButton("Abbrechen", null)
+                    .show()
+            }
+            .setNegativeButton("Schließen", null)
+            .show()
+    }
+
     /** Löscht ein geschwärtes Ergebnis nach Rückfrage. */
     private fun loescheErgebnis(uri: android.net.Uri, name: String) {
         AlertDialog.Builder(this)
@@ -740,14 +785,19 @@ class MainActivity : AppCompatActivity() {
             // Ein Knopf für Bild, PDF und Text (Julius, 24.11.2026). Die Art wird an
             // Inhalt und Endung erkannt; deshalb sind alle Typen zugelassen.
             setOnClickListener {
-                textAuswahl.launch(arrayOf("image/*", "application/pdf", "application/x-pdf",
-                                           "text/plain", "text/*",
-                                           "application/octet-stream"))
+                // Mehrere gemischte Typen führten auf dem Gerät zu einer leeren Liste
+                // („Bilder sind nicht auswählbar", 25.11.2026). Deshalb alle Dateien
+                // anzeigen — die Art wird danach an Inhalt und Endung erkannt.
+                textAuswahl.launch(arrayOf("*/*"))
             }
         }
         val letzteKnopf = Button(this).apply {
             text = "Letzte Dateien"
             setOnClickListener { letzteZeigen() }
+        }
+        val ergebnisKnopf = Button(this).apply {
+            text = "Ergebnisse"
+            setOnClickListener { ergebnisseZeigen() }
         }
         val schriftKnopf = Button(this).apply {
             text = "Schrift: Lateinisch"
@@ -794,6 +844,7 @@ class MainActivity : AppCompatActivity() {
         rahmen.addView(bericht)
         rahmen.addView(bildWaehlen)
         rahmen.addView(letzteKnopf)
+        rahmen.addView(ergebnisKnopf)
         rahmen.addView(schriftKnopf)
         rahmen.addView(selbsttest)
         rahmen.addView(infoKnopf)
