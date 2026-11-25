@@ -270,3 +270,15 @@ jobs:
             pakete/Text-schwaerzen-linux.tar.gz
             pakete/Text-schwaerzen-android.apk
           body_path: notizen/RELEASE.md
+
+      # Nach der Veröffentlichung die Zwischenpakete löschen. Sie liegen jetzt am
+      # Release (dort kostenlos) — als Artefakte zählen sie gegen das Kontingent.
+      - name: Zwischenpakete löschen
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[].id' | while read -r id; do
+            gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id" >/dev/null || true
+          done
