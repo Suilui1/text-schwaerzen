@@ -17,6 +17,12 @@ text-schwaerzen/               alte Kopie (vor dem Umschreiben), veraltet, nur N
 /Applications/Text schwärzen.app   macOS-App (Swift). Quelle: werkzeuge/BildSchwaerzenApp/
                                main.swift · Editor.swift · Liste.swift
 /Volumes/Jammtool              Stick mit den Paketen für Julius' Tests
+privates Repo text-schwaerzen-archiv  nur noch Code und neun Kennzeichnungen (v0.1.0 … v0.5.0);
+                               die fünf Veröffentlichungen mit Bau-Paketen (3,79 GB) wurden am
+                               25.11.2026 gelöscht, weil Code und Geschichte vollständig im
+                               Bündel liegen. Aufbewahrung dort 7 Tage (war 90 — Ursache der
+                               27 GB Artefakte). Ohne Anmeldung NICHT abrufbar (privat, 404):
+                               prüfen über `gh api`, nicht per curl.
 werkzeuge/baue_mac_app.sh      baut, signiert (ad-hoc!) und prüft die macOS-App
 
 3. FASSUNGEN
