@@ -20,7 +20,11 @@ data class Form(
     /** Strichdicke als Anteil der Bildhöhe (0 = Standard 0,006). */
     val dicke: Float = 0f,
     /** Pfeilrichtung bei typ = pfeil: rechts · links · beide · linie. */
-    val richtung: String = "rechts"
+    val richtung: String = "rechts",
+    /** Farbe für Text, Pfeil und Stempelinhalt (ARGB). */
+    val farbe: Int = android.graphics.Color.BLACK,
+    /** Rahmenfarbe des Stempels (ARGB). */
+    val rahmenFarbe: Int = android.graphics.Color.RED
 )
 
 object Formen {
@@ -38,7 +42,9 @@ object Formen {
                      o.optDouble("groesse", 0.0).toFloat(),
                      o.optString("stil", "normal"),
                      o.optDouble("dicke", 0.0).toFloat(),
-                     o.optString("richtung", "rechts"))
+                     o.optString("richtung", "rechts"),
+                     o.optInt("farbe", android.graphics.Color.BLACK),
+                     o.optInt("rahmenFarbe", android.graphics.Color.RED))
             }
         } catch (fehler: Throwable) {
             emptyList()
@@ -91,10 +97,10 @@ object Formen {
                     (oben + unten) / 2f + dicke, Paint().apply { color = Color.BLACK })
                 "pfeil" -> {
                     val stift = Paint().apply {
-                        color = Color.BLACK; strokeWidth = dicke; style = Paint.Style.STROKE
+                        color = f.farbe; strokeWidth = dicke; style = Paint.Style.STROKE
                     }
                     z.drawLine(links, oben, rechts, unten, stift)
-                    val voll = Paint().apply { color = Color.BLACK }
+                    val voll = Paint().apply { color = f.farbe }
                     if (f.richtung == "rechts" || f.richtung == "beide") {
                         z.drawPath(spitze(links, oben, rechts, unten, dicke * 6f), voll)
                     }
@@ -106,7 +112,7 @@ object Formen {
                     val groesse = (if (f.groesse > 0f) f.groesse else 0.03f) * hoehe
                     z.drawText(f.text.ifBlank { "Text" }, links, unten - 6f,
                         Paint().apply {
-                            color = Color.BLACK
+                            color = f.farbe
                             textSize = groesse
                             typeface = schrift(f.stil)
                         })
@@ -118,13 +124,13 @@ object Formen {
                         Paint().apply { color = Color.argb(210, 255, 255, 255) })
                     z.drawRect(links, oben, rechts, unten,
                         Paint().apply {
-                            color = Color.RED; style = Paint.Style.STROKE
+                            color = f.rahmenFarbe; style = Paint.Style.STROKE
                             strokeWidth = dicke
                         })
                     z.drawText(f.text.ifBlank { "GEPRÜFT" }, links + 8f,
                         (oben + unten) / 2f + groesse / 4f,
                         Paint().apply {
-                            color = Color.RED
+                            color = f.farbe
                             textSize = groesse * 0.6f
                             typeface = schrift(f.stil)
                         })

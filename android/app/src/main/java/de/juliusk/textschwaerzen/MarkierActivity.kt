@@ -47,6 +47,10 @@ class MarkierActivity : Activity() {
     private var pfeilRichtung = "rechts"
     private var pfeilDicke = 0.006f
     private var stempelGroesse = 0.032f
+    private var textFarbe = android.graphics.Color.BLACK
+    private var pfeilFarbe = android.graphics.Color.BLACK
+    private var stempelFarbe = android.graphics.Color.RED
+    private var stempelRahmen = android.graphics.Color.RED
 
     private val werkzeuge = listOf(
         "schwaerzen" to "Schwärzen",
@@ -143,7 +147,38 @@ class MarkierActivity : Activity() {
         else -> ""
     }
 
-    /** Ein Knopf für den Pfeil: Richtung und Dicke in einem Dialog. */
+    /** Baut eine Farbauswahl (Reihe von Knöpfen) in den Dialog. */
+    private fun farbReihe(stapel: LinearLayout, titel: String, vorwahl: Int,
+                          beiWahl: (Int) -> Unit) {
+        stapel.addView(TextView(this).apply { text = titel; setPadding(0, 16, 0, 0) })
+        val reihe = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        for (i in Farben.WERTE.indices) {
+            val farbe = Farben.WERTE[i]
+            val knopf = Button(this).apply {
+                text = ""
+                setBackgroundColor(farbe)
+                minWidth = 0
+                minimumWidth = 0
+                width = 70
+                height = 70
+                setOnClickListener {
+                    beiWahl(farbe)
+                    (parent as? LinearLayout)?.let { eltern ->
+                        for (k in 0 until eltern.childCount) {
+                            (eltern.getChildAt(k) as? Button)?.alpha = 0.45f
+                        }
+                    }
+                    alpha = 1f
+                }
+            }
+            knopf.alpha = if (farbe == vorwahl) 1f else 0.45f
+            reihe.addView(knopf, LinearLayout.LayoutParams(0, 70, 1f))
+        }
+        stapel.addView(reihe)
+        beiWahl(vorwahl)
+    }
+
+    /** Ein Knopf für den Pfeil: Richtung, Dicke und Farbe in einem Dialog. */
     private fun pfeilWaehlen() {
         val richtungen = arrayOf("rechts", "links", "beide", "linie")
         val anzeige = arrayOf("Pfeil nach rechts", "Pfeil nach links",
@@ -175,6 +210,7 @@ class MarkierActivity : Activity() {
             })
         }
         stapel.addView(dickenWahl)
+        farbReihe(stapel, "Farbe", pfeilFarbe) { pfeilFarbe = it }
 
         AlertDialog.Builder(this)
             .setTitle("Pfeil")
@@ -192,7 +228,7 @@ class MarkierActivity : Activity() {
                     2 -> 0.012f
                     else -> 0.006f
                 }
-                ansicht.setzePfeil(pfeilRichtung, pfeilDicke)
+                ansicht.setzePfeil(pfeilRichtung, pfeilDicke, pfeilFarbe)
                 bericht.text = "Pfeil: " + anzeige[gewaehlt[0]] + ", " + dicken[gewaehlt[1]]
             }
             .setNegativeButton("Abbrechen", null)
@@ -228,6 +264,7 @@ class MarkierActivity : Activity() {
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
         stapel.addView(regler)
+        farbReihe(stapel, "Farbe", textFarbe) { textFarbe = it }
 
         AlertDialog.Builder(this)
             .setTitle("Text")
@@ -237,7 +274,7 @@ class MarkierActivity : Activity() {
                     201 -> 1; 202 -> 2; 203 -> 3; else -> 0
                 }]
                 val groesse = (regler.progress + 1) * 0.008f
-                ansicht.setzeText(stil, groesse)
+                ansicht.setzeText(stil, groesse, textFarbe)
                 bericht.text = "Text: $stil, Größe ${regler.progress + 1} — jetzt ziehen"
             }
             .setNegativeButton("Abbrechen", null)
@@ -273,6 +310,19 @@ class MarkierActivity : Activity() {
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
         stapel.addView(regler)
+        stapel.addView(TextView(this).apply { text = "Schriftstil"; setPadding(0, 16, 0, 0) })
+        val stile = arrayOf("normal", "fett", "kursiv", "fettkursiv")
+        val stilWahl = RadioGroup(this)
+        for (i in stile.indices) {
+            stilWahl.addView(android.widget.RadioButton(this).apply {
+                id = 400 + i
+                text = stile[i]
+                isChecked = i == 0
+            })
+        }
+        stapel.addView(stilWahl)
+        farbReihe(stapel, "Rahmenfarbe", stempelRahmen) { stempelRahmen = it }
+        farbReihe(stapel, "Schriftfarbe", stempelFarbe) { stempelFarbe = it }
 
         AlertDialog.Builder(this)
             .setTitle("Stempel")
@@ -281,7 +331,10 @@ class MarkierActivity : Activity() {
                 val gewaehlt = wahl.checkedRadioButtonId - 300
                 stempel = liste[if (gewaehlt in liste.indices) gewaehlt else 0]
                 stempelGroesse = (regler.progress + 1) * 0.008f
-                ansicht.setzeStempel(stempel, stempelGroesse)
+                val stil = stile[when (stilWahl.checkedRadioButtonId) {
+                    401 -> 1; 402 -> 2; 403 -> 3; else -> 0
+                }]
+                ansicht.setzeStempel(stempel, stempelGroesse, stil, stempelFarbe, stempelRahmen)
                 bericht.text = "Stempel: $stempel, Größe ${regler.progress + 1}"
             }
             .setNegativeButton("Abbrechen", null)
@@ -304,6 +357,8 @@ class MarkierActivity : Activity() {
                 put("stil", f.stil)
                 put("dicke", f.dicke.toDouble())
                 put("richtung", f.richtung)
+                put("farbe", f.farbe)
+                put("rahmenFarbe", f.rahmenFarbe)
             })
         }
         val daten = Intent()
@@ -332,14 +387,32 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var pfeilRichtung = "rechts"
     private var pfeilDicke = 0.006f
     private var stempelGroesse = 0.032f
+    private var textFarbe = android.graphics.Color.BLACK
+    private var pfeilFarbe = android.graphics.Color.BLACK
+    private var stempelFarbe = android.graphics.Color.RED
+    private var stempelRahmen = android.graphics.Color.RED
 
     fun setzeWerkzeug(wert: String) { werkzeug = wert }
-    fun setzeStempel(wert: String, groesse: Float = 0.032f) {
+    private var stempelStil = "normal"
+    private var stempelFarbe = android.graphics.Color.RED
+    private var stempelRahmen = android.graphics.Color.RED
+    private var textFarbe = android.graphics.Color.BLACK
+    private var pfeilFarbe = android.graphics.Color.BLACK
+
+    fun setzeStempel(wert: String, groesse: Float, stil: String,
+                     farbe: Int, rahmen: Int) {
         stempelText = wert
         stempelGroesse = groesse
+        stempelStil = stil
+        stempelFarbe = farbe
+        stempelRahmen = rahmen
     }
-    fun setzeText(stil: String, groesse: Float) { textStil = stil; textGroesse = groesse }
-    fun setzePfeil(richtung: String, dicke: Float) { pfeilRichtung = richtung; pfeilDicke = dicke }
+    fun setzeText(stil: String, groesse: Float, farbe: Int) {
+        textStil = stil; textGroesse = groesse; textFarbe = farbe
+    }
+    fun setzePfeil(richtung: String, dicke: Float, farbe: Int) {
+        pfeilRichtung = richtung; pfeilDicke = dicke; pfeilFarbe = farbe
+    }
 
     fun rueckgaengig() {
         if (formen.isNotEmpty()) { formen.removeAt(formen.size - 1); invalidate() }
@@ -381,9 +454,9 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                 (oben + unten) / 2f + dicke, Paint().apply { color = Color.BLACK })
             "pfeil" -> {
                 canvas.drawLine(links, oben, rechts, unten, Paint().apply {
-                    color = Color.BLACK; strokeWidth = dicke; style = Paint.Style.STROKE
+                    color = f.farbe; strokeWidth = dicke; style = Paint.Style.STROKE
                 })
-                val voll = Paint().apply { color = Color.BLACK }
+                val voll = Paint().apply { color = f.farbe }
                 if (f.richtung == "rechts" || f.richtung == "beide") {
                     canvas.drawPath(Formen.spitze(links, oben, rechts, unten, dicke * 6f), voll)
                 }
@@ -393,7 +466,7 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
             }
             "text" -> canvas.drawText(f.text.ifBlank { "Text" }, links, unten - 4f,
                 Paint().apply {
-                    color = Color.BLACK
+                    color = f.farbe
                     textSize = (if (f.groesse > 0f) f.groesse else 0.03f) * z.height()
                     typeface = Formen.schrift(f.stil)
                 })
@@ -401,14 +474,14 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                 canvas.drawRect(links, oben, rechts, unten,
                     Paint().apply { color = Color.argb(210, 255, 255, 255) })
                 canvas.drawRect(links, oben, rechts, unten, Paint().apply {
-                    color = Color.RED; style = Paint.Style.STROKE; strokeWidth = dicke
+                    color = f.rahmenFarbe; style = Paint.Style.STROKE; strokeWidth = dicke
                 })
                 val stempelGroesse = if (f.groesse > 0f) f.groesse * z.height()
                                      else ((unten - oben) * 0.6f).coerceAtLeast(18f)
                 canvas.drawText(f.text.ifBlank { "GEPRÜFT" }, links + 8f,
                     (oben + unten) / 2f + stempelGroesse / 3f,
                     Paint().apply {
-                        color = Color.RED; textSize = stempelGroesse
+                        color = f.farbe; textSize = stempelGroesse
                         typeface = Formen.schrift(f.stil)
                     })
             }
@@ -453,7 +526,8 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                                 formen.add(Form("text", nx(r.left), ny(r.top),
                                                 nx(r.right), ny(r.bottom),
                                                 feld.text.toString().ifBlank { "Text" },
-                                                textGroesse, textStil))
+                                                textGroesse, textStil, 0f, "rechts",
+                                                textFarbe, textFarbe))
                                 invalidate()
                             }
                             .setNegativeButton("Abbrechen", null)
@@ -464,9 +538,13 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                             else -> ""
                         }
                         val formGroesse = if (werkzeug == "stempel") stempelGroesse else 0f
+                        val stil = if (werkzeug == "stempel") stempelStil else textStil
+                        val farbe = if (werkzeug == "stempel") stempelFarbe else pfeilFarbe
+                        val rahmen = if (werkzeug == "stempel") stempelRahmen else farbe
                         formen.add(Form(werkzeug, nx(r.left), ny(r.top),
                                         nx(r.right), ny(r.bottom), text,
-                                        formGroesse, textStil, pfeilDicke, pfeilRichtung))
+                                        formGroesse, stil, pfeilDicke, pfeilRichtung,
+                                        farbe, rahmen))
                         invalidate()
                     }
                 }
