@@ -163,7 +163,6 @@ class MainActivity : AppCompatActivity() {
                             was == 1 -> ausListeEntfernen(eintrag)
                             else -> loescheErgebnis(uri, name)
                         }
-                    }
                     .setNegativeButton("Abbrechen", null)
                     .show()
             }
@@ -800,20 +799,24 @@ class MainActivity : AppCompatActivity() {
                 val name = stuecke.getOrElse(2) { "Ergebnis" }
                 AlertDialog.Builder(this)
                     .setTitle(name)
-                    .setItems(arrayOf("Öffnen", "Löschen")) { _, was ->
+                    .setItems(arrayOf("Öffnen", "Aus Liste entfernen", "Löschen")) { _, was ->
                         if (was == 0) {
                             oeffneExtern(uri, when (stuecke[0]) {
                                 "pdf-aus" -> "application/pdf"
                                 "text-aus" -> "text/plain"
                                 else -> "image/png"
                             })
+                        } else if (was == 1) {
+                            ausListeEntfernen(eintraege[welcher])
                         } else {
                             loescheErgebnis(uri, name)
+                        }
                         }
                     }
                     .setNegativeButton("Abbrechen", null)
                     .show()
             }
+            .setNeutralButton("Liste leeren") { _, _ -> listeLeeren() }
             .setNegativeButton("Schließen", null)
             .show()
     }
