@@ -4,6 +4,10 @@ name: Bauten
 # Android braucht ein eigenes Programm (Kotlin) — folgt getrennt.
 permissions:
   contents: write
+  # actions: write braucht der Aufräumschritt: ohne dieses Recht scheitert das Löschen
+  # der Zwischenpakete still (der Schritt endet mit `|| true`). Am 25.11.2026 blieben
+  # deshalb 4 Artefakte (369 MB) nach der Veröffentlichung liegen.
+  actions: write
 
 # Minuten sparen (25.11.2026): GitHub meldete 1.800 von 2.000 Minuten verbraucht.
 # Jeder Push startete vorher VIER Bauten. Jetzt baut nur noch ein Tag oder ein
