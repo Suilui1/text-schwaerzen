@@ -236,6 +236,20 @@ class MainActivity : AppCompatActivity() {
         val d = ergebnis.data ?: return@registerForActivityResult
         // Der Markier-Editor liefert eine Liste von Formen (Whiteout-Werkzeuge).
         val formen = Formen.vonJson(d.getStringExtra("formen"))
+        val pdf = pdfMitRahmen
+        if (pdf != null) {
+            // WICHTIG: kam der Aufruf aus dem PDF-Weg, gehören die Formen auf das PDF —
+            // nicht auf ein einzelnes Bild. Vorher ging das Ergebnis verloren
+            // (Julius, 25.11.2026: „das bearbeitete pdf wird auch nicht gespeichert").
+            pdfMitRahmen = null
+            if (formen.isNotEmpty()) {
+                pdfMitFormen(pdf, formen)
+            } else {
+                bereichSchwaerzen(d.getFloatExtra("x0", 0f), d.getFloatExtra("y0", 0f),
+                                  d.getFloatExtra("x1", 0f), d.getFloatExtra("y1", 0f))
+            }
+            return@registerForActivityResult
+        }
         if (formen.isNotEmpty()) {
             formenAnwenden(formen)
         } else {
@@ -469,6 +483,48 @@ class MainActivity : AppCompatActivity() {
         bericht.text = formen.size.toString() + " Form(en) gezeichnet.\n\n" +
                        "Vorschau antippen öffnet die Datei."
         speichereUndZeige(kopie, formen.size.toString() + " Form(en) gezeichnet")
+    }
+
+    /** Wendet die Formen des Editors auf jede PDF-Seite an. */
+    private fun pdfMitFormen(pdf: android.net.Uri, formen: List<Form>) {
+            bericht.text = "PDF wird verarbeitet …"
+            bildWaehlen.isEnabled = false
+            threads.execute {
+                runOnUiThread { fortschrittZeigen(0) }
+                val ergebnis = PdfVerarbeitung.verarbeiteFormen(
+                    this, pdf, erkennung, nameDerDatei(pdf), formen,
+                    stand = { seite, gesamt ->
+                        runOnUiThread {
+                            fortschrittBalken?.max = gesamt
+                            fortschrittBalken?.progress = seite
+                            fortschrittText?.text = "Seite $seite von $gesamt"
+                        }
+                    },
+                    abgebrochen = { abbrechenGewuenscht }
+                )
+                runOnUiThread { fortschrittSchliessen() }
+                if (abbrechenGewuenscht) {
+                    runOnUiThread {
+                        bildWaehlen.isEnabled = true
+                        bericht.text = "Abgebrochen."
+                        Toast.makeText(this, "Abgebrochen — nichts gespeichert",
+                                       Toast.LENGTH_LONG).show()
+                    }
+                    return@execute
+                }
+                runOnUiThread {
+                    bildWaehlen.isEnabled = true
+                    letzteDatei = ergebnis.datei
+                    letzterTyp = "application/pdf"
+                    if (ergebnis.datei != null) {
+                        merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                    }
+                    val meldung = if (ergebnis.fehler.isNotEmpty()) "Fehler: " + ergebnis.fehler
+                    else ergebnis.seiten.toString() + " Seite(n) bearbeitet"
+                    bericht.text = meldung
+                    abschlussDialog("PDF geschwaerzt", meldung)
+                }
+            }
     }
 
     private fun bereichSchwaerzen(x0: Float, y0: Float, x1: Float, y1: Float) {

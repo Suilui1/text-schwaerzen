@@ -460,7 +460,21 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     }
 
     fun rueckgaengig() {
-        if (formen.isNotEmpty()) { formen.removeAt(formen.size - 1); invalidate() }
+        // Absichtlich wehrhaft: „Rückgängig" hat das Fenster geschlossen
+        // (Julius, 25.11.2026). Wenn hier etwas wirft, darf die App nicht sterben —
+        // die Meldung erscheint, und der Stand bleibt.
+        try {
+            if (formen.isEmpty()) return
+            formen.removeAt(formen.size - 1)
+            if (ausgewaehlt != null && ausgewaehlt!! >= formen.size) ausgewaehlt = null
+            griffAktiv = false
+            verschieben = false
+            invalidate()
+        } catch (fehler: Throwable) {
+            android.widget.Toast.makeText(context,
+                "Rückgängig nicht möglich: " + fehler.javaClass.simpleName,
+                android.widget.Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun ziel(): RectF {

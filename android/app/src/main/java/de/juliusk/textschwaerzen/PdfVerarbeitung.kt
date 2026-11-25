@@ -160,6 +160,62 @@ object PdfVerarbeitung {
         return Ergebnis(seitenAnzahl, ziel, gesamt, "", woerterGesamt)
     }
 
+    /**
+     * Wendet die Formen aus dem Markier-Editor auf JEDE Seite an (25.11.2026).
+     *
+     * Anlaß: Julius bearbeitete ein PDF, drückte „Fertig" — und das Ergebnis wurde nie
+     * geschrieben, weil die Formen am PDF-Weg vorbeigingen. Dieselbe Schleife wie oben,
+     * nur ohne Texterkennung: es wird gezeichnet, was im Editor gezeichnet wurde.
+     */
+    fun verarbeiteFormen(context: Context, uri: Uri, erkennung: Erkennung, name: String,
+                         formen: List<Form>,
+                         stand: ((Int, Int) -> Unit)? = null,
+                         abgebrochen: (() -> Boolean)? = null): Ergebnis = try {
+        val zwischen = File(context.cacheDir, "quelle-formen.pdf")
+        context.contentResolver.openInputStream(uri)?.use { quelle ->
+            zwischen.outputStream().use { ziel -> quelle.copyTo(ziel) }
+        } ?: return Ergebnis(0, null, emptyMap(), "PDF nicht lesbar")
+
+        val descriptor = ParcelFileDescriptor.open(zwischen, ParcelFileDescriptor.MODE_READ_ONLY)
+        val renderer = PdfRenderer(descriptor)
+        val neuesPdf = PdfDocument()
+        val seitenAnzahl = renderer.pageCount
+        try {
+            for (nummer in 0 until seitenAnzahl) {
+                if (abgebrochen != null && abgebrochen()) {
+                    neuesPdf.close()
+                    return Ergebnis(nummer, null, emptyMap(), "abgebrochen")
+                }
+                stand?.invoke(nummer + 1, seitenAnzahl)
+                val seite = renderer.openPage(nummer)
+                val breite = 2000
+                val hoehe = (breite.toFloat() * seite.height / seite.width).toInt()
+                val bild = Bitmap.createBitmap(breite, hoehe, Bitmap.Config.ARGB_8888)
+                Canvas(bild).drawColor(Color.WHITE)
+                seite.render(bild, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                seite.close()
+
+                Formen.zeichne(bild, formen)
+
+                val info = PdfDocument.PageInfo.Builder(breite, hoehe, nummer + 1).create()
+                val neueSeite = neuesPdf.startPage(info)
+                neueSeite.canvas.drawBitmap(bild, 0f, 0f, null)
+                neuesPdf.finishPage(neueSeite)
+                bild.recycle()
+            }
+        } finally {
+            renderer.close()
+            descriptor.close()
+            zwischen.delete()
+        }
+        val ziel = speichere(context, neuesPdf, name)
+        neuesPdf.close()
+        val zaehler = mapOf("formen" to formen.size)
+        return Ergebnis(seitenAnzahl, ziel, zaehler, "")
+    } catch (fehler: Throwable) {
+        Ergebnis(0, null, emptyMap(), "${fehler.javaClass.simpleName}: ${fehler.message}")
+    }
+
     private fun speichere(context: Context, dokument: PdfDocument, quellName: String): Uri? {
         val name = "$quellName-geschwaerzt.pdf"
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
