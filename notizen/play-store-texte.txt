@@ -1,0 +1,53 @@
+Play-Store-Texte — Text schwärzen
+================================
+Stand 25.11.2026. Zeichenlängen sind Grenzen von Google Play; alle Werte geprüft.
+
+NAME (max 30)
+Text schwärzen                                   [14 Zeichen]
+
+UNTER TITEL / SHORT DESCRIPTION (max 80)
+Text in Bildern, PDFs und Textdateien schwärzen — offline, ohne Konto.   [70 Zeichen]
+
+Der Play-Store-Untertitel (der fett unter dem Namen steht) ist ein eigenes Feld;
+dafür die kürzere Fassung:
+Bilder, PDF und Textdateien                      [27 Zeichen]
+
+VOLLBESCHREIBUNG (max 4000)
+
+Text schwärzen macht Text auf Bildern und in Dokumenten unleserlich — auf dem Gerät,
+ohne Netz, ohne Konto.
+
+WAS ES KANN
+
+· Automatisch gezielt: Adressen, Telefonnummern, IBANs, Buchungsnummern, Namen und
+  Codes werden erkannt und geschwärzt — mit Regeln für deutsche, französische,
+  spanische, italienische, portugiesische, rumänische, englische Dokumente
+· Alles: jede erkannte Zeile wird geschwärzt
+· Markieren: Hervorheben, Unterstreichen, Durchstreichen, Pfeile, Text, Stempel,
+  Verwischen — mit Farbe, Größe und Stil
+· Rahmen ziehen: einen Bereich bestimmen, der geschwärzt wird — etwa ein QR-Code
+· Textdateien: zeilenweise schwärzen, auch einzelne Zeilen auswählen
+· Bilder, PDFs und Textdateien in einer App
+· Fünf Schriftsysteme bei der Erkennung: lateinisch, chinesisch, japanisch,
+  koreanisch, Devanagari
+· Ergebnis speichern, „Speichern unter…", teilen oder löschen
+· Letzte Dateien und Ergebnisse mit einem Griff
+· Hell, dunkel oder wie das Gerät
+
+WARUM BEI PDFS SICHER
+
+Bei PDFs wird jede Seite als Bild neu geschrieben. Der Text ist danach nicht mehr
+markierbar oder kopierbar — anders als bei Werkzeugen, die nur einen Kasten über den
+Text malen. Das Ergebnis ist nicht mehr durchsuchbar; das ist der Preis für Sicherheit
+und Absicht.
+
+WAS ES NICHT MACHT
+
+· Keine Werbung, keine Konten, keine Datenübertragung
+· Kein Hochladen in eine Cloud
+· Keine Beratung: ein Blick auf das Ergebnis bleibt nötig
+· Kyrillisch, Griechisch, Arabisch und Hebräisch erkennt die Erkennung nicht
+
+LIZENZ
+
+Der Quelltext liegt offen auf GitHub. Die App ist frei nutzbar.
