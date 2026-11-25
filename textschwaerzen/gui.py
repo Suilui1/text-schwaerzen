@@ -21,7 +21,7 @@ from .pdf import schwaeze_pdf
 from .__main__ import lade_einstellungen, speichere_einstellungen, ziel_pfad, bericht
 
 TEXTE = {
-    "de": {"k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info", "info_text": """Text schwärzen — was die App tut
+    "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_ergebnisse": "Ergebnisse", "keine_ergebnisse": "Noch keine geschwärzte Datei in der Ablage.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info", "info_text": """Text schwärzen — was die App tut
 
 Schwärzt Text in Bildern, PDFs und Textdateien. Alles geschieht auf diesem Rechner; nichts wird verschickt.
 
@@ -53,7 +53,7 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen", "f
            "seite": "Seite", "von": "von", "fertig": "Fertig",
            "bild_waehlen": "Welches Bild oder PDF schwärzen?",
            "k_markieren": "Markieren von Hand"},
-    "en": {"k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info", "info_text": """Redact text — what this app does
+    "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info", "info_text": """Redact text — what this app does
 
 Redacts text in images, PDFs and text files. Everything happens on this machine; nothing is sent anywhere.
 
@@ -159,6 +159,8 @@ class App:
         self.ablage_label.pack(anchor="w", pady=(0, 8))
         ttk.Button(rahmen, text=self.t.get("k_letzte", "Letzte Dateien"),
                    command=self.letzte_zeigen).pack(fill="x", pady=4)
+        ttk.Button(rahmen, text=self.t.get("k_ergebnisse", "Ergebnisse"),
+                   command=self.ergebnisse_zeigen).pack(fill="x", pady=4)
         ttk.Button(rahmen, text=self.t.get("k_info", "Info"),
                    command=self.info_zeigen).pack(fill="x", pady=4)
         ttk.Button(rahmen, text=self.t["k_abbrechen"],
@@ -282,6 +284,68 @@ class App:
                        command=oeffne).pack(pady=2)
         ttk.Button(rahmen, text=self.t.get("k_fertig", "Fertig"),
                    command=fenster.destroy).pack(pady=(10, 0))
+
+    def ergebnisse_zeigen(self) -> None:
+        """Zeigt die geschwärzten Dateien in der Ablage und erlaubt Löschen."""
+        # Ablage aus den Einstellungen; ohne Angabe liegt alles neben dem Original,
+        # dann suchen wir im Bilder-Ordner des Benutzers.
+        eingestellt = lade_einstellungen().get("ablage")
+        if eingestellt:
+            ordner = Path(str(eingestellt))
+        else:
+            ordner = Path.home() / "Pictures"
+            if not ordner.exists():
+                ordner = Path.home() / "Bilder"
+            if not ordner.exists():
+                ordner = Path.home() / "Desktop"
+        treffer = sorted(Path(ordner).glob("*-geschwaerzt.*"), key=lambda p: p.stat().st_mtime,
+                         reverse=True)[:20] if Path(ordner).exists() else []
+        if not treffer:
+            messagebox.showinfo(self.t.get("k_ergebnisse", "Ergebnisse"),
+                                self.t.get("keine_ergebnisse",
+                                           "Noch keine geschwärzte Datei in der Ablage."))
+            return
+        fenster = tk.Toplevel(self.wurzel)
+        fenster.title(self.t.get("k_ergebnisse", "Ergebnisse"))
+        fenster.transient(self.wurzel)
+        rahmen = ttk.Frame(fenster, padding=12)
+        rahmen.pack(fill="both", expand=True)
+        for datei in treffer:
+            zeile = ttk.Frame(rahmen)
+            zeile.pack(fill="x", pady=2)
+            ttk.Label(zeile, text=datei.name, width=42).pack(side="left")
+            ttk.Button(zeile, text=self.t.get("k_oeffnen", "Öffnen"),
+                       command=lambda d=datei: self.oeffne_extern(d)).pack(side="left", padx=2)
+            ttk.Button(zeile, text=self.t.get("k_loeschen", "Löschen"),
+                       command=lambda d=datei, z=zeile: self.loesche_datei(d, z)).pack(side="left")
+        ttk.Button(rahmen, text=self.t.get("k_fertig", "Fertig"),
+                   command=fenster.destroy).pack(pady=(10, 0))
+
+    def oeffne_extern(self, datei: Path) -> None:
+        import subprocess
+        import sys
+        try:
+            if sys.platform == "darwin":
+                subprocess.Popen(["open", str(datei)])
+            elif sys.platform.startswith("win"):
+                import os
+                os.startfile(str(datei))  # type: ignore[attr-defined]
+            else:
+                subprocess.Popen(["xdg-open", str(datei)])
+        except Exception:
+            messagebox.showinfo(self.t.get("k_oeffnen", "Öffnen"), str(datei))
+
+    def loesche_datei(self, datei: Path, zeile) -> None:
+        if not messagebox.askyesno(self.t.get("k_loeschen", "Löschen"),
+                                   "%s\n\n%s" % (datei.name,
+                                                  self.t.get("loeschen_frage",
+                                                             "Endgültig entfernen?"))):
+            return
+        try:
+            datei.unlink()
+            zeile.destroy()
+        except Exception as fehler:  # noqa: BLE001
+            messagebox.showerror(self.t.get("k_loeschen", "Löschen"), str(fehler))
 
     def datei_oeffnen(self, datei: Path) -> None:
         """Entscheidet an der Endung: Textdatei oder Bild/PDF."""
