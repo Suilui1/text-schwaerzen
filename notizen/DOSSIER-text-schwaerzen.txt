@@ -57,6 +57,15 @@ Veröffentlichung: Tag setzen und senden — der Bau hängt an Tags v*:
   WICHTIG: Danach von Hand als Vorab-Fassung kennzeichnen, das macht der Ablauf nicht:
   gh release edit <tag> --prerelease --notes-file notizen/RELEASE.md
 
+SPEICHER (Anlaß 25.11.2026): GitHub meldete „100 % des Actions-Speichers verbraucht"
+(0,5 von 0,5 GB). Ursache waren ARTEFAKTE, nicht Caches: im privaten Repo
+`text-schwaerzen-archiv` lagen 309 Bau-Pakete aus zwanzig Läufen (27 GB), weil dessen
+Ablauf keine Aufbewahrung setzte (Vorgabe 90 Tage). Geräumt; Aufbewahrung dort jetzt 7 Tage,
+im öffentlichen Repo setzt der Ablauf `retention-days: 1` und löscht nach der Veröffentlichung.
+Merke: Caches zählen NICHT (eigene Grenze 10 GB je Repo), Release-Dateien auch nicht.
+Prüfen und räumen:  python3 werkzeuge/github_speicher.py --bericht
+                     python3 werkzeuge/github_speicher.py --raeumen --probe
+
 macOS-App (lokal):
   bash werkzeuge/baue_mac_app.sh      # übersetzt, kopiert ins Bündel, setzt Fassung 2.9.0,
                                       # signiert ad-hoc, macht Kopflauf und Startprobe
