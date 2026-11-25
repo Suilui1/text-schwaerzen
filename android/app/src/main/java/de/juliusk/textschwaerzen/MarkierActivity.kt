@@ -147,6 +147,7 @@ class MarkierActivity : Activity() {
             android.view.Gravity.BOTTOM))
 
         setContentView(rahmen)
+        Darstellung.anwenden(this)
     }
 
     private fun beschreibung(wert: String) = when (wert) {
@@ -398,6 +399,7 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var startY = 0f
     private var aktuell: RectF? = null
     private var ausgewaehlt: Int? = null
+    private var griffAktiv = false
     private var werkzeug = "schwaerzen"
     private var stempelText = "GEPRÜFT"
     private var textStil = "normal"
@@ -571,6 +573,37 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
 
     override fun onTouchEvent(ereignis: MotionEvent): Boolean {
         if (werkzeug == "anfassen") return anfassen(ereignis)
+        // Griff am Endpunkt: funktioniert in jedem Werkzeug, damit Drehen nicht erst
+        // gesucht werden muß (Julius, 25.11.2026: „nichts ist drehbar").
+        if (ereignis.action == MotionEvent.ACTION_DOWN) {
+            val z = ziel()
+            for (i in formen.indices.reversed()) {
+                val f = formen[i]
+                val hx = z.left + f.x1 * z.width()
+                val hy = z.top + f.y1 * z.height()
+                if (Math.hypot((ereignis.x - hx).toDouble(),
+                               (ereignis.y - hy).toDouble()) < 40.0) {
+                    ausgewaehlt = i
+                    griffAktiv = true
+                    invalidate()
+                    return true
+                }
+            }
+        }
+        if (griffAktiv) {
+            val z = ziel()
+            val f = ausgewaehlt?.let { formen.getOrNull(it) } ?: return true
+            if (ereignis.action == MotionEvent.ACTION_MOVE) {
+                f.x1 = ((ereignis.x - z.left) / z.width()).coerceIn(0f, 1f)
+                f.y1 = ((ereignis.y - z.top) / z.height()).coerceIn(0f, 1f)
+                invalidate()
+            }
+            if (ereignis.action == MotionEvent.ACTION_UP) {
+                griffAktiv = false
+                invalidate()
+            }
+            return true
+        }
         when (ereignis.action) {
             MotionEvent.ACTION_DOWN -> {
                 startX = ereignis.x; startY = ereignis.y

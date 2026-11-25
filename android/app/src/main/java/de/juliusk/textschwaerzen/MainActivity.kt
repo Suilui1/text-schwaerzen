@@ -1113,6 +1113,9 @@ class MainActivity : AppCompatActivity() {
         rahmen.addView(ScrollView(this).apply { addView(bildAnzeige) })
 
         setContentView(rahmen)
+        // Erst nach setContentView: vorher gibt es noch keinen Inhalt, auf den der
+        // Rahmen gelegt werden könnte (Ornament war unsichtbar, 25.11.2026).
+        Darstellung.anwenden(this)
         // Einheitliches Aussehen: runde Knöpfe, Akzentfarbe, Abstände
         for (i in 0 until rahmen.childCount) {
             (rahmen.getChildAt(i) as? Button)?.let { Darstellung.knopf(it, this) }
