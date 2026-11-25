@@ -614,6 +614,7 @@ class MainActivity : AppCompatActivity() {
                     return
                 }
                 original = bild
+                letzteDatei = null   // neue Quelle: alte Vorschau gilt nicht mehr
                 quelName = nameDerDatei(uri)
                 merken(uri, quelName, "bild")
                 fertig = null
@@ -885,6 +886,17 @@ class MainActivity : AppCompatActivity() {
         bildAnzeige = ImageView(this).apply {
             adjustViewBounds = true
             setPadding(0, 12, 0, 12)
+            // Antippen öffnet das letzte Ergebnis — die Vorschau bleibt sonst
+            // als „letzte Bearbeitung" stehen, ohne daß man etwas tun kann
+            // (Julius, 25.11.2026).
+            setOnClickListener {
+                if (letzteDatei != null) {
+                    oeffneLetzte()
+                } else {
+                    Toast.makeText(this@MainActivity, "Noch kein Ergebnis",
+                                   Toast.LENGTH_SHORT).show()
+                }
+            }
         }
         bildWaehlen = Button(this).apply {
             text = "Datei wählen"
@@ -1100,7 +1112,7 @@ class MainActivity : AppCompatActivity() {
                     "Kein Text erkannt (" + ergebnisBild.woerter + " Woerter). " +
                     "Bitte ein groesseres Bild verwenden."
                 else teile + "\n\n" + ergebnisBild.woerter + " Woerter erkannt"
-                bericht.text = text
+                bericht.text = text + "\n\nVorschau antippen öffnet die Datei."
                 bildWaehlen.isEnabled = true
                 // Wie beim PDF: sofort speichern und denselben Abschlussdialog zeigen
                 // (Julius: „beim speichern von bildern anders, sollte wie bei pdf sein").
