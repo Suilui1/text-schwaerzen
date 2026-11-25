@@ -312,11 +312,15 @@ class MainActivity : AppCompatActivity() {
             try {
                 // Verkleinern und direkt übergeben: kein Dekodieren in der Activity,
                 // dadurch erscheint das Bild sofort (vorher zwei leere Fenster).
-                var faktor = 1
+                // Höchstens 1200 Pixel: bei 12-Megapixel-Fotos reichte der Speicher sonst
+                // nicht, und der Absturz war ein Error (kein Exception) — die App schloß
+                // sich ohne Meldung (Julius, 25.11.2026).
                 val groesste = maxOf(bild.width, bild.height)
-                while (groesste / faktor > 1600) faktor *= 2
-                val klein = if (faktor == 1) bild else Bitmap.createScaledBitmap(
-                    bild, bild.width / faktor, bild.height / faktor, true)
+                val anteil = if (groesste > 1200) 1200.0 / groesste else 1.0
+                val breite = (bild.width * anteil).toInt().coerceAtLeast(1)
+                val hoehe = (bild.height * anteil).toInt().coerceAtLeast(1)
+                val klein = if (anteil >= 1.0) bild
+                            else Bitmap.createScaledBitmap(bild, breite, hoehe, true)
                 BereichActivity.uebergebenesBild = klein
                 runOnUiThread {
                     bildWaehlen.isEnabled = true
@@ -739,6 +743,24 @@ class MainActivity : AppCompatActivity() {
         rahmen.addView(ScrollView(this).apply { addView(bildAnzeige) })
 
         setContentView(rahmen)
+        zeigeLetztenAbsturz()
+    }
+
+    /** Liegt ein Absturzbericht vor, wird er beim Start gezeigt (statt still zu bleiben). */
+    private fun zeigeLetztenAbsturz() {
+        val datei = java.io.File(filesDir, "absturz.txt")
+        if (!datei.exists()) return
+        val text = try {
+            datei.readText().takeLast(1200)
+        } catch (fehler: Throwable) {
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Letzter Absturz")
+            .setMessage(text)
+            .setPositiveButton("Löschen") { _, _ -> datei.delete() }
+            .setNegativeButton("Behalten", null)
+            .show()
     }
 
     /** „Info": was die App tut, was sie kann, was sie nicht kann. */
