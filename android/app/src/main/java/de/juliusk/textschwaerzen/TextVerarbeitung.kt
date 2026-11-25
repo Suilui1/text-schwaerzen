@@ -18,6 +18,42 @@ import android.provider.MediaStore
  */
 object TextVerarbeitung {
 
+    /** Dateiart, wie sie der eine Knopf erkennen muss. */
+    enum class Art { BILD, PDF, TEXT }
+
+    /** Erkennt die Art an Endung und MIME-Typ — reine Logik, ohne Gerät prüfbar. */
+    fun artBestimmen(name: String, mime: String): Art {
+        val endung = name.substringAfterLast('.', "").lowercase()
+        val typ = mime.lowercase()
+        return when {
+            typ == "application/pdf" || endung == "pdf" -> Art.PDF
+            typ.startsWith("text/") || endung in setOf("txt", "csv", "log", "md") -> Art.TEXT
+            else -> Art.BILD
+        }
+    }
+
+    /** Schwärzt Text zeilenweise — ohne Datei, damit es sich prüfen lässt. */
+    fun schwaerzeInhalt(inhalt: String, modus: String): Triple<String, Map<String, Int>, Int> {
+        val zaehler = mutableMapOf<String, Int>()
+        var getroffen = 0
+        val zeilen = inhalt.split("\n").map { zeile ->
+            if (zeile.isBlank()) {
+                zeile
+            } else {
+                val arten = Regeln.treffer(zeile, modus)
+                if (arten.isEmpty()) {
+                    zeile
+                } else {
+                    val laenge = zeile.trim().length.coerceIn(3, 500)
+                    for (art in arten) zaehler[art] = (zaehler[art] ?: 0) + 1
+                    getroffen++
+                    "█".repeat(laenge)
+                }
+            }
+        }
+        return Triple(zeilen.joinToString("\n"), zaehler, getroffen)
+    }
+
     data class Ergebnis(
         val text: String,
         val datei: Uri?,
