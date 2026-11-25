@@ -848,22 +848,55 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Zeigt die Datei im Dateimanager.
+     * Zeigt die Datei im Dateimanager - so weit Android das zulässt.
      *
-     * Android hat dafür keinen eigenen Befehl. Der übliche Weg ist, die Dateiauswahl
-     * zu öffnen und ihr den Ordner der Datei als Startpunkt mitzugeben; die Auswahl
-     * landet dann in genau diesem Ordner (Julius' Wunsch, 25.11.2026).
+     * Android hat dafür keinen verlässlichen Befehl. Zwei Wege, in dieser Reihenfolge:
+     *   1. Dokumente (Storage Access Framework): den ELTERNORDNER öffnen — dort liegt
+     *      die Datei sichtbar.
+     *   2. Alle anderen (z. B. eigene Ergebnisse aus Bilder/Downloads): die Datei selbst
+     *      an einen Dateimanager geben; der zeigt sie dann in ihrem Ordner.
+     * Früher habe ich nur EXTRA_INITIAL_URI gesetzt — das landete oft im falschen Ordner
+     * (Julius, 25.11.2026).
      */
     private fun imDateimanagerZeigen(uri: android.net.Uri) {
+        // 1) Dokument-URI? Dann den Elternordner öffnen.
+        val eltern = elternOrdner(uri)
+        if (eltern != null) {
+            try {
+                val absicht = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(eltern, android.provider.DocumentsContract.Document.MIME_TYPE_DIR)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(absicht, "Ordner öffnen"))
+                return
+            } catch (fehler: Throwable) {
+                // weiter mit Weg 2
+            }
+        }
+        // 2) Die Datei selbst an einen Dateimanager geben.
         try {
-            val absicht = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "*/*"
-                putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, uri)
+            val typ = contentResolver.getType(uri) ?: "*/*"
+            val absicht = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, typ)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             startActivity(Intent.createChooser(absicht, "Im Dateimanager zeigen"))
         } catch (fehler: Throwable) {
-            Toast.makeText(this, "Dateimanager nicht gefunden", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Kein Dateimanager gefunden", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /** Elternordner einer Dokument-URI, sonst null. */
+    private fun elternOrdner(uri: android.net.Uri): android.net.Uri? {
+        return try {
+            val id = android.provider.DocumentsContract.getDocumentId(uri)
+            val schnitt = id.lastIndexOf('/')
+            if (schnitt <= 0) return null
+            val elternId = id.substring(0, schnitt)
+            android.provider.DocumentsContract.buildDocumentUri(
+                uri.authority ?: return null, elternId)
+        } catch (fehler: Throwable) {
+            null
         }
     }
 
