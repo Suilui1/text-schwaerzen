@@ -208,7 +208,7 @@ class MarkierActivity : Activity() {
         val richtungsWahl = RadioGroup(this)
         for (i in anzeige.indices) {
             richtungsWahl.addView(android.widget.RadioButton(this).apply {
-                id = i
+                id = 500 + i
                 text = anzeige[i]
                 isChecked = i == 0
             })
@@ -231,7 +231,7 @@ class MarkierActivity : Activity() {
             .setView(stapel)
             .setPositiveButton("OK") { _, _ ->
                 gewaehlt[0] = when (richtungsWahl.checkedRadioButtonId) {
-                    0 -> 0; 1 -> 1; 2 -> 2; 3 -> 3; else -> 0
+                      500 -> 0; 501 -> 1; 502 -> 2; 503 -> 3; else -> 0
                 }
                 gewaehlt[1] = when (dickenWahl.checkedRadioButtonId) {
                     100 -> 0; 102 -> 2; else -> 1
@@ -243,6 +243,7 @@ class MarkierActivity : Activity() {
                     else -> 0.006f
                 }
                 ansicht.setzePfeil(pfeilRichtung, pfeilDicke, pfeilFarbe)
+                bericht.text = "Pfeil: " + anzeige[gewaehlt[0]] + ", " + dicken[gewaehlt[1]]
                 bericht.text = "Pfeil: " + anzeige[gewaehlt[0]] + ", " + dicken[gewaehlt[1]]
             }
             .setNegativeButton("Abbrechen", null)
