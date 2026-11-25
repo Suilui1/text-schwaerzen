@@ -88,6 +88,15 @@ macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selb
           · Vorwahl beim Markieren: Farbwahl steht auf Gelb, eine gewählte rote Farbe bleibt
         Gegenproben (25.11.2026 gebaut): alte feste Gelb-Farbe → Unterschied 0,00; alte rote
         Stempel-Vorschau → Vorschau blau+rot+schwarz gegen Ergebnis blau+schwarz, 1 Abweichung.
+        Ein Abschnitt zu den Feldern der Werkzeugleiste (25.11.2026): für jedes der acht
+        Werkzeuge wird geprüft, welche Felder an sein dürfen —
+          Farbe   alle außer Verwischen
+          Größe   nur Text und Stempel        Stil  nur Text und Stempel
+          Stempel nur Stempel                 Seitenpfeile  nur PDF
+        dazu Rückgängig (ohne Form grau). Erwartung „Werkzeuge mit falscher Schaltung: 0".
+        Sichtprüfung mit vorgewähltem Werkzeug:
+          "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" \
+              --markieren BILD --werkzeug Verwischen
         Dazu zwei Abschnitte zu den Abläufen:
           · Verwischen versteckt den Text — dieselbe Texterkennung (Vision) zählt die Wörter
             vor und nach dem Verwischen: 16 → 0, und in der Vorschau ebenfalls 0
@@ -136,6 +145,18 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
   Bildpunkten; Vorschau rechnet denselben Wert auf die Anzeige um. Gemessen: 0/0/0.
   **Retina-Falle dabei:** `cgImage` zählt Bildpunkte, die Ansicht Punkte — ohne Umrechnung
   (Faktor = cg.width / image.size.width) verwischt die Vorschau die falsche Stelle.
+· Sinnlose Felder in der Werkzeugleiste (25.11.2026, Julius: „geprüft ist beim verwischen doch
+  sinnlos, könnte ausgegraut sein"): Farbe, Größe, Stil und Stempel standen bei JEDEM Werkzeug
+  in der Leiste, obwohl sie nur bei bestimmten etwas bewirken; die Seitenpfeile standen auch
+  bei Bildern da; „Rückgängig" war ohne eine einzige Form aktiv. Jetzt schaltet
+  `steuerungAnpassen()` die Felder je Werkzeug (Zuordnung am Zeichenweg abgelesen, nicht
+  geraten), versteckt die Pfeile außer bei PDF, und `rueckgaengigAnpassen()` graut
+  Rückgängig aus, solange nichts gezeichnet ist. Jedes Feld hat einen Hinweis (toolTip),
+  warum es aus ist.
+  Prüfweg für die Augen: `--markieren BILD --werkzeug Verwischen` — sonst sieht man immer
+  nur das erste Werkzeug.
+  **Nicht geändert:** die Rechner-Fassung (Tk) hat dieselbe Schwäche (Verwisch-Stil,
+  Schriftgröße und Stempel stehen immer da) — noch nicht entschieden.
 · „Letzte Dateien": Löschen löscht die DATEI. Wer nur den Eintrag weghaben wollte, hatte bis
   25.11.2026 keine Möglichkeit — jetzt „Nur aus der Liste" (nur UserDefaults, Datei unberührt).
   Beim Bauen: `? :` mit Closure direkt im Argument geht nicht („expected expression"), und
