@@ -151,16 +151,16 @@ class MainActivity : AppCompatActivity() {
                 val name = stuecke.getOrElse(2) { "Datei" }
                 val istErgebnis = stuecke[0].endsWith("-aus")
                 val auswahl = if (istErgebnis) {
-                    arrayOf("Öffnen", "Im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")
+                    arrayOf("Öffnen", "Ordner im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")
                 } else {
-                    arrayOf("Öffnen", "Im Dateimanager zeigen", "Aus Liste entfernen")
+                    arrayOf("Öffnen", "Ordner im Dateimanager zeigen", "Aus Liste entfernen")
                 }
                 AlertDialog.Builder(this)
                     .setTitle(name)
                     .setItems(auswahl) { _, was ->
                         when {
                             was == 0 -> oeffneOderVerarbeite(stuecke[0], uri)
-                            was == 1 -> imDateimanagerZeigen(uri)
+                            was == 1 -> ordnerZeigen(uri)
                             was == 2 -> ausListeEntfernen(eintrag)
                             was == 1 -> ausListeEntfernen(eintrag)
                             else -> loescheErgebnis(uri, name)
@@ -802,7 +802,7 @@ class MainActivity : AppCompatActivity() {
                 val name = stuecke.getOrElse(2) { "Ergebnis" }
                 AlertDialog.Builder(this)
                     .setTitle(name)
-                    .setItems(arrayOf("Öffnen", "Im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")) { _, was ->
+                    .setItems(arrayOf("Öffnen", "Ordner im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")) { _, was ->
                         if (was == 0) {
                             oeffneExtern(uri, when (stuecke[0]) {
                                 "pdf-aus" -> "application/pdf"
@@ -810,7 +810,7 @@ class MainActivity : AppCompatActivity() {
                                 else -> "image/png"
                             })
                         } else if (was == 1) {
-                            imDateimanagerZeigen(uri)
+                            ordnerZeigen(uri)
                           } else if (was == 2) {
                               ausListeEntfernen(eintraege[welcher])
                         } else {
@@ -848,53 +848,85 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Zeigt die Datei im Dateimanager - so weit Android das zulässt.
+     * Öffnet den ORDNER der Datei im Dateimanager (Julius' Wahl „b", 25.11.2026).
      *
-     * Android hat dafür keinen verlässlichen Befehl. Zwei Wege, in dieser Reihenfolge:
-     *   1. Dokumente (Storage Access Framework): den ELTERNORDNER öffnen — dort liegt
-     *      die Datei sichtbar.
-     *   2. Alle anderen (z. B. eigene Ergebnisse aus Bilder/Downloads): die Datei selbst
-     *      an einen Dateimanager geben; der zeigt sie dann in ihrem Ordner.
-     * Früher habe ich nur EXTRA_INITIAL_URI gesetzt — das landete oft im falschen Ordner
-     * (Julius, 25.11.2026).
+     * Android kennt keinen Befehl „zeige diese Datei". Ordner geht aber:
+     *   · bei Dokumenten: den Elternordner als Dokument-URI
+     *   · bei eigenen Ergebnissen: den Medien-Ordner (Pictures bzw. Download) über
+     *     den Speicher-Anbieter „externalstorage"
+     * Scheitert beides, öffnet die Dateiauswahl diesen Ordner als Startpunkt.
      */
-    private fun imDateimanagerZeigen(uri: android.net.Uri) {
-        // 1) Dokument-URI? Dann den Elternordner öffnen.
-        val eltern = elternOrdner(uri)
-        if (eltern != null) {
+    private fun ordnerZeigen(uri: android.net.Uri) {
+        val ordner = ordnerUri(uri)
+        if (ordner != null) {
             try {
                 val absicht = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(eltern, android.provider.DocumentsContract.Document.MIME_TYPE_DIR)
+                    setDataAndType(ordner,
+                        android.provider.DocumentsContract.Document.MIME_TYPE_DIR)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                startActivity(Intent.createChooser(absicht, "Ordner öffnen"))
+                startActivity(absicht)
                 return
             } catch (fehler: Throwable) {
-                // weiter mit Weg 2
+                // kein Betrachter für Ordner — weiter mit der Auswahl
+            }
+            try {
+                val auswahl = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "*/*"
+                    putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, ordner)
+                }
+                startActivity(Intent.createChooser(auswahl, "Ordner zeigen"))
+                return
+            } catch (fehler: Throwable) {
+                // weiter zur Meldung
             }
         }
-        // 2) Die Datei selbst an einen Dateimanager geben.
+        Toast.makeText(this, "Ordner nicht auffindbar", Toast.LENGTH_LONG).show()
+    }
+
+    /** Ordner-URI zur Datei — Dokumente oder Medien-Speicher. */
+    private fun ordnerUri(uri: android.net.Uri): android.net.Uri? {
+        // 1) Dokument aus der Dateiauswahl: Elternordner bauen
         try {
-            val typ = contentResolver.getType(uri) ?: "*/*"
-            val absicht = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, typ)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            if (android.provider.DocumentsContract.isDocumentUri(this, uri)) {
+                val id = android.provider.DocumentsContract.getDocumentId(uri)
+                val schnitt = id.lastIndexOf('/')
+                if (schnitt > 0) {
+                    return android.provider.DocumentsContract.buildDocumentUri(
+                        uri.authority ?: return null, id.substring(0, schnitt))
+                }
             }
-            startActivity(Intent.createChooser(absicht, "Im Dateimanager zeigen"))
         } catch (fehler: Throwable) {
-            Toast.makeText(this, "Kein Dateimanager gefunden", Toast.LENGTH_LONG).show()
+        }
+        // 2) Eigenes Ergebnis: Ordner aus dem Medien-Speicher lesen
+        val pfad = medienOrdner(uri) ?: return null
+        return try {
+            android.provider.DocumentsContract.buildDocumentUri(
+                "com.android.externalstorage.documents",
+                "primary:" + pfad.trimEnd('/'))
+        } catch (fehler: Throwable) {
+            null
         }
     }
 
-    /** Elternordner einer Dokument-URI, sonst null. */
-    private fun elternOrdner(uri: android.net.Uri): android.net.Uri? {
+    /** Ordner (z. B. „Pictures" oder „Download") einer Medien-Datei. */
+    private fun medienOrdner(uri: android.net.Uri): String? {
         return try {
-            val id = android.provider.DocumentsContract.getDocumentId(uri)
-            val schnitt = id.lastIndexOf('/')
-            if (schnitt <= 0) return null
-            val elternId = id.substring(0, schnitt)
-            android.provider.DocumentsContract.buildDocumentUri(
-                uri.authority ?: return null, elternId)
+            val spalten = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                arrayOf(android.provider.MediaStore.MediaColumns.RELATIVE_PATH)
+            } else {
+                arrayOf(android.provider.MediaStore.MediaColumns.DATA)
+            }
+            contentResolver.query(uri, spalten, null, null, null)?.use { zeiger ->
+                if (!zeiger.moveToFirst()) return null
+                val wert = zeiger.getString(0) ?: return null
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    wert.trimEnd('/')
+                } else {
+                    wert.substringBeforeLast('/').removePrefix("/storage/emulated/0/")
+                }
+            }
         } catch (fehler: Throwable) {
             null
         }
