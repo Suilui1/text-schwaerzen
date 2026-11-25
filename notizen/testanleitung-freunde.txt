@@ -7,9 +7,14 @@ https://github.com/Suilui1/text-schwaerzen/releases/tag/v2.9.0-alpha.2
 Dort die passende Datei wählen (Android: .apk · Windows: .zip).
 
 INSTALLATION
-Die Datei „Text-schwaerzen-android-2.9.0.apk" antippen. Android fragt einmal, ob Apps
-aus dieser Quelle installiert werden dürfen — erlauben. (Die App ist noch nicht im
-Play Store; daher diese Nachfrage.)
+Android: die Datei „Text-schwaerzen-android-2.9.0.apk" antippen. Android fragt einmal,
+ob Apps aus dieser Quelle installiert werden dürfen — erlauben. (Die App ist noch nicht
+im Play Store; daher diese Nachfrage.)
+
+Mac: „Text-schwaerzen-mac-app.zip" laden, entpacken, die App in den Ordner „Programme"
+ziehen. Beim ersten Start: Rechtsklick auf die App → Öffnen → im Dialog nochmal Öffnen.
+Das ist nötig, weil das Programm nicht bei Apple angemeldet ist. Danach startet es
+normal per Doppelklick. Die App braucht sonst nichts — kein brew, kein Tesseract.
 
 WAS DIE APP TUT
 Sie schwärzt Text auf Bildern, in PDFs und in Textdateien. Bei PDFs wird jede Seite

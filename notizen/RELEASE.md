@@ -16,10 +16,16 @@ ist danach nicht mehr markierbar oder kopierbar.
 | `Text-schwaerzen-android.apk` | Android 8 und neuer |
 | `Text-schwaerzen-windows.zip` | Windows 10/11 (mit Tesseract) |
 | `Text-schwaerzen-linux.tar.gz` | Linux (x86_64) |
-| `Text-schwaerzen-macos.zip` | macOS (Rechner-Fassung) |
+| `Text-schwaerzen-mac-app.zip` | **macOS-App** — braucht nichts weiter (Apple Silicon und Intel, ab macOS 14) |
+| `Text-schwaerzen-macos.zip` | macOS (Rechner-Fassung, braucht Tesseract) |
 
-Die macOS-App mit den Markier-Werkzeugen (Swift) liegt **nicht** im ZIP — sie wird
-als Bündel in `/Applications` installiert und ist in dieser Veröffentlichung nicht enthalten.
+Die macOS-App ist neu dabei: entpacken, in den Ordner *Programme* ziehen, beim ersten
+Start **Rechtsklick → Öffnen** (die App ist nicht bei Apple notarisiert — das wäre ein
+bezahltes Entwicklerkonto). Sie erkennt Text mit Apples Vision und braucht kein brew,
+keinen Tesseract, kein Python.
+
+Die **Rechner-Fassung** (`Text-schwaerzen-macos.zip`) bleibt für Macs unterhalb von
+macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung
 
