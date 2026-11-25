@@ -619,15 +619,24 @@ class MainActivity : AppCompatActivity() {
 
     /** Dialog nach dem Speichern: mehr Möglichkeiten als nur "Öffnen". */
     private fun abschlussDialog(titel: String, text: String) {
-        // Vier Möglichkeiten als Liste: mit drei Knöpfen ließ sich „Löschen" nicht
-        // unterbringen — und Julius fand es nicht (25.11.2026).
+        // „Öffnen" gehört als Knopf nach vorn — in der Liste war es nicht zu finden
+        // („öffnen der geschwärzten datei ist weg", 25.11.2026).
         AlertDialog.Builder(this)
             .setTitle(titel)
             .setMessage(text)
-            .setItems(arrayOf("Öffnen", "Speichern unter…", "Teilen", "Löschen")) { _, was ->
+            .setPositiveButton("Öffnen") { _, _ -> oeffneLetzte() }
+            .setNeutralButton("Mehr…") { _, _ -> mehrDialog() }
+            .setNegativeButton("Schließen", null)
+            .show()
+    }
+
+    /** Weitere Möglichkeiten: speichern unter, teilen, löschen. */
+    private fun mehrDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Mehr")
+            .setItems(arrayOf("Speichern unter…", "Teilen", "Löschen")) { _, was ->
                 when (was) {
-                    0 -> oeffneLetzte()
-                    1 -> {
+                    0 -> {
                         if (letzterTyp == "application/pdf") {
                             speichernPdf.launch("geschwaerzt.pdf")
                         } else if (letzterTyp == "text/plain") {
@@ -636,7 +645,7 @@ class MainActivity : AppCompatActivity() {
                             speichernBild.launch("geschwaerzt.png")
                         }
                     }
-                    2 -> teileLetzte()
+                    1 -> teileLetzte()
                     else -> {
                         val uri = letzteDatei
                         if (uri == null) {
@@ -647,89 +656,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            .setNegativeButton("Schließen", null)
+            .setNegativeButton("Zurück", null)
             .show()
-    }
-
-    /** Zeigt alle geschwärzten Ergebnisse mit Öffnen und Löschen. */
-    private fun ergebnisseZeigen() {
-        val eintraege = (verlauf.getStringSet("dateien", emptySet()) ?: emptySet())
-            .filter { it.startsWith("bild-aus|") || it.startsWith("pdf-aus|")
-                      || it.startsWith("text-aus|") }
-            .toList()
-        if (eintraege.isEmpty()) {
-            AlertDialog.Builder(this)
-                .setTitle("Ergebnisse")
-                .setMessage("Noch keine geschwärzte Datei gespeichert.\n\nNach dem Schwärzen " +
-                            "liegt sie unter Bilder bzw. Downloads und erscheint hier.")
-                .setPositiveButton("Gut", null)
-                .show()
-            return
-        }
-        val namen = eintraege.map { teil ->
-            val stuecke = teil.split("|")
-            (stuecke.getOrElse(2) { "Ergebnis" })
-        }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle("Ergebnisse")
-            .setItems(namen) { _, welcher ->
-                val stuecke = eintraege[welcher].split("|")
-                val uri = android.net.Uri.parse(stuecke[1])
-                val name = stuecke.getOrElse(2) { "Ergebnis" }
-                AlertDialog.Builder(this)
-                    .setTitle(name)
-                    .setItems(arrayOf("Öffnen", "Löschen")) { _, was ->
-                        if (was == 0) {
-                            oeffneExtern(uri, when (stuecke[0]) {
-                                "pdf-aus" -> "application/pdf"
-                                "text-aus" -> "text/plain"
-                                else -> "image/png"
-                            })
-                        } else {
-                            loescheErgebnis(uri, name)
-                        }
-                    }
-                    .setNegativeButton("Abbrechen", null)
-                    .show()
-            }
-            .setNegativeButton("Schließen", null)
-            .show()
-    }
-
-    /** Löscht ein geschwärtes Ergebnis nach Rückfrage. */
-    private fun loescheErgebnis(uri: android.net.Uri, name: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Löschen?")
-            .setMessage(name + "\n\nDie Datei wird endgültig entfernt.")
-            .setPositiveButton("Löschen") { _, _ ->
-                try {
-                    contentResolver.delete(uri, null, null)
-                    val alt = verlauf.getStringSet("dateien", emptySet())?.toMutableSet()
-                        ?: mutableSetOf<String>()
-                    alt.removeAll { it.contains(uri.toString()) }
-                    verlauf.edit().putStringSet("dateien", alt).apply()
-                    Toast.makeText(this, "Gelöscht: " + name, Toast.LENGTH_SHORT).show()
-                } catch (fehler: Throwable) {
-                    Toast.makeText(this, "Löschen nicht möglich: " + fehler.message,
-                                   Toast.LENGTH_LONG).show()
-                }
-            }
-            .setNegativeButton("Abbrechen", null)
-            .show()
-    }
-
-    /** Öffnet eine Datei in einer anderen App. */
-    private fun oeffneExtern(uri: android.net.Uri, typ: String) {
-        try {
-            val absicht = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, typ)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(absicht)
-        } catch (fehler: Exception) {
-            Toast.makeText(this, "Keine App zum Öffnen", Toast.LENGTH_LONG).show()
-        }
     }
 
     private fun oeffneLetzte() {
