@@ -718,16 +718,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Dialog nach dem Speichern: mehr Möglichkeiten als nur "Öffnen". */
+    /**
+     * Zeigt einen Dialog nur, solange die Activity lebt.
+     *
+     * Anlass (25.11.2026): Beim Speichern läuft die Arbeit im Hintergrund. Verläßt man
+     * in dieser Zeit die App, gibt es kein Fenster mehr — „Unable to add window",
+     * und die App stürzte ab. Der Absturzbericht zeigte auf abschlussDialog.
+     */
+    private fun anzeigen(dialog: AlertDialog?) {
+        val d = dialog ?: return
+        if (isFinishing || isDestroyed) return
+        try {
+            d.show()
+        } catch (fehler: Throwable) {
+            // kein Fenster mehr — nichts tun
+        }
+    }
+
     private fun abschlussDialog(titel: String, text: String) {
         // „Öffnen" als eigener Knopf vorn — in der Liste war es nicht zu finden
         // (25.11.2026). Der Rest bleibt in der Liste.
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle(titel)
             .setMessage(text)
             .setPositiveButton("Öffnen") { _, _ -> oeffneLetzte() }
             .setNeutralButton("Mehr…") { _, _ -> mehrDialog() }
             .setNegativeButton("Schließen", null)
-            .show()
+            .create()
+        anzeigen(dialog)
     }
 
     /** Weitere Möglichkeiten: speichern unter, teilen, löschen. */
@@ -1358,6 +1376,7 @@ class MainActivity : AppCompatActivity() {
                 merken(ziel, name, "bild-aus")
             }
             runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 val hinweis = if (ziel != null) "$meldung\n\nGespeichert: Bilder/$name"
                 else "$meldung\n\nSpeichern fehlgeschlagen"
                 bericht.text = hinweis
