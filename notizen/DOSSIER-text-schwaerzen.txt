@@ -77,7 +77,8 @@ macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selb
           · Verwischen versteckt den Text — dieselbe Texterkennung (Vision) zählt die Wörter
             vor und nach dem Verwischen: 16 → 0, und in der Vorschau ebenfalls 0
           · Nur aus der Liste — Eintrag vorher gemerkt ja / nachher nein, Datei noch da ja;
-            Knopf bei „Letzte Dateien" ja, bei „Ergebnisse" nein
+            Knopf bei „Letzte Dateien" ja, bei „Ergebnisse" nein; Knopfleiste ohne Überdeckung
+            (In der App öffnen@12 · Im Finder zeigen@180 · Nur aus der Liste@338 · Schließen@660)
 Tk:     Selbsttest braucht PyMuPDF; im Bündel-Python fehlt fitz → kopflos nur teilweise prüfbar.
         Der Zwei-Schritt-Ablauf wird eigens geprüft:
           python3 werkzeuge/pruefe_tk_ablauf.py   # startet sich selbst mit dem Python
