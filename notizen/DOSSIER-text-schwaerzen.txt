@@ -121,6 +121,12 @@ Tk:     Selbsttest braucht PyMuPDF; im Bündel-Python fehlt fitz → kopflos nur
         Schritt 1 = Automatisch · Selbst markieren, Schritt 2 = vier Möglichkeiten
         (bei PDF drei), Textdatei direkt. 16 Erwartungen, deutsch und englisch.
         Gegenprobe: TS_REPO=<alte Fassung> schlägt mit 8 Abweichungen an.
+        Die ganze Fassung prüft seit 25.11.2026 zusätzlich:
+          python3 werkzeuge/pruefe_rechner_fassung.py
+        Startfenster, Liste der letzten Dateien (Knöpfe, Löschen nur bei Ergebnissen),
+        Editor-Felder je Werkzeug, Bild- und Textdatei-Weg an echten Proben — dazu die
+        Gegenprobe, daß der Bild-Weg AUCH OHNE PyMuPDF läuft. Gegenprobe gegen den
+        Stand davor: 6 Abweichungen.
         Grenze: PyMuPDF lädt im Python des Harness nicht (Signaturprüfung des Systems),
         deshalb setzt das Skript einen Platzhalter — geprüft werden Fenster, nicht PDF.
 Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
@@ -167,6 +173,16 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
   nur das erste Werkzeug.
   **Nicht geändert:** die Rechner-Fassung (Tk) hat dieselbe Schwäche (Verwisch-Stil,
   Schriftgröße und Stempel stehen immer da) — noch nicht entschieden.
+· Rechner-Fassung (Tk), bei der Prüfung am 25.11.2026 gefunden und behoben:
+    (a) die drei Felder der Editor-Leiste standen bei JEDEM Werkzeug bedienbar da —
+        jetzt Verwisch-Stil nur beim Verwischen, Schriftgröße und Stempel nur bei Text
+        und Stempel (`felder_schalten` in editor.py);
+    (b) die Liste der letzten Dateien hatte NUR „öffnen" und „Im Dateimanager zeigen" —
+        kein „Aus Liste entfernen", kein „Löschen". Jetzt beides je Zeile, Löschen bei
+        Originalen ausgegraut (Funktion `ist_ergebnis` in gui.py, dieselbe Regel wie Android);
+    (c) **`pdf.py` holte PyMuPDF schon beim Import** — deshalb scheiterte ohne PyMuPDF auch
+        das Schwärzen von BILDERN und TEXTDATEIEN. Jetzt wird es erst im PDF-Weg geholt
+        (`_fitz()`), und der Bild-Weg läuft ohne PyMuPDF (gemessen, Gegenprobe 0 → 1).
 · „Letzte Dateien": Löschen löscht die DATEI. Wer nur den Eintrag weghaben wollte, hatte bis
   25.11.2026 keine Möglichkeit — jetzt „Nur aus der Liste" (nur UserDefaults, Datei unberührt).
   Beim Bauen: `? :` mit Closure direkt im Argument geht nicht („expected expression"), und

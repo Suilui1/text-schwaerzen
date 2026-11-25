@@ -21,7 +21,8 @@ from .pdf import schwaeze_pdf
 from .__main__ import lade_einstellungen, speichere_einstellungen, ziel_pfad, bericht
 
 TEXTE = {
-    "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_zeigen": "Im Dateimanager zeigen", "k_ergebnisse": "Ergebnisse", "keine_ergebnisse": "Noch keine geschwärzte Datei in der Ablage.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info", "info_text": """Text schwärzen — was die App tut
+    "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_zeigen": "Im Dateimanager zeigen", "k_ergebnisse": "Ergebnisse", "keine_ergebnisse": "Noch keine geschwärzte Datei in der Ablage.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info",
+           "k_entfernen": "Aus Liste entfernen", "info_text": """Text schwärzen — was die App tut
 
 Schwärzt Text in Bildern, PDFs und Textdateien. Alles geschieht auf diesem Rechner; nichts wird verschickt.
 
@@ -60,7 +61,8 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen",
            "rahmen_titel": "Rahmen um das ziehen, was LESBAR bleiben soll — Enter schwärzt den Rest",
            "seite": "Seite", "von": "von", "fertig": "Fertig",
            "bild_waehlen": "Welches Bild oder PDF schwärzen?"},
-    "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_zeigen": "Show in file manager", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info", "info_text": """Redact text — what this app does
+    "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_zeigen": "Show in file manager", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info",
+           "k_entfernen": "Remove from list", "info_text": """Redact text — what this app does
 
 Redacts text in images, PDFs and text files. Everything happens on this machine; nothing is sent anywhere.
 
@@ -95,6 +97,16 @@ Source: github.com/Suilui1/text-schwaerzen""", "titel": "Redact text",
            "seite": "Page", "von": "of", "fertig": "Done",
            "bild_waehlen": "Which image or PDF should be redacted?"},
 }
+
+
+def ist_ergebnis(datei: Path) -> bool:
+    """Hat die App diese Datei erzeugt? Nur solche darf die Liste löschen.
+
+    Dieselbe Regel wie in Android (`istErgebnis = stufe.endsWith("-aus")`) und in der
+    macOS-App: <name>-geschwaerzt.* oder <name>-markiert.* — Originale nie (25.11.2026).
+    """
+    name = datei.stem.lower()
+    return "-geschwaerzt" in name or "-markiert" in name
 
 
 def sprache_waehlen() -> str:
@@ -295,8 +307,49 @@ class App:
                        command=oeffne).pack(side="left")
             ttk.Button(zeile, text=self.t.get("k_zeigen", "Im Dateimanager zeigen"),
                        command=lambda d=pfad: self.zeige_im_ordner(d)).pack(side="left", padx=2)
+            # Nur den Eintrag wegnehmen — die Datei bleibt (Julius, 25.11.2026).
+            ttk.Button(zeile, text=self.t.get("k_entfernen", "Aus Liste entfernen"),
+                       command=lambda d=pfad, z=zeile: self.aus_liste_entfernen(d, z)
+                       ).pack(side="left", padx=2)
+            # Löschen NUR für Ergebnisse; bei Originalen ist der Knopf grau.
+            loeschen = ttk.Button(zeile, text=self.t.get("k_loeschen", "Löschen"),
+                                  command=lambda d=pfad, z=zeile: self.loesche_aus_liste(d, z))
+            loeschen.pack(side="left", padx=2)
+            if not ist_ergebnis(pfad):
+                loeschen.state(["disabled"])
         ttk.Button(rahmen, text=self.t.get("k_fertig", "Fertig"),
                    command=fenster.destroy).pack(pady=(10, 0))
+
+    def aus_liste_entfernen(self, datei: Path, zeile) -> None:
+        """Nimmt den Eintrag aus der Merkliste — die Datei wird nicht angefaßt."""
+        import json
+        ziel = self._letzte_datei()
+        try:
+            liste = json.loads(ziel.read_text(encoding="utf-8"))
+        except Exception:
+            liste = []
+        neu = [z for z in liste if z != str(datei)]
+        try:
+            ziel.write_text(json.dumps(neu, ensure_ascii=False, indent=1), encoding="utf-8")
+        except Exception:
+            pass
+        zeile.destroy()
+
+    def loesche_aus_liste(self, datei: Path, zeile) -> None:
+        """Löscht ein ERGEBNIS samt Merkeintrag. Originale kommen hier nie an."""
+        if not ist_ergebnis(datei):
+            return
+        if not messagebox.askyesno(self.t.get("k_loeschen", "Löschen"),
+                                   "%s\n\n%s" % (datei,
+                                                  self.t.get("loeschen_frage",
+                                                             "Endgültig entfernen?"))):
+            return
+        try:
+            datei.unlink()
+        except Exception as fehler:  # noqa: BLE001
+            messagebox.showerror(self.t.get("k_loeschen", "Löschen"), str(fehler))
+            return
+        self.aus_liste_entfernen(datei, zeile)
 
     def ergebnisse_zeigen(self) -> None:
         """Zeigt die geschwärzten Dateien in der Ablage und erlaubt Löschen."""

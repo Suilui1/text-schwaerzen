@@ -8,16 +8,25 @@ from __future__ import annotations
 
 from pathlib import Path
 
-try:
-    import pymupdf as fitz
-except ImportError:  # ältere Fassungen
-    import fitz
-
 from .masken import schwaeze_datei
 
 
+def _fitz():
+    """PyMuPDF erst beim PDF holen — nicht beim Import.
+
+    Anlaß (25.11.2026, bei der Prüfung der Rechner-Fassung gemessen): `pdf.py` holte
+    PyMuPDF oben in der Datei. Damit scheiterte auch das Schwärzen von BILDERN und
+    TEXTDATEIEN, wenn PyMuPDF fehlte — obwohl es dafür gar nicht gebraucht wird.
+    """
+    try:
+        import pymupdf as fitz
+    except ImportError:  # ältere Fassungen
+        import fitz
+    return fitz
+
+
 def seitenzahl(pdf: Path) -> int:
-    with fitz.open(pdf) as dokument:
+    with _fitz().open(pdf) as dokument:
         return dokument.page_count
 
 
@@ -29,6 +38,7 @@ def schwaeze_pdf(quelle: Path, ziel: Path, modus: str = "gezielt",
     """Schwärzt jede Seite und schreibt ein neues PDF. `stand(fertig, gesamt)` meldet den Stand."""
     import tempfile
 
+    fitz = _fitz()
     gesamt: dict[str, int] = {}
     with fitz.open(quelle) as alt, fitz.open() as neu:
         for nummer, seite in enumerate(alt, start=1):

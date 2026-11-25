@@ -85,18 +85,25 @@ class Editor:
         # Zweite Leiste: Stil fürs Verwischen, Schriftgröße, Stempel-Text
         extras = ttk.Frame(self.fenster, padding=6)
         extras.pack(fill="x")
+        # Die drei Felder werden je Werkzeug aus- oder eingeschaltet. Vorher standen sie
+        # immer bedienbar da, auch wenn sie nichts bewirkten (Julius, 25.11.2026; in der
+        # macOS-App zuerst gefunden, hier nachgezogen).
         ttk.Label(extras, text="Verwisch-Stil:").pack(side="left", padx=(0, 4))
         self.stil = tk.StringVar(value="weich")
-        ttk.Combobox(extras, textvariable=self.stil, values=list(STILE.values()),
-                     width=14, state="readonly").pack(side="left", padx=(0, 12))
+        self.feld_stil = ttk.Combobox(extras, textvariable=self.stil, values=list(STILE.values()),
+                                      width=14, state="readonly")
+        self.feld_stil.pack(side="left", padx=(0, 12))
         ttk.Label(extras, text="Schriftgröße:").pack(side="left", padx=(0, 4))
         self.groesse = tk.StringVar(value="18")
-        ttk.Combobox(extras, textvariable=self.groesse, values=["12", "16", "18", "24", "32", "48"],
-                     width=5, state="readonly").pack(side="left", padx=(0, 12))
+        self.feld_groesse = ttk.Combobox(extras, textvariable=self.groesse,
+                                         values=["12", "16", "18", "24", "32", "48"],
+                                         width=5, state="readonly")
+        self.feld_groesse.pack(side="left", padx=(0, 12))
         ttk.Label(extras, text="Stempel:").pack(side="left", padx=(0, 4))
         self.stempel_wahl = tk.StringVar(value=STEMPEL[0])
-        ttk.Combobox(extras, textvariable=self.stempel_wahl, values=STEMPEL,
-                     width=14, state="readonly").pack(side="left")
+        self.feld_stempel = ttk.Combobox(extras, textvariable=self.stempel_wahl, values=STEMPEL,
+                                         width=14, state="readonly")
+        self.feld_stempel.pack(side="left")
 
         unten = ttk.Frame(self.fenster, padding=6)
         unten.pack(fill="x")
@@ -130,13 +137,32 @@ class Editor:
         self.fenster.bind("<BackSpace>", self.entferne_auswahl)
         self.fenster.bind("<Delete>", self.entferne_auswahl)
 
+        self.felder_schalten()
         self.zeichne()
         self.fenster.wait_window()
 
     # ---------------------------------------------------------------- Werkzeug
 
+    def felder_schalten(self) -> None:
+        """Schaltet die Felder je Werkzeug: ein Feld, das nichts bewirkt, ist grau.
+
+        Zuordnung, am Zeichenweg abgelesen: Verwisch-Stil nur beim Verwischen,
+        Schriftgröße und Stempel nur bei Text und Stempel.
+        """
+        paare = ((getattr(self, "feld_stil", None), self.werkzeug == "verwischen"),
+                 (getattr(self, "feld_groesse", None), self.werkzeug in ("text", "stempel")),
+                 (getattr(self, "feld_stempel", None), self.werkzeug == "stempel"))
+        for feld, an in paare:
+            if feld is None:
+                continue
+            try:
+                feld.configure(state="readonly" if an else "disabled")
+            except Exception:
+                pass
+
     def setze_werkzeug(self, wert: str) -> None:
         self.werkzeug = wert
+        self.felder_schalten()
 
     def zoome(self, faktor: float) -> None:
         self.zoom = max(0.2, min(5.0, self.zoom * faktor))
