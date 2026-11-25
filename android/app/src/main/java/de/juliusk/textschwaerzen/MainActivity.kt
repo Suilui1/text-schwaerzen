@@ -1014,7 +1014,7 @@ class MainActivity : AppCompatActivity() {
             textSize = 22f
         }
         bericht = TextView(this).apply {
-            setTextColor(Darstellung.farben(this).text)
+            setTextColor(Darstellung.farben(this@MainActivity).text)
             text = "Ein Bild wählen — erkannt wird der Text darauf, nicht das Bild."
             textSize = 15f
             setPadding(0, 12, 0, 12)

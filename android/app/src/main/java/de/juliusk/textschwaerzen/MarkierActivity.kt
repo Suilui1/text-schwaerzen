@@ -394,10 +394,6 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
 
     fun setzeWerkzeug(wert: String) { werkzeug = wert }
     private var stempelStil = "normal"
-    private var stempelFarbe = android.graphics.Color.RED
-    private var stempelRahmen = android.graphics.Color.RED
-    private var textFarbe = android.graphics.Color.BLACK
-    private var pfeilFarbe = android.graphics.Color.BLACK
 
     fun setzeStempel(wert: String, groesse: Float, stil: String,
                      farbe: Int, rahmen: Int) {
