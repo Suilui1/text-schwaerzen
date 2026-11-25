@@ -170,21 +170,26 @@ object PdfVerarbeitung {
     fun verarbeiteFormen(context: Context, uri: Uri, erkennung: Erkennung, name: String,
                          formen: List<Form>,
                          stand: ((Int, Int) -> Unit)? = null,
-                         abgebrochen: (() -> Boolean)? = null): Ergebnis = try {
+                         abgebrochen: (() -> Boolean)? = null): Ergebnis {
         val zwischen = File(context.cacheDir, "quelle-formen.pdf")
-        context.contentResolver.openInputStream(uri)?.use { quelle ->
-            zwischen.outputStream().use { ziel -> quelle.copyTo(ziel) }
-        } ?: return Ergebnis(0, null, emptyMap(), "PDF nicht lesbar")
+        var descriptor: ParcelFileDescriptor? = null
+        var renderer: PdfRenderer? = null
+        var neuesPdf: PdfDocument? = null
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { quelle ->
+                zwischen.outputStream().use { ziel -> quelle.copyTo(ziel) }
+            } ?: return Ergebnis(0, null, emptyMap(), "PDF nicht lesbar")
 
-        val descriptor = ParcelFileDescriptor.open(zwischen, ParcelFileDescriptor.MODE_READ_ONLY)
-        val renderer = PdfRenderer(descriptor)
-        val neuesPdf = PdfDocument()
-        val seitenAnzahl = renderer.pageCount
-        try {
+            descriptor = ParcelFileDescriptor.open(zwischen, ParcelFileDescriptor.MODE_READ_ONLY)
+            renderer = PdfRenderer(descriptor)
+            neuesPdf = PdfDocument()
+            val seitenAnzahl = renderer.pageCount
+            var abgebrochenBei = -1
+
             for (nummer in 0 until seitenAnzahl) {
                 if (abgebrochen != null && abgebrochen()) {
-                    neuesPdf.close()
-                    return Ergebnis(nummer, null, emptyMap(), "abgebrochen")
+                    abgebrochenBei = nummer
+                    break
                 }
                 stand?.invoke(nummer + 1, seitenAnzahl)
                 val seite = renderer.openPage(nummer)
@@ -203,17 +208,21 @@ object PdfVerarbeitung {
                 neuesPdf.finishPage(neueSeite)
                 bild.recycle()
             }
+
+            if (abgebrochenBei >= 0) {
+                Ergebnis(abgebrochenBei, null, emptyMap(), "abgebrochen")
+            } else {
+                val ziel = speichere(context, neuesPdf, name)
+                Ergebnis(seitenAnzahl, ziel, mapOf("formen" to formen.size), "")
+            }
+        } catch (fehler: Throwable) {
+            Ergebnis(0, null, emptyMap(), "${fehler.javaClass.simpleName}: ${fehler.message}")
         } finally {
-            renderer.close()
-            descriptor.close()
+            try { renderer?.close() } catch (fehler: Throwable) {}
+            try { descriptor?.close() } catch (fehler: Throwable) {}
+            try { neuesPdf?.close() } catch (fehler: Throwable) {}
             zwischen.delete()
         }
-        val ziel = speichere(context, neuesPdf, name)
-        neuesPdf.close()
-        val zaehler = mapOf("formen" to formen.size)
-        return Ergebnis(seitenAnzahl, ziel, zaehler, "")
-    } catch (fehler: Throwable) {
-        Ergebnis(0, null, emptyMap(), "${fehler.javaClass.simpleName}: ${fehler.message}")
     }
 
     private fun speichere(context: Context, dokument: PdfDocument, quellName: String): Uri? {
