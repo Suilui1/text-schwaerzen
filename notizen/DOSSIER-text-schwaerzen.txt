@@ -235,7 +235,9 @@ zu verwechseln. Der Bauablauf vergibt den Rechner-Namen jetzt selbst
 (`.github/workflows/bauen.yml`, Matrix `paket:`), sonst liefen Datei und Seite auseinander.
 Umbenannt wurde über die Schnittstelle (`gh api -X PATCH …/releases/assets/<nr> -f name=…`),
 die Inhalte blieben unangetastet.
-Jeder Knopf auf der Seite trägt zwei Zeilen: System/Bauart und was nötig ist.
+Jeder Knopf trägt zwei Zeilen — System/Bauart und was zu tun ist. KEINE Zeile
+„braucht nichts": das ist überflüssig, wenn das entpackte Programm nach der Freigabe
+sofort läuft (Julius, 25.11.2026). Wo etwas nötig ist, steht es (bei Linux: Tesseract).
 
 Knopf-Beschriftung (Julius, 25.11.2026: „das mac os zip muss eindeutig die lauffähige app
 bezeichnen, notfalls intel mac daneben"): erster Knopf heißt **„macOS-App (.zip)"** mit der
