@@ -36,6 +36,9 @@ type bericht-worte.txt >> bericht.txt
 echo. >> bericht.txt
 echo === internationale Adressen === >> bericht.txt
 type bericht-international.txt >> bericht.txt
+echo. >> bericht.txt
+echo === Textdatei === >> bericht.txt
+type bericht-text.txt >> bericht.txt
 
 echo.
 echo ---- Bericht ----

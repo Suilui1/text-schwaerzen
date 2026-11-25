@@ -33,7 +33,9 @@ object TextVerarbeitung {
     }
 
     /** Schwärzt Text zeilenweise — ohne Datei, damit es sich prüfen lässt. */
-    fun schwaerzeInhalt(inhalt: String, modus: String): Triple<String, Map<String, Int>, Int> {
+    fun schwaerzeInhalt(inhaltRoh: String, modus: String): Triple<String, Map<String, Int>, Int> {
+        // Windows-Dateien haben CRLF — sonst bleibt ein \r am Zeilenende stehen.
+        val inhalt = inhaltRoh.replace("\r\n", "\n").replace("\r", "\n")
         val zaehler = mutableMapOf<String, Int>()
         var getroffen = 0
         val zeilen = inhalt.split("\n").map { zeile ->

@@ -19,9 +19,12 @@ def lies(datei: Path) -> str:
     """Liest die Datei; UTF-8 zuerst, danach Windows-1252 als Rückfall."""
     roh = datei.read_bytes()
     try:
-        return roh.decode("utf-8")
+        text = roh.decode("utf-8")
     except UnicodeDecodeError:
-        return roh.decode("cp1252", errors="replace")
+        text = roh.decode("cp1252", errors="replace")
+    # Windows-Dateien haben CRLF; ohne Vereinheitlichung blieb ein \r am Zeilenende
+    # stehen und die Ausgabe hatte gemischte Zeilenenden (25.11.2026 auf dem Stick gesehen).
+    return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
 def schwærze_text(inhalt: str, modus: str = "gezielt") -> tuple[str, dict[str, int], int]:
