@@ -30,9 +30,12 @@ Android   2.9.0 (versionCode 30) · ML Kit, fünf Schriftsysteme
 Rechner   2.9.0 (Tk + Tesseract) · Windows, Linux, macOS-ZIP
 macOS-App 2.9.0 (Swift, Vision) · eigenes Bündel, nicht im ZIP
 
-Veröffentlichung: v2.9.0-alpha.1 (Vorab-Fassung), fünf Dateien:
+Veröffentlichung: v2.9.0-alpha.2 (Vorab-Fassung, 25.11.2026 abends), fünf Dateien:
   Text-schwaerzen-android.apk · -windows.zip · -linux.tar.gz · -macos.zip · -alle-systeme.zip
-Hinweise dazu: notizen/RELEASE.md (der Bau zieht den Text von dort)
+Hinweise dazu: notizen/RELEASE.md (der Bau zieht den Text von dort).
+Fassung bleibt 2.9.0 — die Kennzeichnung unterscheidet (alpha.1, alpha.2).
+Der Ablauf setzt KEIN Vorab-Kennzeichen; danach von Hand:
+  gh release edit <tag> --prerelease --notes-file notizen/RELEASE.md
 
 4. WAS DIE PLATTFORMEN KÖNNEN
                         Android   Rechner(Tk)   macOS(Swift)
@@ -141,6 +144,12 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · PDF-Weg: Formen müssen an verarbeiteFormen gehen, nicht an das Bild.
 · Verwischen: Vorschau 22-fach, Ergebnis 16-fach (Julius: Vorschau gut, Ergebnis war zu stark).
 · Stempel: Schriftgröße aus Kasten (Höhe UND Breite), sonst quillt der Text heraus.
+· Speicherort war nicht wählbar (25.11.2026, Julius): „Fertig" im Markier-Editor schrieb
+  ohne Rückfrage neben das Original als `<name>-markiert.*`. Jetzt fragt
+  `MarkierFenster.frageSpeicherort(...)` über einen NSSavePanel: Vorschlag ist derselbe Ort
+  (oder die eingestellte Ablage), Name und Endung vorbelegt, Ordner frei wählbar.
+  Abbruch läßt den Editor samt Formen stehen. Geprüft in `--selbstpruefung` (Name, Endung,
+  Vorschlagsordner) — Klicken nicht, ein modaler Dialog würde die Prüfung anhalten.
 · Markieren nahm immer Gelb: die Farbe stand im Swift-Zeichenweg fest verdrahtet — an ZWEI
   Stellen (Vorschau in `zeichne`, Ergebnis in `anwenden`), und in der Farbwahl fehlte ausgerechnet
   Gelb. Behoben 25.11.2026: gewählte Farbe mit `markerDeckkraft` 0,45; Gelb in der Liste; beim
