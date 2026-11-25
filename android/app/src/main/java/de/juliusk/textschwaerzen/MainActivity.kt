@@ -746,6 +746,29 @@ class MainActivity : AppCompatActivity() {
         zeigeLetztenAbsturz()
     }
 
+    /** Schreibt den Absturz zusätzlich nach Downloads, damit er sich anhängen läßt. */
+    private fun schreibeAbsturzNachDownloads(text: String): android.net.Uri? {
+        return try {
+            val name = "absturz-" + System.currentTimeMillis() + ".txt"
+            val werte = android.content.ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, name)
+                put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+            }
+            val ziel = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, werte)
+            ziel?.let {
+                contentResolver.openOutputStream(it)?.use { strom ->
+                    strom.write(text.toByteArray(Charsets.UTF_8))
+                }
+            }
+            ziel
+        } catch (fehler: Throwable) {
+            null
+        }
+    }
+
     /** Liegt ein Absturzbericht vor, wird er beim Start gezeigt (statt still zu bleiben). */
     private fun zeigeLetztenAbsturz() {
         val datei = java.io.File(filesDir, "absturz.txt")
@@ -755,11 +778,26 @@ class MainActivity : AppCompatActivity() {
         } catch (fehler: Throwable) {
             return
         }
+        // Julius' Frage (25.11.2026): „wie soll ich den text schicken" — deshalb
+        // Kopieren, Teilen und eine Datei in Downloads, die sich anhängen läßt.
+        val berichtDatei = schreibeAbsturzNachDownloads(text)
         AlertDialog.Builder(this)
             .setTitle("Letzter Absturz")
             .setMessage(text)
-            .setPositiveButton("Löschen") { _, _ -> datei.delete() }
-            .setNegativeButton("Behalten", null)
+            .setPositiveButton("Kopieren") { _, _ ->
+                val ablage = getSystemService(android.content.ClipboardManager::class.java)
+                ablage.setPrimaryClip(android.content.ClipData.newPlainText("Absturz", text))
+                Toast.makeText(this, "In die Zwischenablage kopiert", Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton("Teilen") { _, _ ->
+                val absicht = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, "Absturz Text schwärzen")
+                    putExtra(Intent.EXTRA_TEXT, text)
+                }
+                startActivity(Intent.createChooser(absicht, "Absturz schicken"))
+            }
+            .setNegativeButton("Löschen") { _, _ -> datei.delete() }
             .show()
     }
 
