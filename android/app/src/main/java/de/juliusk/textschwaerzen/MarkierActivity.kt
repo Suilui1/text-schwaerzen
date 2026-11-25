@@ -400,6 +400,7 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var aktuell: RectF? = null
     private var ausgewaehlt: Int? = null
     private var griffAktiv = false
+    private var griffAnfang = false
     private var werkzeug = "schwaerzen"
     private var stempelText = "GEPRÜFT"
     private var textStil = "normal"
@@ -457,8 +458,11 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
             val y0 = z.top + f.y0 * z.height()
             val x1 = z.left + f.x1 * z.width()
             val y1 = z.top + f.y1 * z.height()
-            canvas.drawCircle(x1, y1, 14f, Paint().apply {
-                color = Color.argb(200, 0, 160, 255); style = Paint.Style.FILL
+            canvas.drawCircle(x1, y1, 16f, Paint().apply {
+                color = Color.argb(210, 0, 160, 255); style = Paint.Style.FILL
+            })
+            canvas.drawCircle(x0, y0, 16f, Paint().apply {
+                color = Color.argb(210, 255, 150, 0); style = Paint.Style.FILL
             })
             canvas.drawLine(x0, y0, x1, y1, Paint().apply {
                 color = Color.argb(160, 0, 160, 255); strokeWidth = 3f
@@ -577,14 +581,22 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
         // gesucht werden muß (Julius, 25.11.2026: „nichts ist drehbar").
         if (ereignis.action == MotionEvent.ACTION_DOWN) {
             val z = ziel()
+            // BEIDE Enden greifbar (Julius, 25.11.2026): erst das Ende prüfen,
+            // dann den Anfang — jeweils 44 Pixel Trefferfläche.
             for (i in formen.indices.reversed()) {
                 val f = formen[i]
-                val hx = z.left + f.x1 * z.width()
-                val hy = z.top + f.y1 * z.height()
-                if (Math.hypot((ereignis.x - hx).toDouble(),
-                               (ereignis.y - hy).toDouble()) < 40.0) {
+                val ex = z.left + f.x1 * z.width()
+                val ey = z.top + f.y1 * z.height()
+                val sx = z.left + f.x0 * z.width()
+                val sy = z.top + f.y0 * z.height()
+                val amEnde = Math.hypot((ereignis.x - ex).toDouble(),
+                                        (ereignis.y - ey).toDouble()) < 44.0
+                val amAnfang = Math.hypot((ereignis.x - sx).toDouble(),
+                                          (ereignis.y - sy).toDouble()) < 44.0
+                if (amEnde || amAnfang) {
                     ausgewaehlt = i
                     griffAktiv = true
+                    griffAnfang = amAnfang
                     invalidate()
                     return true
                 }
@@ -594,8 +606,13 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
             val z = ziel()
             val f = ausgewaehlt?.let { formen.getOrNull(it) } ?: return true
             if (ereignis.action == MotionEvent.ACTION_MOVE) {
-                f.x1 = ((ereignis.x - z.left) / z.width()).coerceIn(0f, 1f)
-                f.y1 = ((ereignis.y - z.top) / z.height()).coerceIn(0f, 1f)
+                val neuX = ((ereignis.x - z.left) / z.width()).coerceIn(0f, 1f)
+                val neuY = ((ereignis.y - z.top) / z.height()).coerceIn(0f, 1f)
+                if (griffAnfang) {
+                    f.x0 = neuX; f.y0 = neuY
+                } else {
+                    f.x1 = neuX; f.y1 = neuY
+                }
                 invalidate()
             }
             if (ereignis.action == MotionEvent.ACTION_UP) {

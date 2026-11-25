@@ -23,7 +23,7 @@ object Darstellung {
     enum class Stil(val anzeige: String) {
         KLASSISCH("Klassisch (ruhig)"),
         WEICH("Weich (stark gerundet)"),
-        ORNAMENT("Ornament (Rahmen mit Eckzier)")
+        FARBIG("Farbig (Akzentflächen, kräftige Knöpfe)")
     }
 
     // Farben
@@ -87,20 +87,6 @@ object Darstellung {
     fun anwenden(activity: Activity) {
         val f = farben(activity)
         activity.window?.decorView?.setBackgroundColor(f.hintergrund)
-        if (stil(activity) == Stil.ORNAMENT) {
-            try {
-                val wurzel = activity.findViewById<android.view.ViewGroup>(android.R.id.content)
-                if (wurzel != null && wurzel.findViewWithTag<android.view.View>("ornament") == null) {
-                    val zier = OrnamentAnsicht(activity, f.akzent)
-                    zier.tag = "ornament"
-                    zier.isClickable = false
-                    wurzel.addView(zier, android.view.ViewGroup.LayoutParams(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT))
-                }
-            } catch (fehler: Throwable) {
-            }
-        }
     }
 
     /** Macht aus einem gewöhnlichen Knopf einen runden, farbigen. */
@@ -109,10 +95,15 @@ object Darstellung {
         val grund = GradientDrawable()
         grund.cornerRadius = when (stil(context)) {
             Stil.WEICH -> 70f
-            Stil.ORNAMENT -> 26f
+            Stil.FARBIG -> 60f
             else -> 44f
         }
-        grund.setColor(if (gefuellt) f.akzent else f.flaeche)
+        val farbig = stil(context) == Stil.FARBIG
+        grund.setColor(when {
+            gefuellt -> f.akzent
+            farbig -> (f.akzent and 0x00FFFFFF) or (40 shl 24)   // zarte Akzentfläche
+            else -> f.flaeche
+        })
         grund.setStroke(2, if (f.dunkel) Color.rgb(70, 70, 76) else Color.rgb(209, 209, 214))
         knopf.background = grund
         knopf.setTextColor(if (gefuellt) Color.WHITE else f.akzent)
@@ -127,42 +118,5 @@ object Darstellung {
     /** Titel und Fließtext passend einfärben. */
     fun titel(text: TextView, context: Context) {
         text.setTextColor(farben(context).text)
-    }
-}
-
-/** Feiner Doppelrahmen mit Eckzier ueber die ganze Oberflaeche. */
-class OrnamentAnsicht(kontext: android.content.Context, private val farbe: Int) :
-    android.view.View(kontext) {
-
-    private val aussen = android.graphics.Paint().apply {
-        color = (farbe and 0x00FFFFFF) or (150 shl 24)
-        style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 3f
-        isAntiAlias = true
-    }
-    private val innen = android.graphics.Paint().apply {
-        color = (farbe and 0x00FFFFFF) or (80 shl 24)
-        style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 1.5f
-        isAntiAlias = true
-    }
-    private val ecke = android.graphics.Paint().apply {
-        color = (farbe and 0x00FFFFFF) or (150 shl 24)
-        style = android.graphics.Paint.Style.FILL
-        isAntiAlias = true
-    }
-
-    override fun onDraw(canvas: android.graphics.Canvas) {
-        super.onDraw(canvas)
-        val rand = 12f
-        val innenRand = 20f
-        canvas.drawRect(rand, rand, width - rand, height - rand, aussen)
-        canvas.drawRect(innenRand, innenRand, width - innenRand, height - innenRand, innen)
-        val g = 16f
-        for (paar in listOf(rand to rand, width - rand to rand,
-                            rand to height - rand, width - rand to height - rand)) {
-            val (x, y) = paar
-            canvas.drawRect(x - g / 2, y - g / 2, x + g / 2, y + g / 2, ecke)
-        }
     }
 }
