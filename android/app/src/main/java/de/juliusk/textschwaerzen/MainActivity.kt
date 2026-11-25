@@ -625,12 +625,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle(titel)
             .setMessage(text)
             .setPositiveButton("Öffnen") { _, _ -> oeffneLetzte() }
-            .setNeutralButton("Mehr…", null)
-            .setOnShowListener { dialog ->
-                // Nach dem Anzeigen den „Mehr…"-Knopf mit dem Menü verbinden
-                (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL)
-                    .setOnClickListener { mehrDialog() }
-            }
+            .setNeutralButton("Mehr…") { _, _ -> mehrDialog() }
             .setNegativeButton("Schließen", null)
             .show()
     }
