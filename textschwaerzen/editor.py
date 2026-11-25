@@ -37,6 +37,8 @@ class Dokument:
         self.ist_pdf = pfad.suffix.lower() == ".pdf"
         self.seiten: list[Image.Image] = []
         self.formen: list[list[Form]] = []
+        # Drehen/Ziehen an den Endpunkten (Julius, 25.11.2026: „drehen am Endpunkt")
+        self.griff: str | None = None
         self.seiten_masse: list[tuple[float, float]] = []
         if self.ist_pdf:
             try:
@@ -162,7 +164,19 @@ class Editor:
 
     def starten(self, ereignis) -> None:
         x, y = self.bildpunkt(ereignis.x, ereignis.y)
-        # erst sehen, ob ein vorhandenes Objekt angeklickt wurde — von oben nach unten
+        # Zuerst die Griffe: liegen sie unter dem Zeiger, wird gezogen statt verschoben.
+        # Trefferfläche 14 Bildpixel — bei starker Vergrößerung entsprechend kleiner.
+        for nummer in range(len(self.dokument.formen[self.seite]) - 1, -1, -1):
+            form = self.dokument.formen[self.seite][nummer]
+            for name, (gx, gy) in (("ende", (form.x2, form.y2)),
+                                   ("anfang", (form.x1, form.y1))):
+                if (gx - x) ** 2 + (gy - y) ** 2 <= 14 ** 2:
+                    self.auswahl = nummer
+                    self.griff = name
+                    self.zeichne()
+                    return
+        self.griff = None
+        # dann sehen, ob ein vorhandenes Objekt angeklickt wurde — von oben nach unten
         for nummer in range(len(self.dokument.formen[self.seite]) - 1, -1, -1):
             form = self.dokument.formen[self.seite][nummer]
             if self.trifft(form, x, y):
@@ -174,6 +188,15 @@ class Editor:
         self.start = (x, y)
 
     def ziehen(self, ereignis) -> None:
+        if self.auswahl is not None and self.griff is not None:
+            x, y = self.bildpunkt(ereignis.x, ereignis.y)
+            form = self.dokument.formen[self.seite][self.auswahl]
+            if self.griff == "ende":
+                form.x2, form.y2 = x, y
+            else:
+                form.x1, form.y1 = x, y
+            self.zeichne()
+            return
         if self.auswahl is not None:
             # Objekt verschieben
             x, y = self.bildpunkt(ereignis.x, ereignis.y)
@@ -195,6 +218,10 @@ class Editor:
             outline=ANZEIGE.get(self.werkzeug, "#000000"), width=2)
 
     def loslassen(self, ereignis) -> None:
+        if self.griff is not None:
+            self.griff = None
+            self.zeichne()
+            return
         if self.auswahl is not None:
             self.auswahl = None
             self.zeichne()
@@ -292,6 +319,16 @@ class Editor:
         self.leinwand.delete("all")
         self.leinwand.create_image(0, 0, anchor="nw", image=self.anzeige)
         self.leinwand.configure(scrollregion=(0, 0, breite, hoehe))
+        # Griffe: je Form ein Punkt am Anfang (orange) und am Ende (blau) —
+        # nur bei Auswahl, damit die Vorschau ruhig bleibt.
+        if self.auswahl is not None:
+            form = self.dokument.formen[self.seite][self.auswahl]
+            for farbe, (gx, gy) in (("#ff9600", (form.x1, form.y1)),
+                                    ("#0096ff", (form.x2, form.y2))):
+                r = 7
+                self.leinwand.create_oval((gx * self.zoom) - r, (gy * self.zoom) - r,
+                                          (gx * self.zoom) + r, (gy * self.zoom) + r,
+                                          fill=farbe, outline="white", width=2)
         if self.dokument.ist_pdf:
             self.seiten_label.config(text="Seite %d von %d" % (self.seite + 1,
                                                                len(self.dokument.seiten)))
