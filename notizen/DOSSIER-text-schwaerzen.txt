@@ -72,6 +72,11 @@ SPEICHER (Anlaß 25.11.2026): GitHub meldete „100 % des Actions-Speichers verb
 Ablauf keine Aufbewahrung setzte (Vorgabe 90 Tage). Geräumt; Aufbewahrung dort jetzt 7 Tage,
 im öffentlichen Repo setzt der Ablauf `retention-days: 1` und löscht nach der Veröffentlichung.
 Merke: Caches zählen NICHT (eigene Grenze 10 GB je Repo), Release-Dateien auch nicht.
+**Cause gefunden (25.11.2026):** der Aufräumschritt im Ablauf scheiterte STILL, weil ihm das
+Recht fehlte — `permissions` hatte nur `contents: write`, das Löschen braucht `actions: write`.
+Nach v2.9.0-alpha.2 blieben deshalb 369 MB liegen. Recht ergänzt; der Schritt endet mit
+`|| true`, ein Fehlschlag fällt also nicht auf — nach jeder Veröffentlichung nachsehen:
+`python3 werkzeuge/github_speicher.py --bericht`.
 Prüfen und räumen:  python3 werkzeuge/github_speicher.py --bericht
                      python3 werkzeuge/github_speicher.py --raeumen --probe
 
