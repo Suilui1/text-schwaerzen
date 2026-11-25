@@ -289,7 +289,7 @@ class MainActivity : AppCompatActivity() {
                         if (ergebnis.fehler.isNotEmpty()) {
                             AlertDialog.Builder(this).setTitle("Fehler")
                                 .setMessage(ergebnis.fehler)
-                                .setPositiveButton("Gut", null).show()
+                                .setPositiveButton("OK", null).show()
                             return@runOnUiThread
                         }
                         letzteDatei = ergebnis.datei
@@ -315,7 +315,7 @@ class MainActivity : AppCompatActivity() {
         val alle = TextVerarbeitung.zeilen(this, uri)
         if (alle.isEmpty()) {
             AlertDialog.Builder(this).setTitle("Fehler")
-                .setMessage("Datei nicht lesbar").setPositiveButton("Gut", null).show()
+                .setMessage("Datei nicht lesbar").setPositiveButton("OK", null).show()
             return
         }
         val angezeigt = alle.mapIndexed { nummer, zeile ->
@@ -333,7 +333,7 @@ class MainActivity : AppCompatActivity() {
                     runOnUiThread {
                         if (ergebnis.fehler.isNotEmpty()) {
                             AlertDialog.Builder(this).setTitle("Fehler")
-                                .setMessage(ergebnis.fehler).setPositiveButton("Gut", null).show()
+                                .setMessage(ergebnis.fehler).setPositiveButton("OK", null).show()
                             return@runOnUiThread
                         }
                         letzteDatei = ergebnis.datei
@@ -397,7 +397,7 @@ class MainActivity : AppCompatActivity() {
                 AlertDialog.Builder(this)
                     .setTitle("Selbsttest")
                     .setMessage(meldung)
-                    .setPositiveButton("Gut", null)
+                    .setPositiveButton("OK", null)
                     .show()
             }
         }
@@ -435,7 +435,7 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     bildWaehlen.isEnabled = true
                     AlertDialog.Builder(this).setTitle("Fehler")
-                        .setMessage(fehler.message).setPositiveButton("Gut", null).show()
+                        .setMessage(fehler.message).setPositiveButton("OK", null).show()
                 }
             }
         }
@@ -513,7 +513,7 @@ class MainActivity : AppCompatActivity() {
                     bericht.text = "PDF nicht lesbar."
                     AlertDialog.Builder(this).setTitle("Fehler")
                         .setMessage("Die erste Seite konnte nicht gelesen werden.")
-                        .setPositiveButton("Gut", null).show()
+                        .setPositiveButton("OK", null).show()
                     return@runOnUiThread
                 }
                 bericht.text = ""
@@ -591,7 +591,7 @@ class MainActivity : AppCompatActivity() {
                     AlertDialog.Builder(this)
                         .setTitle("PDF fehlgeschlagen")
                         .setMessage(ergebnis.fehler)
-                        .setPositiveButton("Gut", null)
+                        .setPositiveButton("OK", null)
                         .show()
                     bildWaehlen.isEnabled = true
                     bildWaehlen.isEnabled = true
@@ -786,7 +786,7 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Ergebnisse")
                 .setMessage("Noch keine geschwärzte Datei gespeichert.\n\nNach dem Schwärzen " +
                             "liegt sie unter Bilder bzw. Downloads und erscheint hier.")
-                .setPositiveButton("Gut", null)
+                .setPositiveButton("OK", null)
                 .show()
             return
         }
@@ -1104,7 +1104,7 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Info")
             .setMessage(text)
-            .setPositiveButton("Gut", null)
+            .setPositiveButton("OK", null)
             .show()
     }
 
@@ -1220,7 +1220,7 @@ class MainActivity : AppCompatActivity() {
                     .setTitle(if (ziel != null) "Gespeichert" else "Fehler")
                     .setMessage(text)
                     .setPositiveButton("Oeffnen") { _, _ -> oeffneLetzte() }
-                    .setNegativeButton("Gut", null)
+                    .setNegativeButton("OK", null)
                     .show()
             }
         }
