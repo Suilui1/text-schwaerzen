@@ -235,6 +235,9 @@ zu verwechseln. Der Bauablauf vergibt den Rechner-Namen jetzt selbst
 (`.github/workflows/bauen.yml`, Matrix `paket:`), sonst liefen Datei und Seite auseinander.
 Umbenannt wurde über die Schnittstelle (`gh api -X PATCH …/releases/assets/<nr> -f name=…`),
 die Inhalte blieben unangetastet.
+Aufbau der Seite (25.11.2026): Einleitung nennt Bilder, Screenshots, PDFs und Textdateien
+gleichwertig; eigener Abschnitt „Bilder, Textdateien, PDFs"; „Was es kann" führt Regeln als
+für alle drei Arten geltend. Vorher war die Seite zu PDF-lastig (Julius' Fund).
 Jeder Knopf trägt zwei Zeilen — System/Bauart und was zu tun ist. KEINE Zeile
 „braucht nichts": das ist überflüssig, wenn das entpackte Programm nach der Freigabe
 sofort läuft (Julius, 25.11.2026). Wo etwas nötig ist, steht es (bei Linux: Tesseract).
