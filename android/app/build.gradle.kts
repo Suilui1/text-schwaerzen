@@ -13,8 +13,8 @@ android {
         targetSdk = 34
         // Eigene Zählung statt der Gradle-Voreinstellung „0.1.0": der Info-Knopf zeigte
         // sonst eine Fassung, die es seit Wochen nicht mehr gab (25.11.2026).
-        versionCode = 21
-        versionName = "2.1.0"
+        versionCode = 30
+        versionName = "2.9.0"
     }
 
     // Fester Signaturschlüssel im Projekt: sonst erzeugt jeder Bau-Rechner einen neuen
