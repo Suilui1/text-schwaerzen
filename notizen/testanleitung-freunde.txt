@@ -1,0 +1,47 @@
+Text schwärzen — Kurzanleitung für Tester
+=========================================
+Fassung 2.8.4 · Stand 25.11.2026
+
+INSTALLATION
+Die Datei Text-schwaerzen-android-2.8.4.apk antippen. Android fragt nach der
+Erlaubnis, Apps aus dieser Quelle zu installieren — die muß einmal erteilt werden.
+(Wir sind nicht im Play Store; deshalb diese Nachfrage.)
+
+WAS DIE APP TUT
+Sie schwärzt Text auf Bildern und in PDFs. Bei PDFs wird jede Seite als Bild neu
+geschrieben — der Text ist danach wirklich weg, nicht nur übermalt.
+
+BITTE DIESE VIER DINGE TESTEN
+
+1  Bild schwärzen
+   „Datei wählen" → ein Foto mit Text → „Nur Adressen und Namen" oder „Alles"
+   → Ergebnis ansehen: sind wirklich alle Namen, Nummern und Adressen weg?
+
+2  Von Hand markieren
+   Im Bild „Bereich ziehen" → Werkzeug oben wählen → im Bild ziehen
+   → „Fertig". Besonders: Pfeil (beide Enden ziehbar), Text (Größe und Stil),
+   Stempel, Verwischen.
+
+3  PDF
+   „Datei wählen" → eine PDF → „Alles" → Ergebnis öffnen und prüfen:
+   läßt sich der Text noch markieren oder kopieren? (Er sollte es NICHT.)
+
+4  Alltag
+   Ergebnis speichern, wiederfinden unter „Letzte Dateien"/„Ergebnisse",
+   teilen, löschen. Auch: App während des Speicherns verlassen.
+
+WAS BEKANNT IST (nicht melden nötig)
+· Bei PDFs wirkt von den Markier-Werkzeugen nur die Schwärzung, keine Pfeile
+  oder Stempel.
+· Kyrillisch, Griechisch, Arabisch, Hebräisch erkennt die Texterkennung nicht.
+· Das Ergebnis ist ein Bild-PDF: nicht mehr durchsuchbar (das ist Absicht).
+
+WENN ETWAS SCHIEFGEHT
+„Mehr… → Info" zeigt die Fassung — bitte mitschreiben.
+Stürzt die App ab, erscheint beim nächsten Start ein Bericht mit Datum und
+Fassung; der läßt sich mit „Kopieren" weitergeben.
+
+WAS ICH WISSEN WILL
+· Was hast du versucht, was ist passiert, was hast du erwartet?
+· Gerät und Android-Fassung (Einstellungen → Über das Telefon)
+· Ein Bildschirmfoto hilft mehr als eine Beschreibung.
