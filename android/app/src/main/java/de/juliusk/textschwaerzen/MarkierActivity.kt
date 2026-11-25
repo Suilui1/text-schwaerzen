@@ -86,6 +86,12 @@ class MarkierActivity : Activity() {
         for ((wert, anzeige) in werkzeuge) {
             leiste.addView(Button(this).apply {
                 text = anzeige
+                // Auf schmalen Geräten wurden „TEXT…" und „RÜCKGÄNGIG" abgeschnitten
+                // (Bildschirmfoto Julius, 25.11.2026). Eine Zeile, kleinere Schrift,
+                // die Leiste rollt ohnehin.
+                isSingleLine = true
+                textSize = 13f
+                setPadding(24, 18, 24, 18)
                 setOnClickListener {
                     when (wert) {
                         "pfeil" -> pfeilWaehlen()
@@ -132,14 +138,20 @@ class MarkierActivity : Activity() {
         val unten = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         unten.addView(Button(this).apply {
             text = "Rückgängig"
+            isSingleLine = true
+            textSize = 14f
             setOnClickListener { ansicht.rueckgaengig() }
         }, LinearLayout.LayoutParams(0, -2, 1f))
         unten.addView(Button(this).apply {
             text = "Abbrechen"
+            isSingleLine = true
+            textSize = 14f
             setOnClickListener { setResult(RESULT_CANCELED); finish() }
         }, LinearLayout.LayoutParams(0, -2, 1f))
         unten.addView(Button(this).apply {
             text = "Fertig"
+            isSingleLine = true
+            textSize = 14f
             setOnClickListener { fertig() }
         }, LinearLayout.LayoutParams(0, -2, 1f))
         rahmen.addView(unten, FrameLayout.LayoutParams(
