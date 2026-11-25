@@ -167,7 +167,22 @@ class MainActivity : AppCompatActivity() {
                     .setNegativeButton("Abbrechen", null)
                     .show()
             }
+            .setNeutralButton("Liste leeren") { _, _ -> listeLeeren() }
             .setNegativeButton("Schliessen", null)
+            .show()
+    }
+
+    /** Leert den ganzen Verlauf - die Dateien selbst bleiben erhalten. */
+    private fun listeLeeren() {
+        AlertDialog.Builder(this)
+            .setTitle("Liste leeren?")
+            .setMessage("Alle Eintraege werden aus der Liste entfernt.\n" +
+                        "Die Dateien selbst bleiben auf dem Geraet.")
+            .setPositiveButton("Leeren") { _, _ ->
+                verlaufSchreiben(emptyList())
+                Toast.makeText(this, "Liste geleert", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Abbrechen", null)
             .show()
     }
 
