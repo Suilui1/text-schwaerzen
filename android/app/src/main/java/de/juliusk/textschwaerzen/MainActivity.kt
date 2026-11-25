@@ -151,15 +151,17 @@ class MainActivity : AppCompatActivity() {
                 val name = stuecke.getOrElse(2) { "Datei" }
                 val istErgebnis = stuecke[0].endsWith("-aus")
                 val auswahl = if (istErgebnis) {
-                    arrayOf("Öffnen", "Aus Liste entfernen", "Löschen")
+                    arrayOf("Öffnen", "Im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")
                 } else {
-                    arrayOf("Öffnen", "Aus Liste entfernen")
+                    arrayOf("Öffnen", "Im Dateimanager zeigen", "Aus Liste entfernen")
                 }
                 AlertDialog.Builder(this)
                     .setTitle(name)
                     .setItems(auswahl) { _, was ->
                         when {
                             was == 0 -> oeffneOderVerarbeite(stuecke[0], uri)
+                            was == 1 -> imDateimanagerZeigen(uri)
+                            was == 2 -> ausListeEntfernen(eintrag)
                             was == 1 -> ausListeEntfernen(eintrag)
                             else -> loescheErgebnis(uri, name)
                         }
@@ -800,7 +802,7 @@ class MainActivity : AppCompatActivity() {
                 val name = stuecke.getOrElse(2) { "Ergebnis" }
                 AlertDialog.Builder(this)
                     .setTitle(name)
-                    .setItems(arrayOf("Öffnen", "Aus Liste entfernen", "Löschen")) { _, was ->
+                    .setItems(arrayOf("Öffnen", "Im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")) { _, was ->
                         if (was == 0) {
                             oeffneExtern(uri, when (stuecke[0]) {
                                 "pdf-aus" -> "application/pdf"
@@ -808,7 +810,9 @@ class MainActivity : AppCompatActivity() {
                                 else -> "image/png"
                             })
                         } else if (was == 1) {
-                            ausListeEntfernen(eintraege[welcher])
+                            imDateimanagerZeigen(uri)
+                          } else if (was == 2) {
+                              ausListeEntfernen(eintraege[welcher])
                         } else {
                             loescheErgebnis(uri, name)
                         }
@@ -841,6 +845,26 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Abbrechen", null)
             .show()
+    }
+
+    /**
+     * Zeigt die Datei im Dateimanager.
+     *
+     * Android hat dafür keinen eigenen Befehl. Der übliche Weg ist, die Dateiauswahl
+     * zu öffnen und ihr den Ordner der Datei als Startpunkt mitzugeben; die Auswahl
+     * landet dann in genau diesem Ordner (Julius' Wunsch, 25.11.2026).
+     */
+    private fun imDateimanagerZeigen(uri: android.net.Uri) {
+        try {
+            val absicht = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, uri)
+            }
+            startActivity(Intent.createChooser(absicht, "Im Dateimanager zeigen"))
+        } catch (fehler: Throwable) {
+            Toast.makeText(this, "Dateimanager nicht gefunden", Toast.LENGTH_LONG).show()
+        }
     }
 
     /** Öffnet eine Datei in einer anderen App. */
