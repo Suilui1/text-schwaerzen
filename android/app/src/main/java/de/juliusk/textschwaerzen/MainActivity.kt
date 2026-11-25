@@ -219,8 +219,14 @@ class MainActivity : AppCompatActivity() {
             return@registerForActivityResult
         }
         val d = ergebnis.data ?: return@registerForActivityResult
-        bereichSchwaerzen(d.getFloatExtra("x0", 0f), d.getFloatExtra("y0", 0f),
-                          d.getFloatExtra("x1", 0f), d.getFloatExtra("y1", 0f))
+        // Der Markier-Editor liefert eine Liste von Formen (Whiteout-Werkzeuge).
+        val formen = Formen.vonJson(d.getStringExtra("formen"))
+        if (formen.isNotEmpty()) {
+            formenAnwenden(formen)
+        } else {
+            bereichSchwaerzen(d.getFloatExtra("x0", 0f), d.getFloatExtra("y0", 0f),
+                              d.getFloatExtra("x1", 0f), d.getFloatExtra("y1", 0f))
+        }
     }
 
     private val textAuswahl = registerForActivityResult(
@@ -419,11 +425,11 @@ class MainActivity : AppCompatActivity() {
                 val hoehe = (bild.height * anteil).toInt().coerceAtLeast(1)
                 val klein = if (anteil >= 1.0) bild
                             else Bitmap.createScaledBitmap(bild, breite, hoehe, true)
-                BereichActivity.uebergebenesBild = klein
+                MarkierActivity.uebergebenesBild = klein
                 runOnUiThread {
                     bildWaehlen.isEnabled = true
                     bericht.text = ""
-                    val absicht = Intent(this, BereichActivity::class.java)
+                    val absicht = Intent(this, MarkierActivity::class.java)
                     bereichAuswahl.launch(absicht)
                 }
             } catch (fehler: Exception) {
@@ -434,6 +440,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /** Wendet die im Markier-Editor gezeichneten Formen auf das Bild an. */
+    private fun formenAnwenden(formen: List<Form>) {
+        val bild = fertig ?: original ?: return
+        val kopie = bild.copy(Bitmap.Config.ARGB_8888, true)
+        Formen.zeichne(kopie, formen)
+        fertig = kopie
+        bildAnzeige.setImageBitmap(kopie)
+        bildWaehlen.isEnabled = true
+        val arten = formen.map { it.typ }.distinct().size
+        bericht.text = formen.size.toString() + " Form(en) gezeichnet.\n\n" +
+                       "Vorschau antippen öffnet die Datei."
+        speichereUndZeige(kopie, formen.size.toString() + " Form(en) gezeichnet")
     }
 
     private fun bereichSchwaerzen(x0: Float, y0: Float, x1: Float, y1: Float) {
@@ -512,7 +532,7 @@ class MainActivity : AppCompatActivity() {
                     return@runOnUiThread
                 }
                 bericht.text = ""
-                val absicht = Intent(this, BereichActivity::class.java)
+                val absicht = Intent(this, MarkierActivity::class.java)
                 absicht.putExtra("datei", bild.absolutePath)
                 bereichAuswahl.launch(absicht)
             }

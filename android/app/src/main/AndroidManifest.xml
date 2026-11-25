@@ -17,5 +17,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".BereichActivity" android:exported="false" />
+        <activity android:name=".MarkierActivity" android:exported="false" />
     </application>
 </manifest>
