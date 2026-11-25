@@ -87,14 +87,30 @@ class MainActivity : AppCompatActivity() {
             .setItems(namen) { _, welcher ->
                 val stuecke = eintraege[welcher].split("|")
                 val uri = android.net.Uri.parse(stuecke[1])
-                when (stuecke[0]) {
+                val art = stuecke[0]
+                if (art.endsWith("-aus")) {
+                    // Geschwärzte Ergebnisse: öffnen oder löschen (Julius' Wunsch, 25.11.2026).
+                    AlertDialog.Builder(this)
+                        .setTitle(stuecke.getOrElse(2) { "Ergebnis" })
+                        .setItems(arrayOf("Öffnen", "Löschen")) { _, was ->
+                            if (was == 0) {
+                                oeffneExtern(uri, when (art) {
+                                    "pdf-aus" -> "application/pdf"
+                                    "text-aus" -> "text/plain"
+                                    else -> "image/png"
+                                })
+                            } else {
+                                loescheErgebnis(uri, stuecke.getOrElse(2) { "Ergebnis" })
+                            }
+                        }
+                        .setNegativeButton("Abbrechen", null)
+                        .show()
+                    return@setItems
+                }
+                when (art) {
                     "pdf" -> pdfGewaehlt(uri)
                     "text" -> textGewaehlt(uri)
-                    "bild" -> ladeBild(uri)
-                    // Geschwärzte Ergebnisse werden nur geöffnet, nicht neu verarbeitet.
-                    "pdf-aus" -> oeffneExtern(uri, "application/pdf")
-                    "text-aus" -> oeffneExtern(uri, "text/plain")
-                    else -> oeffneExtern(uri, "image/png")
+                    else -> ladeBild(uri)
                 }
             }
             .setNegativeButton("Schliessen", null)
@@ -611,6 +627,28 @@ class MainActivity : AppCompatActivity() {
                 else speichernBild.launch("geschwaerzt.png")
             }
             .setNegativeButton("Teilen") { _, _ -> teileLetzte() }
+            .show()
+    }
+
+    /** Löscht ein geschwärtes Ergebnis nach Rückfrage. */
+    private fun loescheErgebnis(uri: android.net.Uri, name: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Löschen?")
+            .setMessage(name + "\n\nDie Datei wird endgültig entfernt.")
+            .setPositiveButton("Löschen") { _, _ ->
+                try {
+                    contentResolver.delete(uri, null, null)
+                    val alt = verlauf.getStringSet("dateien", emptySet())?.toMutableSet()
+                        ?: mutableSetOf<String>()
+                    alt.removeAll { it.contains(uri.toString()) }
+                    verlauf.edit().putStringSet("dateien", alt).apply()
+                    Toast.makeText(this, "Gelöscht: " + name, Toast.LENGTH_SHORT).show()
+                } catch (fehler: Throwable) {
+                    Toast.makeText(this, "Löschen nicht möglich: " + fehler.message,
+                                   Toast.LENGTH_LONG).show()
+                }
+            }
+            .setNegativeButton("Abbrechen", null)
             .show()
     }
 
