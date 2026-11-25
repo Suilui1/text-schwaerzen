@@ -811,7 +811,6 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             loescheErgebnis(uri, name)
                         }
-                        }
                     }
                     .setNegativeButton("Abbrechen", null)
                     .show()
