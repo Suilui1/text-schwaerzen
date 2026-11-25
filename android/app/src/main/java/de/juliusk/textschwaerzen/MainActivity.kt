@@ -35,7 +35,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bildAnzeige: ImageView
     private lateinit var bericht: TextView
     private lateinit var bildWaehlen: Button
-    private lateinit var pdfWaehlen: Button
     private lateinit var speichern: Button
 
     private val threads = Executors.newSingleThreadExecutor()
@@ -345,7 +344,7 @@ class MainActivity : AppCompatActivity() {
             pdfMitRahmen = null
             val rahmen = android.graphics.RectF(x0, y0, x1, y1)
             bericht.text = "PDF wird verarbeitet …"
-            pdfWaehlen.isEnabled = false
+            bildWaehlen.isEnabled = false
             threads.execute {
                 runOnUiThread { fortschrittZeigen(0) }
                 val ergebnis = PdfVerarbeitung.verarbeite(
@@ -362,7 +361,7 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread { fortschrittSchliessen() }
                 if (abbrechenGewuenscht) {
                     runOnUiThread {
-                        pdfWaehlen.isEnabled = true
+                        bildWaehlen.isEnabled = true
                         bericht.text = "Abgebrochen."
                         Toast.makeText(this, "Abgebrochen — nichts gespeichert",
                                        Toast.LENGTH_LONG).show()
@@ -370,7 +369,7 @@ class MainActivity : AppCompatActivity() {
                     return@execute
                 }
                 runOnUiThread {
-                    pdfWaehlen.isEnabled = true
+                    bildWaehlen.isEnabled = true
                     letzteDatei = ergebnis.datei
                     letzterTyp = "application/pdf"
                     if (ergebnis.datei != null) {
@@ -457,7 +456,7 @@ class MainActivity : AppCompatActivity() {
         val modusName = modus
         bericht.text = "PDF wird verarbeitet …"
         bildWaehlen.isEnabled = false
-        pdfWaehlen.isEnabled = false
+        bildWaehlen.isEnabled = false
         threads.execute {
             quelleName = nameDerDatei(uri)
             runOnUiThread { fortschrittZeigen(0) }
@@ -476,7 +475,7 @@ class MainActivity : AppCompatActivity() {
             if (abbrechenGewuenscht) {
                 runOnUiThread {
                     bildWaehlen.isEnabled = true
-                    pdfWaehlen.isEnabled = true
+                    bildWaehlen.isEnabled = true
                     bericht.text = "Abgebrochen."
                     Toast.makeText(this, "Abgebrochen — nichts gespeichert", Toast.LENGTH_LONG).show()
                 }
@@ -491,7 +490,7 @@ class MainActivity : AppCompatActivity() {
                         .setPositiveButton("Gut", null)
                         .show()
                     bildWaehlen.isEnabled = true
-                    pdfWaehlen.isEnabled = true
+                    bildWaehlen.isEnabled = true
                 }
                 return@execute
             }
@@ -507,7 +506,7 @@ class MainActivity : AppCompatActivity() {
                     merken(ergebnis.datei, quelleName + "-geschwaerzt", "pdf-aus")
                 }
                 bildWaehlen.isEnabled = true
-                pdfWaehlen.isEnabled = true
+                bildWaehlen.isEnabled = true
                 abschlussDialog("PDF geschwaerzt", ergebnis.seiten.toString() + " Seite(n), " +
                                 ergebnis.woerter + " Woerter erkannt\n" + teile)
             }
