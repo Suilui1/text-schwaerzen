@@ -778,38 +778,6 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun abschlussDialogAlt(titel: String, text: String) {
-        AlertDialog.Builder(this)
-            .setTitle(titel)
-            .setMessage(text)
-            .setItems(arrayOf("Öffnen", "Speichern unter…", "Teilen", "Löschen")) { _, was ->
-                when (was) {
-                    0 -> oeffneLetzte()
-                    1 -> {
-                        if (letzterTyp == "application/pdf") {
-                            speichernPdf.launch("geschwaerzt.pdf")
-                        } else if (letzterTyp == "text/plain") {
-                            speichernText.launch("geschwaerzt.txt")
-                        } else {
-                            speichernBild.launch("geschwaerzt.png")
-                        }
-                    }
-                    2 -> teileLetzte()
-                    else -> {
-                        val uri = letzteDatei
-                        if (uri == null) {
-                            Toast.makeText(this, "Keine Datei zum Löschen", Toast.LENGTH_SHORT).show()
-                        } else {
-                            loescheErgebnis(uri, "Ergebnis")
-                        }
-                    }
-                }
-            }
-            .setNegativeButton("Schließen", null)
-            .show()
-    }
-
-    /** Zeigt alle geschwärzten Ergebnisse mit Öffnen und Löschen. */
     private fun ergebnisseZeigen() {
         val eintraege = verlaufSaeubern()
             .filter { it.startsWith("bild-aus|") || it.startsWith("pdf-aus|")
@@ -1177,9 +1145,17 @@ class MainActivity : AppCompatActivity() {
         // Julius' Frage (25.11.2026): „wie soll ich den text schicken" — deshalb
         // Kopieren, Teilen und eine Datei in Downloads, die sich anhängen läßt.
         val berichtDatei = schreibeAbsturzNachDownloads(text)
+        val fassung = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (fehler: Throwable) {
+            "?"
+        }
+        val wann = java.text.SimpleDateFormat("dd.MM. HH:mm", java.util.Locale.GERMAN)
+            .format(java.util.Date(datei.lastModified()))
+        val kopf = "Absturz vom " + wann + " · Fassung " + fassung + "\n\n"
         AlertDialog.Builder(this)
             .setTitle("Letzter Absturz")
-            .setMessage(text)
+            .setMessage(kopf + text)
             .setPositiveButton("Kopieren") { _, _ ->
                 val ablage = getSystemService(android.content.ClipboardManager::class.java)
                 ablage.setPrimaryClip(android.content.ClipData.newPlainText("Absturz", text))
