@@ -65,6 +65,14 @@ macOS-App (lokal):
 6. PRÜFEN
 macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selbstpruefung
         Erwartung: gezielt 3 · alles 4 · rahmen 1 Flächen; PDF 2 Seiten geschrieben und lesbar.
+        Dazu seit 25.11.2026 drei Abschnitte für die Werkzeuge (sie hatten vorher KEINE Prüfung):
+          · Markieren nimmt die gewählte Farbe — rot r1,00 g0,73 b0,73 gegen gelb r1,00 g0,93 b0,62,
+            Unterschied grün+blau 0,31 (muß über 0 liegen); Proben als PNG daneben
+          · Vorschau zeigt dasselbe wie das Ergebnis — sechs Werkzeuge mit Farbe, Vergleich der
+            vorkommenden Farben; „Werkzeuge mit Abweichung: 0"
+          · Vorwahl beim Markieren: Farbwahl steht auf Gelb, eine gewählte rote Farbe bleibt
+        Gegenproben (25.11.2026 gebaut): alte feste Gelb-Farbe → Unterschied 0,00; alte rote
+        Stempel-Vorschau → Vorschau blau+rot+schwarz gegen Ergebnis blau+schwarz, 1 Abweichung.
 Tk:     Selbsttest braucht PyMuPDF; im Bündel-Python fehlt fitz → kopflos nur teilweise prüfbar.
         Der Zwei-Schritt-Ablauf wird eigens geprüft:
           python3 werkzeuge/pruefe_tk_ablauf.py   # startet sich selbst mit dem Python
@@ -92,6 +100,13 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
   Gelb. Behoben 25.11.2026: gewählte Farbe mit `markerDeckkraft` 0,45; Gelb in der Liste; beim
   Umschalten auf „Markieren" wird Gelb vorgewählt, wenn noch Schwarz gilt. Geprüft in
   `--selbstpruefung` (Farbe gemessen, Gegenprobe mit fester Farbe: Unterschied 0,00).
+· Stempel — dieselbe Fehlerklasse, von der neuen Prüfung gefunden: die Vorschau rahmte ROT und
+  füllte zu 85 %, gespeichert wurde die gewählte Farbe mit deckendem Weiß. Behoben: beide Wege
+  gleich. **Merke: jede Form wird an ZWEI Stellen gezeichnet** (Vorschau und Ergebnis) — Farb- und
+  Stilfragen gehören an beide, und `--selbstpruefung` vergleicht sie jetzt für alle sechs
+  Werkzeuge mit Farbe.
+· Eine Prüfung mit EINEM Meßpunkt war blind: sie fand beim Stempel den blauen Text und übersah den
+  roten Rahmen, meldete „gleich". Erst der Vergleich der vorkommenden Farben schlägt an.
 · Kein Teilneuzeichnen beim Ziehen — das erzeugt Rastermuster.
 · Android: Signaturschlüssel seit 2.1.x gleich; neue APK installiert über die alte.
 
