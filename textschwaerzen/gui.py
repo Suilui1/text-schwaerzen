@@ -41,7 +41,12 @@ Jede Seite wird als Bild gerendert und neu geschrieben. Der Text ist danach nich
 GRENZE
 Ein Blick auf das Ergebnis bleibt nötig. Namen ohne Adresse oder Nummer erkennt die Automatik nicht sicher.
 
-Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen", "frage": "Wie stark schwärzen?",
+Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen",
+           # Zwei Schritte statt vier Knöpfe auf einmal — wie die macOS-Fassung seit
+           # 25.11.2026 (Julius: „user experience hat Prioritaet, alles so klar und
+           # einfach wie noetig").
+           "wie_vorgehen": "Wie vorgehen?", "was_schwaerzen": "Was schwärzen?",
+           "k_auto": "Automatisch schwärzen", "k_selbst": "Selbst markieren",
            "k_gezielt": "Nur Adressen und Namen", "k_alles": "Alles",
            "k_worte": "Nur markierte Wörter", "k_rahmen": "Rahmen ziehen",
            "k_abbrechen": "Abbrechen", "k_schwaerzen": "Schwärzen",
@@ -49,10 +54,12 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen", "f
            "ablage_original": "Ablage: neben dem Original",
            "wort_titel": "Wörter auswählen",
            "wort_text": "Angekreuzte Wörter werden geschwärzt — im Bild an ihrer Stelle, im PDF auf allen Seiten.",
+           # Eigener Text fürs Startfenster: dort stand bis 25.11.2026 der
+           # Wortauswahl-Text („Angekreuzte Wörter …") — falsch an dieser Stelle.
+           "start_text": "Schwärzt Text in Bildern, PDFs und Textdateien. Alles geschieht auf diesem Rechner; nichts wird verschickt.",
            "rahmen_titel": "Rahmen um das ziehen, was LESBAR bleiben soll — Enter schwärzt den Rest",
            "seite": "Seite", "von": "von", "fertig": "Fertig",
-           "bild_waehlen": "Welches Bild oder PDF schwärzen?",
-           "k_markieren": "Markieren von Hand"},
+           "bild_waehlen": "Welches Bild oder PDF schwärzen?"},
     "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_zeigen": "Show in file manager", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info", "info_text": """Redact text — what this app does
 
 Redacts text in images, PDFs and text files. Everything happens on this machine; nothing is sent anywhere.
@@ -73,7 +80,9 @@ Every page is rendered as an image and rewritten. The text can no longer be sele
 LIMIT
 Always look at the result. Names without an address or number are not reliably detected.
 
-Source: github.com/Suilui1/text-schwaerzen""", "titel": "Redact text", "frage": "How much should be redacted?",
+Source: github.com/Suilui1/text-schwaerzen""", "titel": "Redact text",
+           "wie_vorgehen": "How to proceed?", "was_schwaerzen": "What to redact?",
+           "k_auto": "Redact automatically", "k_selbst": "Mark it myself",
            "k_gezielt": "Addresses and names only", "k_alles": "Everything",
            "k_worte": "Selected words only", "k_rahmen": "Draw a box",
            "k_abbrechen": "Cancel", "k_schwaerzen": "Redact",
@@ -81,10 +90,10 @@ Source: github.com/Suilui1/text-schwaerzen""", "titel": "Redact text", "frage": 
            "ablage_original": "Saved next to the original",
            "wort_titel": "Choose words",
            "wort_text": "Checked words are redacted — in place in images, on every page in PDFs.",
+           "start_text": "Redacts text in images, PDFs and text files. Everything happens on this machine; nothing is sent anywhere.",
            "rahmen_titel": "Draw a box around what should stay READABLE — Enter redacts the rest",
            "seite": "Page", "von": "of", "fertig": "Done",
-           "bild_waehlen": "Which image or PDF should be redacted?",
-           "k_markieren": "Mark by hand"},
+           "bild_waehlen": "Which image or PDF should be redacted?"},
 }
 
 
@@ -145,14 +154,14 @@ class App:
         rahmen.pack(fill="both", expand=True)
         ttk.Label(rahmen, text=self.t["titel"],
                   font=("Helvetica", 18, "bold")).pack(anchor="w")
-        ttk.Label(rahmen, text=self.t["wort_text"], wraplength=380,
+        ttk.Label(rahmen, text=self.t.get("start_text", self.t["wort_text"]), wraplength=380,
                   foreground="#555").pack(anchor="w", pady=(4, 12))
         # Ein Knopf für alle Dateien (Julius' Wunsch 24.11.2026): Bild, PDF und Text
         # werden an der Endung erkannt. Danach die Reihenfolge wie auf Android.
+        # Seit 25.11.2026 gibt es keinen eigenen Knopf „Markieren von Hand" mehr —
+        # die Wahl steckt im ersten Schritt der Rückfrage (wie in der macOS-Fassung).
         ttk.Button(rahmen, text=self.t.get("k_datei", "Datei wählen"),
                    command=self.datei_waehlen).pack(fill="x", pady=4)
-        ttk.Button(rahmen, text=self.t.get("k_markieren", "Markieren von Hand"),
-                   command=self.markieren).pack(fill="x", pady=4)
         ttk.Button(rahmen, text=self.t["k_ablage"],
                    command=self.ablage_waehlen).pack(fill="x", pady=4)
         self.ablage_label = ttk.Label(rahmen, text=self.ablage_text(), foreground="#555")
@@ -398,37 +407,29 @@ class App:
 
     def frage_modus_text(self) -> str | None:
         """Nur zwei Stufen — einen Rahmen gibt es bei Text nicht."""
+        return self.frage_knopf(self.t["was_schwaerzen"],
+                                [("gezielt", self.t["k_gezielt"]),
+                                 ("alles", self.t["k_alles"])])
+
+    def frage_knopf(self, titel: str, optionen: list[tuple[str, str]],
+                    dateiname: str = "") -> str | None:
+        """Eine Rückfrage mit Knöpfen; gibt den Wert des gedrückten Knopfes zurück.
+
+        Eigene Knöpfe statt `messagebox`: bei vier Knöpfen ist die Antwort nicht mehr
+        eindeutig (so steht es auch in der macOS-Fassung). Abbrechen gibt None.
+        """
         fenster = tk.Toplevel(self.wurzel)
-        fenster.title(self.t["frage"])
+        fenster.title(titel)
         fenster.transient(self.wurzel)
+        fenster.resizable(False, False)
         fenster.grab_set()
         wahl: list[str | None] = [None]
-
-        def setze(wert: str) -> None:
-            wahl[0] = wert
-            fenster.destroy()
-
-        ttk.Label(fenster, text=self.t["frage"], font=("Helvetica", 14, "bold")).pack(padx=20, pady=12)
-        ttk.Button(fenster, text=self.t["k_gezielt"], width=34,
-                   command=lambda: setze("gezielt")).pack(padx=20, pady=3)
-        ttk.Button(fenster, text=self.t["k_alles"], width=34,
-                   command=lambda: setze("alles")).pack(padx=20, pady=3)
-        ttk.Button(fenster, text=self.t["k_abbrechen"], width=34,
-                   command=fenster.destroy).pack(padx=20, pady=(3, 14))
-        self.wurzel.wait_window(fenster)
-        return wahl[0]
-
-    def frage_modus(self, ist_pdf: bool) -> str | None:
-        fenster = tk.Toplevel(self.wurzel)
-        fenster.title(self.t["frage"])
-        fenster.transient(self.wurzel)
-        fenster.grab_set()
-        wahl: list[str | None] = [None]
-        ttk.Label(fenster, text=self.t["frage"], font=("Helvetica", 14, "bold")).pack(padx=20, pady=12)
-        optionen = [("gezielt", self.t["k_gezielt"]), ("alles", self.t["k_alles"]),
-                    ("worte", self.t["k_worte"])]
-        if not ist_pdf:
-            optionen.append(("bereich", self.t["k_rahmen"]))
+        ttk.Label(fenster, text=titel, font=("Helvetica", 14, "bold")).pack(padx=20, pady=(14, 2))
+        if dateiname:
+            # Der Name gehört dazu: sonst weiß niemand mehr, welche Datei gemeint ist,
+            # wenn der Dateidialog geschlossen ist.
+            ttk.Label(fenster, text=dateiname, foreground="#555",
+                      wraplength=340).pack(padx=20, pady=(0, 8))
 
         def setze(wert: str) -> None:
             wahl[0] = wert
@@ -438,9 +439,30 @@ class App:
             ttk.Button(fenster, text=text, width=34,
                        command=lambda w=wert: setze(w)).pack(padx=20, pady=3)
         ttk.Button(fenster, text=self.t["k_abbrechen"], width=34,
-                   command=fenster.destroy).pack(padx=20, pady=(3, 14))
+                   command=fenster.destroy).pack(padx=20, pady=(10, 16))
         self.wurzel.wait_window(fenster)
         return wahl[0]
+
+    def frage_modus(self, ist_pdf: bool, dateiname: str = "") -> str | None:
+        """Fragt in zwei Schritten: erst das Vorgehen, dann die Feinheiten.
+
+        Vorher standen vier Knöpfe auf einmal im Fenster („Wie stark schwärzen?").
+        Julius hat am 25.11.2026 für die macOS-Fassung entschieden: zwei Schritte,
+        alles so klar und einfach wie nötig. Die Tk-Fassung folgt jetzt nach.
+        """
+        erstes = self.frage_knopf(self.t["wie_vorgehen"],
+                                  [("automatisch", self.t["k_auto"]),
+                                   ("markieren", self.t["k_selbst"])],
+                                  dateiname)
+        if erstes is None:
+            return None
+        if erstes == "markieren":
+            return "markieren"
+        optionen = [("gezielt", self.t["k_gezielt"]), ("alles", self.t["k_alles"]),
+                    ("worte", self.t["k_worte"])]
+        if not ist_pdf:
+            optionen.append(("bereich", self.t["k_rahmen"]))
+        return self.frage_knopf(self.t["was_schwaerzen"], optionen, dateiname)
 
     def frage_worte(self, bildpfad: Path) -> set[str] | None:
         woerter = erkenne_worte(bildpfad)
@@ -548,19 +570,31 @@ class App:
         fenster.wait_window()
         return ergebnis[0]
 
-    def markieren(self) -> None:
-        datei = filedialog.askopenfilename(
-            title=self.t.get("k_markieren", "Markieren von Hand"),
-            filetypes=[("Bilder", "*.png *.jpg *.jpeg *.tif *.tiff *.webp"), ("Alle Dateien", "*.*")])
-        if not datei:
-            return
-        from .editor import oeffne
-        oeffne(Path(datei), self.sprache)
+    def oeffne_editor(self, quelle: Path) -> None:
+        """„Selbst markieren" — der Markier-Editor, mit allen PDF-Seiten.
+
+        Fehlt PyMuPDF (nur bei PDF nötig) oder scheitert das Öffnen, erscheint eine
+        Meldung statt eines Absturzes: bis 25.11.2026 wäre hier ein Traceback
+        erschienen, und das Fenster hätte wortlos nichts getan.
+        """
+        try:
+            from .editor import oeffne
+            oeffne(Path(quelle), self.sprache)
+        except ImportError as fehler:
+            messagebox.showerror(self.t["k_selbst"],
+                                 "PyMuPDF fehlt — PDFs lassen sich nicht öffnen.\n"
+                                 "pip install pymupdf\n\n%s" % fehler)
+        except Exception as fehler:  # noqa: BLE001 — Meldung statt Absturz
+            messagebox.showerror(self.t["k_selbst"],
+                                 "%s\n\n%s" % (quelle.name, fehler))
 
     def verarbeite(self, quelle: Path) -> None:
         ist_pdf = quelle.suffix.lower() == ".pdf"
-        modus = self.frage_modus(ist_pdf)
+        modus = self.frage_modus(ist_pdf, quelle.name)
         if not modus:
+            return
+        if modus == "markieren":
+            self.oeffne_editor(quelle)
             return
 
         worte: set[str] = set()
@@ -610,7 +644,9 @@ class App:
     def zeige_fortschritt(self, quelle: Path, ziel: Path, modus: str,
                           worte: set[str], behalten) -> None:
         fenster = tk.Toplevel(self.wurzel)
-        fenster.title(self.t["frage"])
+        # Vorher stand hier „Wie stark schwärzen?" — die Frage ist aber längst
+        # beantwortet, das Fenster zeigt den Fortschritt.
+        fenster.title(self.t["titel"])
         fenster.transient(self.wurzel)
         fenster.grab_set()
         beschriftung = ttk.Label(fenster, text="…")
