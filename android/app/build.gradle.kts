@@ -11,8 +11,10 @@ android {
         applicationId = "de.juliusk.textschwaerzen"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        // Eigene Zählung statt der Gradle-Voreinstellung „0.1.0": der Info-Knopf zeigte
+        // sonst eine Fassung, die es seit Wochen nicht mehr gab (25.11.2026).
+        versionCode = 21
+        versionName = "2.1.0"
     }
 
     // Fester Signaturschlüssel im Projekt: sonst erzeugt jeder Bau-Rechner einen neuen
