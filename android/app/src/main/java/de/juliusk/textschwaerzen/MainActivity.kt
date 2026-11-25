@@ -163,6 +163,7 @@ class MainActivity : AppCompatActivity() {
                             was == 1 -> ausListeEntfernen(eintrag)
                             else -> loescheErgebnis(uri, name)
                         }
+                    }
                     .setNegativeButton("Abbrechen", null)
                     .show()
             }
