@@ -219,6 +219,10 @@ jobs:
             echo "Kein Schluessel hinterlegt - Bau ohne feste Signatur"
           fi
 
+      - name: Selbstpruefung (Tests ohne Geraet)
+        working-directory: android
+        run: gradle :app:testDebugUnitTest --no-daemon
+
       - name: Android-Paket bauen
         env:
           SCHWAERZEN_KEYSTORE: ${{ runner.temp }}/signatur/schwaerzen.jks
