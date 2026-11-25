@@ -1,0 +1,98 @@
+DOSSIER — Text schwärzen
+========================
+Stand: 25.11.2026 · gedacht als Übergabe an eine neue Sitzung.
+Satz zum Beginnen: „Lies notizen/DOSSIER-text-schwaerzen.txt und arbeite weiter."
+
+1. WORUM ES GEHT
+Text schwärzen entfernt Text aus Bildern, PDFs und Textdateien — auf dem Gerät,
+ohne Netz, ohne Konto. Bei PDFs wird jede Seite als Bild neu geschrieben; der Text
+ist danach nicht markierbar oder kopierbar. Vier Systeme: Android, Windows, Linux,
+macOS. iOS wurde am 24.11.2026 verworfen (kein Xcode, keine Zeit).
+
+2. WO WAS LIEGT
+text-schwaerzen-oeffentlich/    MAßGEBLICH. Öffentliches Repository, hier wird gebaut.
+                               GitHub: https://github.com/Suilui1/text-schwaerzen
+text-schwaerzen/               alte Kopie (vor dem Umschreiben), veraltet, nur Nachschlagen.
+                               Sicherung: sicherungen/text-schwaerzen-alt-2026-11-25.bundle
+/Applications/Text schwärzen.app   macOS-App (Swift). Quelle: werkzeuge/BildSchwaerzenApp/
+                               main.swift · Editor.swift · Liste.swift
+/Volumes/Jammtool              Stick mit den Paketen für Julius' Tests
+werkzeuge/baue_mac_app.sh      baut, signiert (ad-hoc!) und prüft die macOS-App
+
+3. FASSUNGEN
+Android   2.9.0 (versionCode 30) · ML Kit, fünf Schriftsysteme
+Rechner   2.9.0 (Tk + Tesseract) · Windows, Linux, macOS-ZIP
+macOS-App 2.9.0 (Swift, Vision) · eigenes Bündel, nicht im ZIP
+
+Veröffentlichung: v2.9.0-alpha.1 (Vorab-Fassung), fünf Dateien:
+  Text-schwaerzen-android.apk · -windows.zip · -linux.tar.gz · -macos.zip · -alle-systeme.zip
+Hinweise dazu: notizen/RELEASE.md (der Bau zieht den Text von dort)
+
+4. WAS DIE PLATTFORMEN KÖNNEN
+                        Android   Rechner(Tk)   macOS(Swift)
+Werkzeuge                    6        10             8
+Farbe · Größe · Stil        ja        ja            ja
+Verschieben / Drehen        ja        ja            ja
+PDF-Formen je Seite         ja        ja            ja
+Rückgängig                  ja        ja            ja
+Startfenster                ja        ja            ja
+Im Finder/Dateimanager      ja        ja            ja
+Regeln (Adressen usw.)      ja        ja            ja (Vision)
+Wortauswahl                 ja        ja            ja
+Textdateien                 ja        ja            nein
+
+5. BAUEN UND AUSLIEFERN
+Desktop + Android (öffentliches Repository, kostet Minuten, nicht Speicher):
+  gh workflow run bauen.yml -R Suilui1/text-schwaerzen
+  gh run watch -R Suilui1/text-schwaerzen
+  # Pakete herunterladen und ablegen:
+  python3 werkzeuge/austausch.py --neu <datei> --ziel /Volumes/Jammtool --name <name> --alte "<muster>"
+Veröffentlichung: Tag setzen und senden — der Bau hängt an Tags v*:
+  git tag -a v2.9.0-alpha.2 -m "…" && git push origin v2.9.0-alpha.2
+  Der Auftrag „veroeffentlichen" legt das Release an und löscht danach die Zwischenpakete.
+  WICHTIG: Danach von Hand als Vorab-Fassung kennzeichnen, das macht der Ablauf nicht:
+  gh release edit <tag> --prerelease --notes-file notizen/RELEASE.md
+
+macOS-App (lokal):
+  bash werkzeuge/baue_mac_app.sh      # übersetzt, kopiert ins Bündel, setzt Fassung 2.9.0,
+                                      # signiert ad-hoc, macht Kopflauf und Startprobe
+  Prüfwege:  --selbstpruefung · --info · --frage <datei> · --markieren <datei>
+
+6. PRÜFEN
+macOS:  "/Applications/Text schwärzen.app/Contents/MacOS/BildSchwaerzen" --selbstpruefung
+        Erwartung: gezielt 3 · alles 4 · rahmen 1 Flächen; PDF 2 Seiten geschrieben und lesbar.
+Tk:     Selbsttest braucht PyMuPDF; im Bündel-Python fehlt fitz → kopflos nur teilweise prüfbar.
+Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
+
+7. FALLEN, DIE SCHON ZUGESCHLAGEN HABEN
+· Nach dem Tausch von Contents/MacOS MUSS neu signiert werden, sonst SIGKILL (Taskgated).
+· pgrep-Muster mit Umlaut finden nichts („schwärzen" liegt zerlegt auf der Platte) — ohne Umlaut suchen.
+· Klick-Brücken (onKlick) niemals als assoziiertes Objekt am Knopf halten: Absturz beim Abbau.
+  Jetzt in KlickSpeicher (static) — und die Liste steht NICHT hinter app.run().
+· AppKit-Dateidialog ist modal: solange er offen ist, reagiert kein anderes Fenster.
+· Nach dem Editor nicht naechste() rufen, ohne editorOffen zu prüfen — sonst beendet sich die App.
+· PDF-Weg: Formen müssen an verarbeiteFormen gehen, nicht an das Bild.
+· Verwischen: Vorschau 22-fach, Ergebnis 16-fach (Julius: Vorschau gut, Ergebnis war zu stark).
+· Stempel: Schriftgröße aus Kasten (Höhe UND Breite), sonst quillt der Text heraus.
+· Kein Teilneuzeichnen beim Ziehen — das erzeugt Rastermuster.
+· Android: Signaturschlüssel seit 2.1.x gleich; neue APK installiert über die alte.
+
+8. OFFENE PUNKTE
+· Tk-Fassung auf den Zwei-Schritt-Ablauf bringen (Automatisch | Selbst markieren → Details).
+· Windows und Linux sind gebaut, aber nie auf einem echten Gerät gelaufen.
+· macOS-App: Maus/Tastatur im Editor hat noch niemand länger benutzt.
+· Play Store im Dezember: Texte (notizen/play-store-texte.txt), Symbol 512, Feature-Grafik,
+  fünf Screenshots liegen in lieferung/play/. Es fehlen: Datenschutzseite, Data-Safety,
+  Altersfreigabe, AAB statt APK, Entwicklerkonto (25 $).
+· Preisfrage offen (Vorschlag: kostenlos mit Spendenlink oder 3,99 € einmalig).
+· F-Droid geht nicht: ML Kit ist nicht frei.
+
+9. VERHALTEN GEGENÜBER JULIUS
+Deutsch, kurz, mit gemessenen Zahlen. Er entscheidet Umfang und Tempo. Nichts löschen,
+ohne die neue Kopie geprüft zu haben (Prüfsumme). Fehler offen benennen: sagen, beheben,
+prüfen, aufschreiben. Für Tests vom Stick: selbsttest.bat, Bericht zurück.
+Tester-Anleitung: notizen/testanleitung-freunde.txt (nennt den Download-Link der Alpha).
+
+10. GEHEIMNISSE
+Keystore: ~/.config/text-schwaerzen/android-signing/ (Name, Paßwort in Datei) — NIE ausgeben.
+GitHub-Secrets: SCHWAERZEN_KEYSTORE_BASE64, SCHWAERZEN_STORE_PASS, SCHWAERZEN_KEY_ALIAS.
