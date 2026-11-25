@@ -417,6 +417,18 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var verschieben = false
     private var versatzX = 0f
     private var versatzY = 0f
+
+    /** Abstand eines Punktes zur Strecke (a,b) — für schmale Pfeile. */
+    private fun abstandZurStrecke(px: Float, py: Float, ax: Float, ay: Float,
+                                  bx: Float, by: Float): Double {
+        val dx = (bx - ax).toDouble()
+        val dy = (by - ay).toDouble()
+        val laenge = dx * dx + dy * dy
+        if (laenge < 0.0001) return Math.hypot((px - ax).toDouble(), (py - ay).toDouble())
+        var t = ((px - ax) * dx + (py - ay) * dy) / laenge
+        t = t.coerceIn(0.0, 1.0)
+        return Math.hypot((px - (ax + t * dx)).toDouble(), (py - (ay + t * dy)).toDouble())
+    }
     private var werkzeug = "schwaerzen"
     private var stempelText = "GEPRÜFT"
     private var textStil = "normal"
@@ -597,35 +609,41 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
         // gesucht werden muß (Julius, 25.11.2026: „nichts ist drehbar").
         if (ereignis.action == MotionEvent.ACTION_DOWN) {
             val z = ziel()
-            // BEIDE Enden greifbar (Julius, 25.11.2026): erst das Ende prüfen,
-            // dann den Anfang — jeweils 44 Pixel Trefferfläche.
             for (i in formen.indices.reversed()) {
                 val f = formen[i]
                 val ex = z.left + f.x1 * z.width()
                 val ey = z.top + f.y1 * z.height()
                 val sx = z.left + f.x0 * z.width()
                 val sy = z.top + f.y0 * z.height()
-                val amEnde = Math.hypot((ereignis.x - ex).toDouble(),
-                                        (ereignis.y - ey).toDouble()) < 44.0
-                val amAnfang = Math.hypot((ereignis.x - sx).toDouble(),
-                                          (ereignis.y - sy).toDouble()) < 44.0
-                if (amEnde || amAnfang) {
-                    ausgewaehlt = i
-                    griffAktiv = true
-                    griffAnfang = amAnfang
-                    invalidate()
-                    return true
+                val dEnde = Math.hypot((ereignis.x - ex).toDouble(),
+                                       (ereignis.y - ey).toDouble())
+                val dAnfang = Math.hypot((ereignis.x - sx).toDouble(),
+                                         (ereignis.y - sy).toDouble())
+
+                // Zuerst prüfen: liegt der Finger INNEN? Dann verschieben.
+                // Vorher hatten die Griffe 44 Pixel und lagen bei kleinen Formen
+                // (Text, Stempel) über der ganzen Fläche — dadurch wurde nur
+                // gestreckt statt verschoben (Julius, 25.11.2026).
+                val innen = if (f.typ == "pfeil") {
+                    abstandZurStrecke(ereignis.x, ereignis.y, sx, sy, ex, ey) < 26.0
+                } else {
+                    ereignis.x in minOf(sx, ex)..maxOf(sx, ex) &&
+                        ereignis.y in minOf(sy, ey)..maxOf(sy, ey)
                 }
-                // Innerhalb der Form: verschieben (Julius: „Text verschiebbar machen")
-                val links = minOf(sx, ex) - 10f
-                val rechts = maxOf(sx, ex) + 10f
-                val oben = minOf(sy, ey) - 10f
-                val unten = maxOf(sy, ey) + 10f
-                if (ereignis.x in links..rechts && ereignis.y in oben..unten) {
+                val griffFrei = minOf(dEnde, dAnfang) > 34.0
+
+                if (innen && griffFrei) {
                     ausgewaehlt = i
                     verschieben = true
                     versatzX = ereignis.x - (sx + ex) / 2f
                     versatzY = ereignis.y - (sy + ey) / 2f
+                    invalidate()
+                    return true
+                }
+                if (dEnde < 44.0 || dAnfang < 44.0) {
+                    ausgewaehlt = i
+                    griffAktiv = true
+                    griffAnfang = dAnfang < dEnde
                     invalidate()
                     return true
                 }
