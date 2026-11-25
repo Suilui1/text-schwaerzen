@@ -273,7 +273,7 @@ class MarkierActivity : Activity() {
         stapel.addView(stilWahl)
         val beschriftung = TextView(this).apply { text = "Größe: 3"; setPadding(0, 16, 0, 0) }
         stapel.addView(beschriftung)
-        val regler = SeekBar(this).apply { max = 9; progress = 2 }
+        val regler = SeekBar(this).apply { max = 14; progress = 2 }
         regler.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, wert: Int, vonNutzer: Boolean) {
                 beschriftung.text = "Größe: " + (wert + 1)
@@ -291,7 +291,8 @@ class MarkierActivity : Activity() {
                 val stil = stile[when (stilWahl.checkedRadioButtonId) {
                     201 -> 1; 202 -> 2; 203 -> 3; else -> 0
                 }]
-                val groesse = (regler.progress + 1) * 0.008f
+                // bis 15 % der Bildhöhe - vorher war bei 8 % Schluß (25.11.2026)
+                val groesse = (regler.progress + 1) * 0.01f
                 ansicht.setzeText(stil, groesse, textFarbe)
                 bericht.text = "Text: $stil, Größe ${regler.progress + 1} — jetzt ziehen"
             }
@@ -319,7 +320,7 @@ class MarkierActivity : Activity() {
         stapel.addView(wahl)
         val beschriftung = TextView(this).apply { text = "Größe: 4"; setPadding(0, 16, 0, 0) }
         stapel.addView(beschriftung)
-        val regler = SeekBar(this).apply { max = 9; progress = 3 }
+        val regler = SeekBar(this).apply { max = 14; progress = 3 }
         regler.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, wert: Int, vonNutzer: Boolean) {
                 beschriftung.text = "Größe: " + (wert + 1)
@@ -348,7 +349,7 @@ class MarkierActivity : Activity() {
             .setPositiveButton("OK") { _, _ ->
                 val gewaehlt = wahl.checkedRadioButtonId - 300
                 stempel = liste[if (gewaehlt in liste.indices) gewaehlt else 0]
-                stempelGroesse = (regler.progress + 1) * 0.008f
+                stempelGroesse = (regler.progress + 1) * 0.01f
                 val stil = stile[when (stilWahl.checkedRadioButtonId) {
                     401 -> 1; 402 -> 2; 403 -> 3; else -> 0
                 }]
@@ -401,6 +402,9 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
     private var ausgewaehlt: Int? = null
     private var griffAktiv = false
     private var griffAnfang = false
+    private var verschieben = false
+    private var versatzX = 0f
+    private var versatzY = 0f
     private var werkzeug = "schwaerzen"
     private var stempelText = "GEPRÜFT"
     private var textStil = "normal"
@@ -600,7 +604,38 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                     invalidate()
                     return true
                 }
+                // Innerhalb der Form: verschieben (Julius: „Text verschiebbar machen")
+                val links = minOf(sx, ex) - 10f
+                val rechts = maxOf(sx, ex) + 10f
+                val oben = minOf(sy, ey) - 10f
+                val unten = maxOf(sy, ey) + 10f
+                if (ereignis.x in links..rechts && ereignis.y in oben..unten) {
+                    ausgewaehlt = i
+                    verschieben = true
+                    versatzX = ereignis.x - (sx + ex) / 2f
+                    versatzY = ereignis.y - (sy + ey) / 2f
+                    invalidate()
+                    return true
+                }
             }
+        }
+        if (verschieben) {
+            val z = ziel()
+            val f = ausgewaehlt?.let { formen.getOrNull(it) } ?: return true
+            if (ereignis.action == MotionEvent.ACTION_MOVE) {
+                val mitteX = ((ereignis.x - versatzX - z.left) / z.width()).coerceIn(0f, 1f)
+                val mitteY = ((ereignis.y - versatzY - z.top) / z.height()).coerceIn(0f, 1f)
+                val halbeB = (f.x1 - f.x0) / 2f
+                val halbeH = (f.y1 - f.y0) / 2f
+                f.x0 = mitteX - halbeB; f.x1 = mitteX + halbeB
+                f.y0 = mitteY - halbeH; f.y1 = mitteY + halbeH
+                invalidate()
+            }
+            if (ereignis.action == MotionEvent.ACTION_UP) {
+                verschieben = false
+                invalidate()
+            }
+            return true
         }
         if (griffAktiv) {
             val z = ziel()
