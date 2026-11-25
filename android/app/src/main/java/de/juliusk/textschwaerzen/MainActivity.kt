@@ -50,6 +50,29 @@ class MainActivity : AppCompatActivity() {
     @Volatile private var abbrechenGewuenscht = false
     private val verlauf by lazy { getSharedPreferences("verlauf", MODE_PRIVATE) }
 
+    /** Prüft, ob eine gemerkte Datei noch da ist (im Dateimanager gelöschte fallen raus). */
+    private fun existiert(uri: android.net.Uri): Boolean {
+        return try {
+            contentResolver.openAssetFileDescriptor(uri, "r")?.use { true } ?: false
+        } catch (fehler: Throwable) {
+            false
+        }
+    }
+
+    /** Liest den Verlauf und wirft Einträge weg, deren Datei nicht mehr existiert. */
+    private fun verlaufSaeubern(): List<String> {
+        val roh = (verlauf.getStringSet("dateien", emptySet()) ?: emptySet()).toList()
+        val gut = roh.filter { eintrag ->
+            val teile = eintrag.split("|")
+            val uri = teile.getOrNull(1)?.let { android.net.Uri.parse(it) }
+            uri != null && existiert(uri)
+        }
+        if (gut.size != roh.size) {
+            verlauf.edit().putStringSet("dateien", gut.toSet()).apply()
+        }
+        return gut
+    }
+
     /** Merkt sich die zuletzt geöffneten Dateien (höchstens acht). */
     private fun merken(uri: android.net.Uri, name: String, typ: String) {
         try {
@@ -67,8 +90,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Zeigt die zuletzt geöffneten Bilder und Dokumente. */
     private fun letzteZeigen() {
-        val eintraege = (verlauf.getStringSet("dateien", emptySet()) ?: emptySet())
-            .toList().sortedDescending()
+        val eintraege = verlaufSaeubern().sortedDescending()
         if (eintraege.isEmpty()) {
             Toast.makeText(this, "Noch keine Datei geöffnet", Toast.LENGTH_SHORT).show()
             return
@@ -693,10 +715,9 @@ class MainActivity : AppCompatActivity() {
 
     /** Zeigt alle geschwärzten Ergebnisse mit Öffnen und Löschen. */
     private fun ergebnisseZeigen() {
-        val eintraege = (verlauf.getStringSet("dateien", emptySet()) ?: emptySet())
+        val eintraege = verlaufSaeubern()
             .filter { it.startsWith("bild-aus|") || it.startsWith("pdf-aus|")
                       || it.startsWith("text-aus|") }
-            .toList()
         if (eintraege.isEmpty()) {
             AlertDialog.Builder(this)
                 .setTitle("Ergebnisse")
