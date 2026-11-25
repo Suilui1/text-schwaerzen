@@ -71,3 +71,12 @@ dependencies {
     // "Alles" stehen (Julius' Fahrkarte, 24.11.2026).
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }
+
+// Jeder Test meldet sich namentlich im Protokoll — sonst steht dort nur „BUILD SUCCESSFUL"
+// und niemand sieht, ob die Prüfung überhaupt gelaufen ist (25.11.2026).
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = false
+    }
+}
