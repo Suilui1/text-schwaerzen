@@ -131,17 +131,37 @@ class MainActivity : AppCompatActivity() {
 
     /** Ein Weg für alles: Bild, PDF und Text werden am Inhalt erkannt. */
     private fun dateiOeffnen(uri: android.net.Uri) {
-        if (istPdf(uri)) {
-            pdfGewaehlt(uri)
-            return
+        // nameDerDatei() schneidet die Endung ab — für die Erkennung braucht es den
+        // vollen Namen, sonst wurde jede .txt als Bild geöffnet
+        // („kann Bild nicht öffnen", Julius am 25.11.2026).
+        val voll = vollerName(uri).lowercase()
+        val endung = voll.substringAfterLast('.', "")
+        val typ = try {
+            (contentResolver.getType(uri) ?: "").lowercase()
+        } catch (fehler: Exception) {
+            ""
         }
-        val name = nameDerDatei(uri).lowercase()
-        val endung = name.substringAfterLast('.', "")
-        if (endung in setOf("txt", "csv", "log", "md")) {
-            textGewaehlt(uri)
-            return
+        when {
+            istPdf(uri) -> pdfGewaehlt(uri)
+            typ.startsWith("text/") || endung in setOf("txt", "csv", "log", "md") ->
+                textGewaehlt(uri)
+            else -> ladeBild(uri)
         }
-        ladeBild(uri)
+    }
+
+    /** Anzeigename MIT Endung. */
+    private fun vollerName(uri: android.net.Uri): String {
+        var name = "datei"
+        try {
+            contentResolver.query(uri, null, null, null, null)?.use { zeiger ->
+                val spalte = zeiger.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (spalte >= 0 && zeiger.moveToFirst()) {
+                    name = zeiger.getString(spalte) ?: name
+                }
+            }
+        } catch (fehler: Exception) {
+        }
+        return name
     }
 
     private val pdfAuswahl = registerForActivityResult(
