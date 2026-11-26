@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.4
+# Text schwärzen 2.9.0-alpha.5
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,14 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung
+
+- **Behoben: die Befehlszeile stürzte ab.** Durch einen Namenskonflikt in der
+  Programmdatei scheiterte jede Schwärzung über die Befehlszeile (`--bild`, `--text`,
+  `--pdf`) — also auch `selbsttest.bat` — mit „UnboundLocalError". Betroffen war nur
+  alpha.4; diese Fassung ist wieder in Ordnung.
+- **Behoben: die Update-Prüfung scheiterte unter Windows mit Zertifikatsfehler**
+  (`CERTIFICATE_VERIFY_FAILED`). Die Zertifikatsliste fehlte im gepackten Programm; sie
+  wird jetzt mitgeliefert.
 
 - **Die Update-Prüfung sagt jetzt, woran es lag.** Statt „braucht eine Internetverbindung"
   steht der echte Grund (z. B. `URLError`, `CERTIFICATE_VERIFY_FAILED`, Ratenbegrenzung von

@@ -132,13 +132,25 @@ def update_abfrage(adresse: str = "", zeitgrenze: float = 10.0) -> tuple[str, st
     Fassungen Vorab-Fassungen sind (26.11.2026 gemessen).
     """
     import json
+    import ssl
     import urllib.request
 
     adresse = adresse or ("https://api.github.com/repos/Suilui1/text-schwaerzen/releases")
     anfrage = urllib.request.Request(adresse, headers={
         "User-Agent": "text-schwaerzen", "Accept": "application/vnd.github+json"})
+    # Zertifikatsliste mitgeben: Im gepackten Windows-Programm (PyInstaller) fehlt sie,
+    # dann scheitert JEDE HTTPS-Abfrage mit CERTIFICATE_VERIFY_FAILED — auf Julius'
+    # Windows-Rechner am 26.11.2026 genau so passiert. certifi bringt die Liste mit.
+    kontext = None
     try:
-        with urllib.request.urlopen(anfrage, timeout=zeitgrenze) as antwort:
+        import certifi
+        kontext = ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        kontext = None
+    oeffner = (urllib.request.build_opener(urllib.request.HTTPSHandler(context=kontext))
+               if kontext is not None else urllib.request.build_opener())
+    try:
+        with oeffner.open(anfrage, timeout=zeitgrenze) as antwort:
             roh = antwort.read()
     except Exception as fehler:  # noqa: BLE001 — der Grund gehört in die Meldung
         return "", "%s: %s" % (type(fehler).__name__, fehler)

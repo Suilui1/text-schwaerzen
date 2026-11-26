@@ -47,7 +47,9 @@ jobs:
       - name: Abhängigkeiten
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pillow pymupdf pytesseract pyinstaller
+          # certifi: bringt die Zertifikatsliste mit, sonst scheitert die HTTPS-Abfrage der
+          # Update-Prüfung im gepackten Programm (CERTIFICATE_VERIFY_FAILED, 26.11.2026).
+          python -m pip install pillow pymupdf pytesseract pyinstaller certifi
 
       # Tesseract mit deutscher Sprachdatei mitliefern, damit der Nutzer nichts
       # nachinstallieren muß. Windows: Chocolatey, Linux: apt, macOS: brew.
@@ -117,6 +119,7 @@ jobs:
           # auf Julius' Windows-Rechner wie „keine Internetverbindung" aus.
           pyinstaller --noconfirm --onefile --windowed --name "Text-schwaerzen" `
             --hidden-import ssl --hidden-import _ssl --hidden-import http.client `
+            --collect-data certifi `
             --add-data "tessdata;tessdata" start.py
 
       - name: Paket bauen (Linux/macOS)
@@ -125,6 +128,7 @@ jobs:
           mkdir -p tessdata
           pyinstaller --noconfirm --onefile --windowed --name "Text-schwaerzen" \
             --hidden-import ssl --hidden-import _ssl --hidden-import http.client \
+            --collect-data certifi \
             --add-data "tessdata:tessdata" start.py
 
       - name: Zusammenpacken (Windows)

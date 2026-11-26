@@ -107,14 +107,19 @@ def befehlszeile(argumente: list[str]) -> int:
             zeilen.append("Befund: es gibt eine andere Fassung (%s)." % neueste)
         else:
             zeilen.append("Befund: Abfrage gescheitert.")
-        bericht = Path("update-bericht.txt")
+        # ACHTUNG: die Datei heißt bericht_datei, nicht bericht — sonst verdeckt die
+        # örtliche Variable die Funktion bericht() weiter unten, und JEDE Bildschwärzung
+        # über die Befehlszeile stürzt mit UnboundLocalError ab (am 26.11.2026 auf Julius'
+        # Windows-Rechner passiert, beim Selbsttest vom Stick).
+        bericht_datei = Path("update-bericht.txt")
         try:
-            bericht.write_text("\n".join(zeilen) + "\n", encoding="utf-8")
+            bericht_datei.write_text("\n".join(zeilen) + "\n", encoding="utf-8")
         except Exception:
-            bericht = None
+            bericht_datei = None
         for z in zeilen:
             print(z)
-        print("Bericht: %s" % (bericht.resolve() if bericht else "(nicht schreibbar)"))
+        print("Bericht: %s" % (bericht_datei.resolve() if bericht_datei
+                               else "(nicht schreibbar)"))
         return 0
 
     if a.text:
