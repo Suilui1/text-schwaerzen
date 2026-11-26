@@ -80,6 +80,13 @@ Nach v2.9.0-alpha.2 blieben deshalb 369 MB liegen. Recht ergänzt; der Schritt e
 Prüfen und räumen:  python3 werkzeuge/github_speicher.py --bericht
                      python3 werkzeuge/github_speicher.py --raeumen --probe
 
+INSTALLER (seit 26.11.2026): `werkzeuge/baue_mac_installer.sh` baut aus der installierten
+App zwei Wege — **.dmg** (ziehen) und **.pkg** (doppelklicken, entfernt die Quarantäne).
+Mindestsystem 13.0, beide Bauarten. **Falle:** `pkgbuild` kann keine Umlaute im
+Paketinhalt schreiben („parent directory … does not exist", nachgewiesen) — das PKG
+installiert deshalb „Text schwaerzen.app" und benennt im postinstall um. Nicht installiert
+geprüft (sudo verlangt Paßwort); geprüft sind Aufbau, Payload, Skript-Syntax.
+
 Mac-App als Paket (seit 25.11.2026): `testversion/Text-schwaerzen-mac-app.zip` (984 KB),
 gehängt an die Veröffentlichung. Gebaut für **beide Bauarten** (arm64 + x86_64) mit
 **Mindestsystem macOS 14.0** (auch 13.0 übersetzt fehlerfrei; nicht ausgeliefert) —
