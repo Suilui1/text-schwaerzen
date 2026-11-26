@@ -233,8 +233,11 @@ Rechner-Fassung: Info-Fenster → „Nach Updates sehen"; Kern ist `gui.neueste_
 **Nie `/releases/latest` benutzen** — das liefert 404, solange alle Fassungen als
 Vorab-Fassung gekennzeichnet sind (gemessen 26.11.2026). Immer die Liste `/releases`
 nehmen und die Kennzeichnung vergleichen (`__kennung__` im Paket, `SchwaerzenKennung` im
-App-Bündel, gesetzt vom Bau bzw. von baue_mac_app.sh). Die Android-Fassung hat noch keine
-Update-Prüfung.
+App-Bündel, gesetzt vom Bau bzw. von baue_mac_app.sh). Android (26.11.2026): „Mehr…" → „Nach Updates sehen" zeigt die Fassung und öffnet die
+Veröffentlichungsseite im **Browser** — kein Abruf in der App, weil sie bewusst KEIN
+INTERNET-Recht hat („schickt nichts ins Netz" bleibt wahr). Linux/Windows/macOS nutzen
+denselben Tk-Code, bekommen die Prüfung also mit dem nächsten Bau; das Alpha.2-Paket ist
+älter als die Änderung.
 
 11. EIGENE SEITE (seit 25.11.2026)
 DATEINAMEN (25.11.2026, Julius: „bei den dateinamen muss eindeutig die lauffähige app
