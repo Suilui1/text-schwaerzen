@@ -26,7 +26,9 @@ TEXTE = {
            "k_update": "Nach Updates sehen",
            "update_titel": "Update-Prüfung",
            "update_keine_verbindung": "Die Update-Prüfung braucht eine Internetverbindung. Das Programm selbst arbeitet ohne Netz.",
-           "update_unbekannt": "Die neueste Veröffentlichung ließ sich nicht lesen.",
+           "update_unbekannt": "Die Abfrage bei GitHub ist gescheitert.",
+           "update_grund": "Grund",
+           "update_browser_frage": "Trotzdem die Veröffentlichungsseite im Browser öffnen?",
            "update_aktuell": "Das ist die neueste Fassung (%s).",
            "update_neuer": "Neu veröffentlicht: %s\n\nDiese Fassung ist %s.\n\nZur Veröffentlichung?",
            "update_knoepfe": "In diesem Programm gibt es eine Schaltfläche dafür.", "info_text": """Text schwärzen — was die App tut
@@ -73,7 +75,9 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen",
            "k_update": "Check for updates",
            "update_titel": "Update check",
            "update_keine_verbindung": "The update check needs an internet connection. The program itself works offline.",
-           "update_unbekannt": "The latest release could not be read.",
+           "update_unbekannt": "The query to GitHub failed.",
+           "update_grund": "Reason",
+           "update_browser_frage": "Open the release page in the browser anyway?",
            "update_aktuell": "This is the latest version (%s).",
            "update_neuer": "Newly released: %s\n\nThis version is %s.\n\nOpen the release page?",
            "update_knoepfe": "The program has a button for this.", "info_text": """Redact text — what this app does
@@ -113,13 +117,19 @@ Source: github.com/Suilui1/text-schwaerzen""", "titel": "Redact text",
 }
 
 
-def neueste_fassung(adresse: str = "",
-                    zeitgrenze: float = 8.0) -> str:
-    """Kennzeichnung der neuesten Veröffentlichung — oder "" bei Fehler.
+def update_abfrage(adresse: str = "", zeitgrenze: float = 10.0) -> tuple[str, str]:
+    """Fragt GitHub nach der neuesten Veröffentlichung.
 
-    Fragt die LISTE der Veröffentlichungen ab, nicht /releases/latest: Das liefert 404,
-    solange alle Fassungen als Vorab-Fassung gekennzeichnet sind (am 26.11.2026 gemessen
-    — genau daran scheiterte die Update-Prüfung der Mac-App).
+    Rückgabe: (Kennzeichnung, Grund). Bei Erfolg ist der Grund ""; scheitert es, ist die
+    Kennzeichnung "" und der Grund nennt die Ursache im Klartext.
+
+    Warum der Grund mitgeliefert wird (26.11.2026): Die Windows-Fassung meldete „neuere
+    Veröffentlichung ließ sich nicht lesen — die Update-Prüfung braucht eine
+    Internetverbindung". Das war eine falsche Auskunft: der Satz galt für JEDE Ursache.
+    Julius stand vor dem Rechner und konnte nicht wissen, was los war.
+
+    Warum die LISTE und nicht /releases/latest: letzteres antwortet mit 404, solange alle
+    Fassungen Vorab-Fassungen sind (26.11.2026 gemessen).
     """
     import json
     import urllib.request
@@ -129,12 +139,24 @@ def neueste_fassung(adresse: str = "",
         "User-Agent": "text-schwaerzen", "Accept": "application/vnd.github+json"})
     try:
         with urllib.request.urlopen(anfrage, timeout=zeitgrenze) as antwort:
-            liste = json.load(antwort)
-    except Exception:
-        return ""
+            roh = antwort.read()
+    except Exception as fehler:  # noqa: BLE001 — der Grund gehört in die Meldung
+        return "", "%s: %s" % (type(fehler).__name__, fehler)
+    try:
+        liste = json.loads(roh.decode("utf-8", "replace"))
+    except Exception as fehler:  # noqa: BLE001
+        return "", "Antwort nicht lesbar (%s): %s" % (type(fehler).__name__, fehler)
+    if isinstance(liste, dict) and liste.get("message"):
+        # Zum Beispiel: „API rate limit exceeded"
+        return "", "GitHub sagt: %s" % liste.get("message")
     if not isinstance(liste, list) or not liste:
-        return ""
-    return str(liste[0].get("tag_name", "") or "")
+        return "", "Die Liste der Veröffentlichungen ist leer."
+    return str(liste[0].get("tag_name", "") or ""), ""
+
+
+def neueste_fassung(adresse: str = "", zeitgrenze: float = 10.0) -> str:
+    """Nur die Kennzeichnung (leer bei Fehler) — für Prüfskripte."""
+    return update_abfrage(adresse, zeitgrenze)[0]
 
 
 def ist_ergebnis(datei: Path) -> bool:
@@ -269,12 +291,18 @@ class App:
         import webbrowser
         from . import __kennung__
 
-        neueste = neueste_fassung()
+        neueste, grund = update_abfrage()
         if not neueste:
-            messagebox.showinfo(self.t.get("update_titel", "Update-Prüfung"),
-                                self.t.get("update_unbekannt",
-                                           "Die neueste Veröffentlichung ließ sich nicht lesen.")
-                                + "\n\n" + self.t.get("update_keine_verbindung", ""))
+            # Grund nennen UND den Ausweg anbieten: die Seite geht auch ohne Abfrage.
+            frage = messagebox.askyesno(
+                self.t.get("update_titel", "Update-Prüfung"),
+                self.t.get("update_unbekannt",
+                           "Die Abfrage bei GitHub ist gescheitert.")
+                + "\n\n" + self.t.get("update_grund", "Grund") + ": " + grund
+                + "\n\n" + self.t.get("update_browser_frage",
+                                        "Trotzdem die Veröffentlichungsseite im Browser öffnen?"))
+            if frage:
+                webbrowser.open("https://github.com/Suilui1/text-schwaerzen/releases")
             return
         if neueste == __kennung__:
             messagebox.showinfo(self.t.get("update_titel", "Update-Prüfung"),

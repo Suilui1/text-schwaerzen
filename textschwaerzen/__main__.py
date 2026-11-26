@@ -76,6 +76,8 @@ def befehlszeile(argumente: list[str]) -> int:
     p.add_argument("--behalten", default="", help="x,y,breite,hoehe (Modus bereich)")
     p.add_argument("--aus", default="", help="Zieldatei")
     p.add_argument("--markieren", action="store_true", help="Editor zum Markieren öffnen")
+    p.add_argument("--updatepruefung", action="store_true",
+                   help="Update-Abfrage prüfen und den Befund in update-bericht.txt schreiben")
     p.add_argument("--bericht", default="", help="Ergebnis zusätzlich in diese Datei schreiben")
     p.add_argument("--sprache", default="deu", help="Tesseract-Sprache (Vorgabe deu)")
     a = p.parse_args(argumente)
@@ -89,6 +91,31 @@ def befehlszeile(argumente: list[str]) -> int:
                 f.write("\n=== Aufruf: %s ===\n" % " ".join(argumente))
         except Exception:
             pass
+
+    if a.updatepruefung:
+        # Prüfweg (26.11.2026): ohne Fenster, schreibt den Befund neben das Programm.
+        # Nötig, weil die Windows-Fassung ohne Konsole läuft — ein print() verschwindet.
+        from . import __kennung__
+        from .gui import update_abfrage
+        neueste, grund = update_abfrage()
+        zeilen = ["Kennzeichnung dieses Programms: " + __kennung__,
+                  "Neueste laut GitHub:                " + (neueste or "(keine)"),
+                  "Grund bei Fehler:                   " + (grund or "-")]
+        if neueste and neueste == __kennung__:
+            zeilen.append("Befund: das ist die neueste Fassung.")
+        elif neueste:
+            zeilen.append("Befund: es gibt eine andere Fassung (%s)." % neueste)
+        else:
+            zeilen.append("Befund: Abfrage gescheitert.")
+        bericht = Path("update-bericht.txt")
+        try:
+            bericht.write_text("\n".join(zeilen) + "\n", encoding="utf-8")
+        except Exception:
+            bericht = None
+        for z in zeilen:
+            print(z)
+        print("Bericht: %s" % (bericht.resolve() if bericht else "(nicht schreibbar)"))
+        return 0
 
     if a.text:
         # Textdateien werden zeilenweise geschwärzt — wie in der Android-Fassung.
@@ -144,6 +171,7 @@ def starte_oberflaeche() -> int:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] in ("--bild", "--pdf", "--text", "--help", "-h"):
+    if len(sys.argv) > 1 and sys.argv[1] in ("--bild", "--pdf", "--text", "--updatepruefung",
+                                             "--help", "-h"):
         sys.exit(befehlszeile(sys.argv[1:]))
     sys.exit(starte_oberflaeche())

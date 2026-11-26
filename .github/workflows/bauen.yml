@@ -112,7 +112,11 @@ jobs:
         if: matrix.system == 'windows'
         shell: powershell
         run: |
+          # ssl/_ssl/http.client ausdrücklich mitnehmen: Die Update-Prüfung geht über HTTPS.
+          # Fehlt PyInstaller eines davon, scheitert die Abfrage — und das sah am 26.11.2026
+          # auf Julius' Windows-Rechner wie „keine Internetverbindung" aus.
           pyinstaller --noconfirm --onefile --windowed --name "Text-schwaerzen" `
+            --hidden-import ssl --hidden-import _ssl --hidden-import http.client `
             --add-data "tessdata;tessdata" start.py
 
       - name: Paket bauen (Linux/macOS)
@@ -120,6 +124,7 @@ jobs:
         run: |
           mkdir -p tessdata
           pyinstaller --noconfirm --onefile --windowed --name "Text-schwaerzen" \
+            --hidden-import ssl --hidden-import _ssl --hidden-import http.client \
             --add-data "tessdata:tessdata" start.py
 
       - name: Zusammenpacken (Windows)

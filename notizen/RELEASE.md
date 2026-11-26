@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.3
+# Text schwärzen 2.9.0-alpha.4
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,14 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung
+
+- **Die Update-Prüfung sagt jetzt, woran es lag.** Statt „braucht eine Internetverbindung"
+  steht der echte Grund (z. B. `URLError`, `CERTIFICATE_VERIFY_FAILED`, Ratenbegrenzung von
+  GitHub) — und es wird angeboten, die Veröffentlichungsseite trotzdem im Browser zu öffnen.
+- **Windows-Paket mit ausdrücklich eingebundenen Netzmodulen** (`ssl`, `_ssl`, `http.client`):
+  fehlte eines davon, scheiterte die Abfrage und sah wie ein Netzfehler aus.
+- **Neuer Prüfweg:** `Text-schwaerzen.exe --updatepruefung` schreibt den Befund nach
+  `update-bericht.txt` neben das Programm.
 
 - **Update-Prüfung in der Rechner-Fassung** (Windows, Linux, macOS): unter „Info" fragt
   ein Knopf bei GitHub nach einer neueren Fassung — nur auf Klick, sonst kein Netzverkehr.
