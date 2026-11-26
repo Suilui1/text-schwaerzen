@@ -236,6 +236,13 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · Preisfrage offen (Vorschlag: kostenlos mit Spendenlink oder 3,99 € einmalig).
 · F-Droid geht nicht: ML Kit ist nicht frei.
 
+12a. LINUX-ABSTURZ, OFFEN (26.11.2026)
+Julius' Linux: Signal 4 (SIGILL) in der mitgelieferten libpython3.12 aus dem
+PyInstaller-Paket. Im Bau (Ubuntu 24.04) läuft dasselbe Paket. Verdacht: Prozessor/VM.
+Ausweg bereit: `Text-schwaerzen-quelle.tar.gz` am Release — Quelle plus `start-linux.sh`,
+läuft mit dem System-Python. Zu klären: `uname -m`, `lscpu`, `./Text-schwaerzen --help`,
+VM ja/nein. Danach evtl. Linux-Paket gegen ältere CPU-Stufe bauen.
+
 12. UPDATE-PRÜFUNG (seit 26.11.2026)
 Mac-App: Info-Dialog → „Nach Updates suchen". Prüfweg ohne Fenster: `--updatepruefung`.
 Rechner-Fassung: Info-Fenster → „Nach Updates sehen"; Kern ist `gui.neueste_fassung()`.
