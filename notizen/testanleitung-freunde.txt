@@ -1,9 +1,9 @@
 Text schwärzen — Kurzanleitung für Tester
 =========================================
-Fassung 2.9.0-alpha.2 · Stand 25.11.2026
+Fassung 2.9.0-alpha.3 · Stand 26.11.2026
 
 HERUNTERLADEN
-https://github.com/Suilui1/text-schwaerzen/releases/tag/v2.9.0-alpha.2
+https://github.com/Suilui1/text-schwaerzen/releases/tag/v2.9.0-alpha.3
 Dort die passende Datei wählen (Android: .apk · Windows: .zip).
 
 INSTALLATION

@@ -28,7 +28,7 @@ TEXTE = {
            "update_keine_verbindung": "Die Update-Prüfung braucht eine Internetverbindung. Das Programm selbst arbeitet ohne Netz.",
            "update_unbekannt": "Die neueste Veröffentlichung ließ sich nicht lesen.",
            "update_aktuell": "Das ist die neueste Fassung (%s).",
-           "update_neuer": "Es gibt eine neuere Fassung: %s\n\nDies ist %s.\n\nZur Veröffentlichung?",
+           "update_neuer": "Neu veröffentlicht: %s\n\nDiese Fassung ist %s.\n\nZur Veröffentlichung?",
            "update_knoepfe": "In diesem Programm gibt es eine Schaltfläche dafür.", "info_text": """Text schwärzen — was die App tut
 
 Schwärzt Text in Bildern, PDFs und Textdateien. Alles geschieht auf diesem Rechner; nichts wird verschickt.
@@ -75,7 +75,7 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen",
            "update_keine_verbindung": "The update check needs an internet connection. The program itself works offline.",
            "update_unbekannt": "The latest release could not be read.",
            "update_aktuell": "This is the latest version (%s).",
-           "update_neuer": "A newer version is available: %s\n\nThis is %s.\n\nOpen the release page?",
+           "update_neuer": "Newly released: %s\n\nThis version is %s.\n\nOpen the release page?",
            "update_knoepfe": "The program has a button for this.", "info_text": """Redact text — what this app does
 
 Redacts text in images, PDFs and text files. Everything happens on this machine; nothing is sent anywhere.
