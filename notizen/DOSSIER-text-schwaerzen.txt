@@ -227,6 +227,15 @@ Android: neun Unit-Tests laufen im Bau vor dem Paketieren (PruefungTest).
 · Preisfrage offen (Vorschlag: kostenlos mit Spendenlink oder 3,99 € einmalig).
 · F-Droid geht nicht: ML Kit ist nicht frei.
 
+12. UPDATE-PRÜFUNG (seit 26.11.2026)
+Mac-App: Info-Dialog → „Nach Updates suchen". Prüfweg ohne Fenster: `--updatepruefung`.
+Rechner-Fassung: Info-Fenster → „Nach Updates sehen"; Kern ist `gui.neueste_fassung()`.
+**Nie `/releases/latest` benutzen** — das liefert 404, solange alle Fassungen als
+Vorab-Fassung gekennzeichnet sind (gemessen 26.11.2026). Immer die Liste `/releases`
+nehmen und die Kennzeichnung vergleichen (`__kennung__` im Paket, `SchwaerzenKennung` im
+App-Bündel, gesetzt vom Bau bzw. von baue_mac_app.sh). Die Android-Fassung hat noch keine
+Update-Prüfung.
+
 11. EIGENE SEITE (seit 25.11.2026)
 DATEINAMEN (25.11.2026, Julius: „bei den dateinamen muss eindeutig die lauffähige app
 deutlich sein"): Die App heißt **Text-schwaerzen-macos-app.zip**, die Rechner-Fassung

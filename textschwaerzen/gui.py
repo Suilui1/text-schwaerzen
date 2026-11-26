@@ -22,7 +22,14 @@ from .__main__ import lade_einstellungen, speichere_einstellungen, ziel_pfad, be
 
 TEXTE = {
     "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_zeigen": "Im Dateimanager zeigen", "k_ergebnisse": "Ergebnisse", "keine_ergebnisse": "Noch keine geschwärzte Datei in der Ablage.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info",
-           "k_entfernen": "Aus Liste entfernen", "info_text": """Text schwärzen — was die App tut
+           "k_entfernen": "Aus Liste entfernen",
+           "k_update": "Nach Updates sehen",
+           "update_titel": "Update-Prüfung",
+           "update_keine_verbindung": "Die Update-Prüfung braucht eine Internetverbindung. Das Programm selbst arbeitet ohne Netz.",
+           "update_unbekannt": "Die neueste Veröffentlichung ließ sich nicht lesen.",
+           "update_aktuell": "Das ist die neueste Fassung (%s).",
+           "update_neuer": "Es gibt eine neuere Fassung: %s\n\nDies ist %s.\n\nZur Veröffentlichung?",
+           "update_knoepfe": "In diesem Programm gibt es eine Schaltfläche dafür.", "info_text": """Text schwärzen — was die App tut
 
 Schwärzt Text in Bildern, PDFs und Textdateien. Alles geschieht auf diesem Rechner; nichts wird verschickt.
 
@@ -62,7 +69,14 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen",
            "seite": "Seite", "von": "von", "fertig": "Fertig",
            "bild_waehlen": "Welches Bild oder PDF schwärzen?"},
     "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_zeigen": "Show in file manager", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info",
-           "k_entfernen": "Remove from list", "info_text": """Redact text — what this app does
+           "k_entfernen": "Remove from list",
+           "k_update": "Check for updates",
+           "update_titel": "Update check",
+           "update_keine_verbindung": "The update check needs an internet connection. The program itself works offline.",
+           "update_unbekannt": "The latest release could not be read.",
+           "update_aktuell": "This is the latest version (%s).",
+           "update_neuer": "A newer version is available: %s\n\nThis is %s.\n\nOpen the release page?",
+           "update_knoepfe": "The program has a button for this.", "info_text": """Redact text — what this app does
 
 Redacts text in images, PDFs and text files. Everything happens on this machine; nothing is sent anywhere.
 
@@ -97,6 +111,30 @@ Source: github.com/Suilui1/text-schwaerzen""", "titel": "Redact text",
            "seite": "Page", "von": "of", "fertig": "Done",
            "bild_waehlen": "Which image or PDF should be redacted?"},
 }
+
+
+def neueste_fassung(adresse: str = "",
+                    zeitgrenze: float = 8.0) -> str:
+    """Kennzeichnung der neuesten Veröffentlichung — oder "" bei Fehler.
+
+    Fragt die LISTE der Veröffentlichungen ab, nicht /releases/latest: Das liefert 404,
+    solange alle Fassungen als Vorab-Fassung gekennzeichnet sind (am 26.11.2026 gemessen
+    — genau daran scheiterte die Update-Prüfung der Mac-App).
+    """
+    import json
+    import urllib.request
+
+    adresse = adresse or ("https://api.github.com/repos/Suilui1/text-schwaerzen/releases")
+    anfrage = urllib.request.Request(adresse, headers={
+        "User-Agent": "text-schwaerzen", "Accept": "application/vnd.github+json"})
+    try:
+        with urllib.request.urlopen(anfrage, timeout=zeitgrenze) as antwort:
+            liste = json.load(antwort)
+    except Exception:
+        return ""
+    if not isinstance(liste, list) or not liste:
+        return ""
+    return str(liste[0].get("tag_name", "") or "")
 
 
 def ist_ergebnis(datei: Path) -> bool:
@@ -216,8 +254,38 @@ class App:
         text.insert("1.0", self.t.get("info_text", ""))
         text.configure(state="disabled")
         text.pack(fill="both", expand=True, pady=(8, 8))
-        ttk.Button(rahmen, text=self.t.get("k_fertig", "Fertig") if "k_fertig" in self.t
-                   else "OK", command=fenster.destroy).pack(anchor="e")
+        knoepfe = ttk.Frame(rahmen)
+        knoepfe.pack(fill="x", pady=(4, 0))
+        # Julius am 26.11.2026: „die win 10 version hat keine update funktion".
+        # Jetzt dieselbe Frage wie in der Mac-App — nur über die LISTE der
+        # Veröffentlichungen, weil /releases/latest bei Vorab-Fassungen 404 liefert.
+        ttk.Button(knoepfe, text=self.t.get("k_update", "Nach Updates sehen"),
+                   command=self.update_pruefen).pack(side="left")
+        ttk.Button(knoepfe, text=self.t.get("k_fertig", "Fertig") if "k_fertig" in self.t
+                   else "OK", command=fenster.destroy).pack(side="right")
+
+    def update_pruefen(self) -> None:
+        """Fragt bei GitHub nach der neuesten Fassung und bietet den Weg dorthin an."""
+        import webbrowser
+        from . import __kennung__
+
+        neueste = neueste_fassung()
+        if not neueste:
+            messagebox.showinfo(self.t.get("update_titel", "Update-Prüfung"),
+                                self.t.get("update_unbekannt",
+                                           "Die neueste Veröffentlichung ließ sich nicht lesen.")
+                                + "\n\n" + self.t.get("update_keine_verbindung", ""))
+            return
+        if neueste == __kennung__:
+            messagebox.showinfo(self.t.get("update_titel", "Update-Prüfung"),
+                                self.t.get("update_aktuell", "Das ist die neueste Fassung (%s).")
+                                % neueste)
+            return
+        frage = self.t.get("update_neuer",
+                           "Es gibt eine neuere Fassung: %s\n\nDies ist %s.\n\nZur Veröffentlichung?")
+        if messagebox.askyesno(self.t.get("update_titel", "Update-Prüfung"),
+                               frage % (neueste, __kennung__)):
+            webbrowser.open("https://github.com/Suilui1/text-schwaerzen/releases")
 
     def groesse_nachziehen(self) -> None:
         try:

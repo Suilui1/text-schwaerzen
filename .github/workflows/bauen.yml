@@ -92,6 +92,22 @@ jobs:
           curl -L -o tessdata/deu.traineddata "https://github.com/tesseract-ocr/tessdata_fast/raw/main/deu.traineddata"
           cp tessdata/deu.traineddata "$(brew --prefix)/share/tessdata/" || true
 
+      # Kennzeichnung der Veröffentlichung ins Paket schreiben, damit die
+      # Update-Prüfung im Programm weiß, aus welcher Fassung sie stammt.
+      # Anlaß (26.11.2026): Julius — „die win 10 version hat keine update funktion".
+      - name: Kennzeichnung setzen
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib, re
+          p = pathlib.Path("textschwaerzen/__init__.py")
+          t = p.read_text(encoding="utf-8")
+          t = re.sub(r'__kennung__ = "[^"]*"', '__kennung__ = "${{ github.ref_name }}"', t)
+          p.write_text(t, encoding="utf-8")
+          print("Kennzeichnung:", [z for z in t.splitlines() if "__kennung__" in z])
+          PY
+
       - name: Paket bauen (Windows)
         if: matrix.system == 'windows'
         shell: powershell
