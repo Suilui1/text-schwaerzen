@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.2
+# Text schwärzen 2.9.0-alpha.3
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -16,7 +16,7 @@ ist danach nicht mehr markierbar oder kopierbar.
 | `Text-schwaerzen-android.apk` | Android 8 und neuer |
 | `Text-schwaerzen-windows.zip` | Windows 10/11 (mit Tesseract) |
 | `Text-schwaerzen-linux.tar.gz` | Linux (x86_64) |
-| `Text-schwaerzen-macos-app.zip` | **macOS-App** — braucht nichts weiter (Apple Silicon und Intel, ab macOS 14) |
+| `Text-schwaerzen-macos-app.zip` | **macOS-App** — braucht nichts weiter (Apple Silicon und Intel, ab macOS 13) |
 | `Text-schwaerzen-macos-rechner.zip` | macOS (Rechner-Fassung, braucht Tesseract, nur Apple Silicon) |
 
 Die macOS-App ist neu dabei: entpacken, in den Ordner *Programme* ziehen, beim ersten
@@ -28,6 +28,15 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung
+
+- **Update-Prüfung in der Rechner-Fassung** (Windows, Linux, macOS): unter „Info" fragt
+  ein Knopf bei GitHub nach einer neueren Fassung — nur auf Klick, sonst kein Netzverkehr.
+- **Android: „Nach Updates sehen"** unter „Mehr…" — zeigt die Fassung und öffnet die
+  Veröffentlichungsseite im Browser. Die App selbst hat weiterhin kein Netzrecht.
+- **macOS-Installer:** `.dmg` zum Ziehen und `.pkg` zum Doppelklicken (installiert selbst
+  und entfernt die Sperre). Die Mac-App läuft ab macOS 13 und auf Apple Silicon wie Intel.
+
+## Neu in der vorigen Fassung (alpha.2)
 
 - **Zwei Schritte statt vier Knöpfe auf einmal:** erst „Wie vorgehen?" (Automatisch
   schwärzen · Selbst markieren), dann „Was schwärzen?". Der Dateiname steht dabei im Fenster.
