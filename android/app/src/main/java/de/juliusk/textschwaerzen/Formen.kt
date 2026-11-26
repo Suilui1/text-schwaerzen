@@ -62,6 +62,73 @@ object Formen {
     }
 
     /** Dreieck-Spitze; Richtung ergibt sich aus (x0,y0) → (x1,y1). */
+    /** Weichzeichnen: zwei Durchgänge Kastenfilter, kommt einem Gauß-Filter nahe.
+     *
+     * Warum (26.11.2026): Julius — „verwischen nicht so schön". Gemeint war das Ergebnis
+     * auf Android: es verpixelte (Blöcke 12), das sieht hart aus. Auf dem Mac ist es ein
+     * echter Weichzeichner, und das gefiel ihm. Deshalb hier dasselbe: Präfixsummen je
+     * Zeile und Spalte, kein zusätzliches Paket.
+     */
+    fun weichzeichnen(quelle: Bitmap, radius: Int): Bitmap {
+        val w = quelle.width
+        val h = quelle.height
+        if (radius < 1 || w < 3 || h < 3) return quelle
+        val ein = IntArray(w * h)
+        quelle.getPixels(ein, 0, w, 0, 0, w, h)
+        val quer = IntArray(w * h)
+        val aus = IntArray(w * h)
+        val gross = maxOf(w, h) + 1
+        val s0 = IntArray(gross)
+        val s1 = IntArray(gross)
+        val s2 = IntArray(gross)
+        val s3 = IntArray(gross)
+
+        // waagerecht
+        for (y in 0 until h) {
+            val start = y * w
+            s0[0] = 0; s1[0] = 0; s2[0] = 0; s3[0] = 0
+            for (x in 0 until w) {
+                val p = ein[start + x]
+                s0[x + 1] = s0[x] + ((p ushr 24) and 0xFF)
+                s1[x + 1] = s1[x] + ((p ushr 16) and 0xFF)
+                s2[x + 1] = s2[x] + ((p ushr 8) and 0xFF)
+                s3[x + 1] = s3[x] + (p and 0xFF)
+            }
+            for (x in 0 until w) {
+                val lo = maxOf(0, x - radius)
+                val hi = minOf(w - 1, x + radius)
+                val n = hi - lo + 1
+                quer[start + x] = (((s0[hi + 1] - s0[lo]) / n) shl 24) or
+                        (((s1[hi + 1] - s1[lo]) / n) shl 16) or
+                        (((s2[hi + 1] - s2[lo]) / n) shl 8) or
+                        ((s3[hi + 1] - s3[lo]) / n)
+            }
+        }
+        // senkrecht
+        for (x in 0 until w) {
+            s0[0] = 0; s1[0] = 0; s2[0] = 0; s3[0] = 0
+            for (y in 0 until h) {
+                val p = quer[y * w + x]
+                s0[y + 1] = s0[y] + ((p ushr 24) and 0xFF)
+                s1[y + 1] = s1[y] + ((p ushr 16) and 0xFF)
+                s2[y + 1] = s2[y] + ((p ushr 8) and 0xFF)
+                s3[y + 1] = s3[y] + (p and 0xFF)
+            }
+            for (y in 0 until h) {
+                val lo = maxOf(0, y - radius)
+                val hi = minOf(h - 1, y + radius)
+                val n = hi - lo + 1
+                aus[y * w + x] = (((s0[hi + 1] - s0[lo]) / n) shl 24) or
+                        (((s1[hi + 1] - s1[lo]) / n) shl 16) or
+                        (((s2[hi + 1] - s2[lo]) / n) shl 8) or
+                        ((s3[hi + 1] - s3[lo]) / n)
+            }
+        }
+        val fertig = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        fertig.setPixels(aus, 0, w, 0, 0, w, h)
+        return fertig
+    }
+
     fun spitze(x0: Float, y0: Float, x1: Float, y1: Float, laenge: Float): Path {
         val winkel = Math.atan2((y1 - y0).toDouble(), (x1 - x0).toDouble())
         val links = winkel + Math.PI * 0.85
@@ -146,12 +213,13 @@ object Formen {
                     val breite = (rechts - links).toInt().coerceAtLeast(1)
                     val h = (unten - oben).toInt().coerceAtLeast(1)
                     if (links >= 0 && oben >= 0 && rechts <= bild.width && unten <= bild.height) {
-                        val klein = Bitmap.createScaledBitmap(
-                            Bitmap.createBitmap(bild, links.toInt(), oben.toInt(), breite, h),
-                            (breite / 12).coerceAtLeast(1), (h / 12).coerceAtLeast(1), false)
-                        z.drawBitmap(klein, null,
-                            android.graphics.RectF(links, oben, rechts, unten), null)
-                        klein.recycle()
+                        val ausschnitt = Bitmap.createBitmap(bild, links.toInt(), oben.toInt(), breite, h)
+                        // Radius wie auf dem Mac: ein Achtel der kurzen Seite, mindestens 6 Punkte
+                        val radius = maxOf(6, minOf(breite, h) / 8)
+                        val weich = weichzeichnen(ausschnitt, radius)
+                        z.drawBitmap(weich, null, android.graphics.RectF(links, oben, rechts, unten), null)
+                        weich.recycle()
+                        ausschnitt.recycle()
                     }
                 }
             }

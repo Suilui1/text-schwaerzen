@@ -566,16 +566,24 @@ class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap)
                     })
             }
             "verwischen" -> {
-                val stift = Paint().apply { color = Color.argb(160, 120, 120, 120) }
-                var x = links
-                while (x < rechts) {
-                    var y = oben
-                    while (y < unten) {
-                        canvas.drawRect(x, y, minOf(x + 8f, rechts), minOf(y + 8f, unten), stift)
-                        y += 8f
-                    }
-                    x += 8f
-                }
+                // Vorschau: den Ausschnitt klein und wieder groß zeichnen — weich, so wie das
+                // Ergebnis. Vorher lagen graue Kästchen darüber; das sah nach Raster aus
+                // (Julius, 26.11.2026: „verwischen nicht so schön").
+                val kasten = RectF(links, oben, rechts, unten)
+                val faktor = 10f
+                val klein = Bitmap.createBitmap(
+                    ((rechts - links) / faktor).toInt().coerceAtLeast(1),
+                    ((unten - oben) / faktor).toInt().coerceAtLeast(1),
+                    Bitmap.Config.ARGB_8888)
+                val maler = Canvas(klein)
+                maler.drawBitmap(bild,
+                    android.graphics.Rect(links.toInt(), oben.toInt(),
+                                          rechts.toInt(), unten.toInt()),
+                    RectF(0f, 0f, klein.width.toFloat(), klein.height.toFloat()),
+                    Paint().apply { isFilterBitmap = true })
+                canvas.drawBitmap(klein, null, kasten,
+                    Paint().apply { isFilterBitmap = true })
+                klein.recycle()
             }
         }
     }
