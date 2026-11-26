@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.5
+# Text schwärzen 2.9.0-alpha.6
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,10 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung
+
+- **Android verwischt jetzt weich statt zu verpixeln.** Ergebnis und Vorschau zeichnen mit
+  einem echten Weichzeichner (zwei Kastenfilter-Durchgänge, Radius ein Achtel der kurzen
+  Seite) — dieselbe Anmutung wie in der Mac-App. Vorher hinterließ „Verwischen" harte Blöcke.
 
 - **Behoben: die Befehlszeile stürzte ab.** Durch einen Namenskonflikt in der
   Programmdatei scheiterte jede Schwärzung über die Befehlszeile (`--bild`, `--text`,
