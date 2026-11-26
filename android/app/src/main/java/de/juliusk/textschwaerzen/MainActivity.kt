@@ -1249,12 +1249,13 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Mehr")
             .setItems(arrayOf("Schrift wählen", "Darstellung", "Selbsttest", "Info",
-                              "Beenden")) { _, was ->
+                              "Nach Updates sehen", "Beenden")) { _, was ->
                 when (was) {
                     0 -> schriftWaehlen()
                     1 -> darstellungWaehlen()
                     2 -> selbsttestLaufen()
                     3 -> infoZeigen()
+                    4 -> updateAnzeigen()
                     else -> { threads.shutdown(); finish() }
                 }
             }
@@ -1309,6 +1310,42 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /** „Nach Updates sehen": zeigt die Fassung und den Weg zu neuen Fassungen.
+     *
+     * Warum ohne eigene Abfrage (26.11.2026): Die App hat bewusst KEIN Netzrecht — sie
+     * „schickt nichts ins Netz", und das soll auch so bleiben. Also kein Abruf in der App,
+     * sondern der Browser: dort steht die neueste Fassung mit Datum.
+     */
+    private fun updateAnzeigen() {
+        val fassung = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (fehler: Exception) {
+            "?"
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Nach Updates sehen")
+            .setMessage(
+                "Diese App ist Fassung " + fassung + ".\n\n" +
+                "Neue Fassungen stehen auf der Veröffentlichungsseite. Die App selbst " +
+                "schickt nichts ins Netz — dieser Knopf öffnet nur den Browser."
+            )
+            .setPositiveButton("Im Browser öffnen") { _, _ ->
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://github.com/Suilui1/text-schwaerzen/releases")))
+                } catch (fehler: Exception) {
+                    // Kein Browser vorhanden: Adresse wenigstens zeigen
+                    AlertDialog.Builder(this)
+                        .setTitle("Adresse")
+                        .setMessage("github.com/Suilui1/text-schwaerzen/releases")
+                        .setPositiveButton("OK", null)
+                        .show()
+                }
+            }
+            .setNegativeButton("Schließen", null)
+            .show()
+    }
+
     /** „Info": was die App tut, was sie kann, was sie nicht kann. */
     private fun infoZeigen() {
         val fassung = try {
@@ -1333,6 +1370,9 @@ class MainActivity : AppCompatActivity() {
             · Bereich ziehen — Rahmen um einen Fleck (z. B. QR-Code)
             · Zeilen auswählen — bei Textdateien
             QR- und Strichcodes werden immer mitgeschwärzt.
+
+            NEUE FASSUNGEN
+            Unter „Mehr…" → „Nach Updates sehen" steht der Weg zur Veröffentlichungsseite.
 
             WAS DIE APP NICHT MACHT
             Sie löscht keine Bilder und schickt nichts ins Netz. Sie ersetzt keine
