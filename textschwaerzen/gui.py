@@ -70,7 +70,8 @@ TEXTE = {
     "fertig": "Fertig",
     "bild_waehlen": "Welches Bild oder PDF schwärzen?",
     "k_app": "In der App öffnen",
-    "datei_fehlt": "Datei fehlt."
+    "datei_fehlt": "Datei fehlt.",
+    "k_beenden": "Beenden"
 },
     "en": {
     "k_oeffnen": "Open",
@@ -119,7 +120,8 @@ TEXTE = {
     "fertig": "Done",
     "bild_waehlen": "Which image or PDF should be redacted?",
     "k_app": "Open in the app",
-    "datei_fehlt": "File is missing."
+    "datei_fehlt": "File is missing.",
+    "k_beenden": "Quit"
 },
 }
 
@@ -170,7 +172,8 @@ TEXTE["fr"] = {
     "fertig": "Terminé",
     "bild_waehlen": "Quelle image ou quel PDF masquer ?",
     "k_app": "Ouvrir dans l'application",
-    "datei_fehlt": "Fichier introuvable."
+    "datei_fehlt": "Fichier introuvable.",
+    "k_beenden": "Quitter"
 }
 
 TEXTE["es"] = {
@@ -220,7 +223,8 @@ TEXTE["es"] = {
     "fertig": "Listo",
     "bild_waehlen": "¿Qué imagen o PDF ocultar?",
     "k_app": "Abrir en la aplicación",
-    "datei_fehlt": "Falta el archivo."
+    "datei_fehlt": "Falta el archivo.",
+    "k_beenden": "Salir"
 }
 
 TEXTE["zh"] = {
@@ -270,7 +274,8 @@ TEXTE["zh"] = {
     "fertig": "完成",
     "bild_waehlen": "要遮蔽哪张图片或哪个 PDF？",
     "k_app": "在应用中打开",
-    "datei_fehlt": "文件不存在。"
+    "datei_fehlt": "文件不存在。",
+    "k_beenden": "退出"
 }
 
 def update_abfrage(adresse: str = "", zeitgrenze: float = 10.0) -> tuple[str, str]:
@@ -421,7 +426,9 @@ class App:
                    command=self.ergebnisse_zeigen).pack(fill="x", pady=4)
         ttk.Button(rahmen, text=self.t.get("k_info", "Info"),
                    command=self.info_zeigen).pack(fill="x", pady=4)
-        ttk.Button(rahmen, text=self.t["k_abbrechen"],
+        # Der Knopf beendet das Programm — also heißt er auch so (Julius, 27.11.2026:
+        # „abbrechen ist doch beenden"). „Abbrechen" bleibt in den Dialogen, wo es stimmt.
+        ttk.Button(rahmen, text=self.t.get("k_beenden", "Beenden"),
                    command=self.wurzel.destroy).pack(fill="x", pady=(10, 0))
 
         # Fenstergröße aus dem Inhalt ableiten. `geometry("")` allein genügte nicht:
