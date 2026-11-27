@@ -58,7 +58,7 @@ class BereichActivity : Activity() {
             null
         }
         if (geladen == null) {
-            android.widget.Toast.makeText(this, "Bild nicht lesbar", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, Texte.t("bild_nicht_lesbar"), android.widget.Toast.LENGTH_LONG).show()
             setResult(RESULT_CANCELED)
             finish()
             return
@@ -84,11 +84,11 @@ class BereichActivity : Activity() {
             orientation = android.widget.LinearLayout.HORIZONTAL
         }
         val abbrechen = Button(this).apply {
-            text = "Abbrechen"
+            text = Texte.t("abbrechen")
             setOnClickListener { setResult(RESULT_CANCELED); finish() }
         }
         val uebernehmen = Button(this).apply {
-            text = "Schwärzen"
+            text = Texte.t("schwaerzen")
             setOnClickListener {
                 val r = ansicht.bereich()
                 if (r == null) {

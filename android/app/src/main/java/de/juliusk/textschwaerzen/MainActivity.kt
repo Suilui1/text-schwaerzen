@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity() {
         // machte die Liste unchronologisch (Julius, 25.11.2026).
         val eintraege = verlaufSaeubern()
         if (eintraege.isEmpty()) {
-            Toast.makeText(this, "Noch keine Datei geöffnet", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, Texte.t("keine_letzte"), Toast.LENGTH_SHORT).show()
             return
         }
         // Nur der Dateiname: der Vorsatz („fertig", „PDF") sah unschön aus
@@ -155,17 +155,17 @@ class MainActivity : AppCompatActivity() {
             teil.split("|").getOrElse(2) { "?" }
         }.toTypedArray()
         AlertDialog.Builder(this)
-            .setTitle("Letzte Dateien")
+            .setTitle(Texte.t("letzte_dateien"))
             .setItems(namen) { _, welcher ->
                 val eintrag = eintraege[welcher]
                 val stuecke = eintrag.split("|")
                 val uri = android.net.Uri.parse(stuecke[1])
-                val name = stuecke.getOrElse(2) { "Datei" }
+                val name = stuecke.getOrElse(2) { Texte.t("datei") }
                 val istErgebnis = stuecke[0].endsWith("-aus")
                 val auswahl = if (istErgebnis) {
-                    arrayOf("Öffnen", "Ordner im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")
+                    arrayOf(Texte.t("oeffnen"), Texte.t("im_ordner"), Texte.t("aus_liste"), Texte.t("loeschen"))
                 } else {
-                    arrayOf("Öffnen", "Ordner im Dateimanager zeigen", "Aus Liste entfernen")
+                    arrayOf(Texte.t("oeffnen"), Texte.t("im_ordner"), Texte.t("aus_liste"))
                 }
                 AlertDialog.Builder(this)
                     .setTitle(name)
@@ -178,7 +178,7 @@ class MainActivity : AppCompatActivity() {
                             else -> loescheErgebnis(uri, name)
                         }
                     }
-                    .setNegativeButton("Abbrechen", null)
+                    .setNegativeButton(Texte.t("abbrechen"), null)
                     .show()
             }
             .setNeutralButton("Liste leeren") { _, _ -> listeLeeren() }
@@ -191,12 +191,12 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Liste leeren?")
             .setMessage("Alle Eintraege werden aus der Liste entfernt.\n" +
-                        "Die Dateien selbst bleiben auf dem Geraet.")
+                        Texte.t("dateien_bleiben"))
             .setPositiveButton("Leeren") { _, _ ->
                 verlaufSchreiben(emptyList())
                 Toast.makeText(this, "Liste geleert", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -321,8 +321,8 @@ class MainActivity : AppCompatActivity() {
         val name = nameDerDatei(uri)
         merken(uri, name, "text")
         AlertDialog.Builder(this)
-            .setTitle("Text schwärzen — wie stark?")
-            .setItems(arrayOf("Nur Adressen und Namen", "Alles", "Zeilen auswählen")) { _, welcher ->
+            .setTitle(Texte.t("text_wie_stark"))
+            .setItems(arrayOf(Texte.t("gezielt"), Texte.t("alles"), Texte.t("zeilen_auswaehlen"))) { _, welcher ->
                 if (welcher == 2) {
                     zeilenAuswaehlen(uri, name)
                     return@setItems
@@ -332,7 +332,7 @@ class MainActivity : AppCompatActivity() {
                     val ergebnis = TextVerarbeitung.verarbeite(this, uri, modusName, name)
                     runOnUiThread {
                         if (ergebnis.fehler.isNotEmpty()) {
-                            AlertDialog.Builder(this).setTitle("Fehler")
+                            AlertDialog.Builder(this).setTitle(Texte.t("fehler"))
                                 .setMessage(ergebnis.fehler)
                                 .setPositiveButton("OK", null).show()
                             return@runOnUiThread
@@ -351,7 +351,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -359,8 +359,8 @@ class MainActivity : AppCompatActivity() {
     private fun zeilenAuswaehlen(uri: android.net.Uri, name: String) {
         val alle = TextVerarbeitung.zeilen(this, uri)
         if (alle.isEmpty()) {
-            AlertDialog.Builder(this).setTitle("Fehler")
-                .setMessage("Datei nicht lesbar").setPositiveButton("OK", null).show()
+            AlertDialog.Builder(this).setTitle(Texte.t("fehler"))
+                .setMessage(Texte.t("datei_nicht_lesbar")).setPositiveButton("OK", null).show()
             return
         }
         val angezeigt = alle.mapIndexed { nummer, zeile ->
@@ -368,16 +368,16 @@ class MainActivity : AppCompatActivity() {
         }.toTypedArray()
         val gewaehlt = mutableSetOf<Int>()
         AlertDialog.Builder(this)
-            .setTitle("Zeilen zum Schwärzen ankreuzen")
+            .setTitle(Texte.t("zeilen_ankreuzen"))
             .setMultiChoiceItems(angezeigt, null) { _, welche, istAn -> 
                 if (istAn) gewaehlt.add(welche) else gewaehlt.remove(welche)
             }
-            .setPositiveButton("Schwärzen") { _, _ ->
+            .setPositiveButton(Texte.t("schwaerzen")) { _, _ ->
                 threads.execute {
                     val ergebnis = TextVerarbeitung.verarbeiteAuswahl(this, uri, gewaehlt, name)
                     runOnUiThread {
                         if (ergebnis.fehler.isNotEmpty()) {
-                            AlertDialog.Builder(this).setTitle("Fehler")
+                            AlertDialog.Builder(this).setTitle(Texte.t("fehler"))
                                 .setMessage(ergebnis.fehler).setPositiveButton("OK", null).show()
                             return@runOnUiThread
                         }
@@ -390,7 +390,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -400,13 +400,13 @@ class MainActivity : AppCompatActivity() {
         // application/octet-stream). Deshalb zeigen wir alle Dateien an und prüfen den
         // Inhalt selbst — am 24.11.2026 waren im Auswahlfenster keine PDFs zu sehen.
         if (!istPdf(uri)) {
-            bericht.text = "Diese Datei ist kein PDF."
+            bericht.text = Texte.t("kein_pdf")
             return
         }
         merken(uri, nameDerDatei(uri), "pdf")
         AlertDialog.Builder(this)
-            .setTitle("Wie stark schwärzen?")
-            .setItems(arrayOf("Nur Adressen und Namen", "Alles", "Bereich ziehen")) { _, welcher ->
+            .setTitle(Texte.t("wie_stark"))
+            .setItems(arrayOf(Texte.t("gezielt"), Texte.t("alles"), Texte.t("bereich_ziehen"))) { _, welcher ->
                 if (welcher == 2) {
                     pdfRahmenZiehen(uri)
                     return@setItems
@@ -414,7 +414,7 @@ class MainActivity : AppCompatActivity() {
                 modus = if (welcher == 0) "gezielt" else "alles"
                 startePdf(uri)
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -440,7 +440,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 bericht.text = meldung
                 AlertDialog.Builder(this)
-                    .setTitle("Selbsttest")
+                    .setTitle(Texte.t("selbsttest"))
                     .setMessage(meldung)
                     .setPositiveButton("OK", null)
                     .show()
@@ -479,7 +479,7 @@ class MainActivity : AppCompatActivity() {
             } catch (fehler: Exception) {
                 runOnUiThread {
                     bildWaehlen.isEnabled = true
-                    AlertDialog.Builder(this).setTitle("Fehler")
+                    AlertDialog.Builder(this).setTitle(Texte.t("fehler"))
                         .setMessage(fehler.message).setPositiveButton("OK", null).show()
                 }
             }
@@ -496,7 +496,7 @@ class MainActivity : AppCompatActivity() {
         bildWaehlen.isEnabled = true
         val arten = formen.map { it.typ }.distinct().size
         bericht.text = formen.size.toString() + " Form(en) gezeichnet.\n\n" +
-                       "Vorschau antippen öffnet die Datei."
+                       Texte.t("vorschau_hinweis")
         speichereUndZeige(kopie, formen.size.toString() + " Form(en) gezeichnet")
     }
 
@@ -696,7 +696,7 @@ class MainActivity : AppCompatActivity() {
         fortschrittDialog = AlertDialog.Builder(this)
             .setTitle("Schwärzen läuft")
             .setView(leiste)
-            .setNegativeButton("Abbrechen") { _, _ -> abbrechenGewuenscht = true }
+            .setNegativeButton(Texte.t("abbrechen")) { _, _ -> abbrechenGewuenscht = true }
             .setCancelable(false)
             .show()
     }
@@ -779,7 +779,7 @@ class MainActivity : AppCompatActivity() {
             contentResolver.openInputStream(uri)?.use { strom ->
                 val bild = BitmapFactory.decodeStream(strom)
                 if (bild == null) {
-                    Toast.makeText(this, "Bild nicht lesbar", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, Texte.t("bild_nicht_lesbar"), Toast.LENGTH_LONG).show()
                     return
                 }
                 original = bild
@@ -834,7 +834,7 @@ class MainActivity : AppCompatActivity() {
             }
             Toast.makeText(this, "Gespeichert: " + ziel, Toast.LENGTH_LONG).show()
         } catch (fehler: Exception) {
-            Toast.makeText(this, "Speichern fehlgeschlagen: " + fehler.message,
+            Toast.makeText(this, Texte.t("speichern_nein") + fehler.message,
                            Toast.LENGTH_LONG).show()
         }
     }
@@ -848,13 +848,13 @@ class MainActivity : AppCompatActivity() {
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            startActivity(Intent.createChooser(absicht, "Teilen"))
+            startActivity(Intent.createChooser(absicht, Texte.t("teilen")))
         } catch (fehler: Exception) {
-            Toast.makeText(this, "Teilen nicht möglich", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, Texte.t("teilen_nein"), Toast.LENGTH_LONG).show()
         }
     }
 
-    /** Dialog nach dem Speichern: mehr Möglichkeiten als nur "Öffnen". */
+    /** Dialog nach dem Speichern: mehr Möglichkeiten als nur Texte.t("oeffnen"). */
     /**
      * Zeigt einen Dialog nur, solange die Activity lebt.
      *
@@ -878,9 +878,9 @@ class MainActivity : AppCompatActivity() {
         val dialog = AlertDialog.Builder(this)
             .setTitle(titel)
             .setMessage(text)
-            .setPositiveButton("Öffnen") { _, _ -> oeffneLetzte() }
+            .setPositiveButton(Texte.t("oeffnen")) { _, _ -> oeffneLetzte() }
             .setNeutralButton("Mehr…") { _, _ -> mehrDialog() }
-            .setNegativeButton("Schließen", null)
+            .setNegativeButton(Texte.t("schliessen"), null)
             .create()
         anzeigen(dialog)
     }
@@ -889,7 +889,7 @@ class MainActivity : AppCompatActivity() {
     private fun mehrDialog() {
         AlertDialog.Builder(this)
             .setTitle("Mehr")
-            .setItems(arrayOf("Speichern unter…", "Teilen", "Löschen")) { _, was ->
+            .setItems(arrayOf(Texte.t("speichern_unter"), Texte.t("teilen"), Texte.t("loeschen"))) { _, was ->
                 when (was) {
                     0 -> {
                         if (letzterTyp == "application/pdf") {
@@ -904,7 +904,7 @@ class MainActivity : AppCompatActivity() {
                     else -> {
                         val uri = letzteDatei
                         if (uri == null) {
-                            Toast.makeText(this, "Keine Datei zum Löschen", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, Texte.t("keine_datei"), Toast.LENGTH_SHORT).show()
                         } else {
                             loescheErgebnis(uri, "Ergebnis")
                         }
@@ -940,7 +940,7 @@ class MainActivity : AppCompatActivity() {
                 val name = stuecke.getOrElse(2) { "Ergebnis" }
                 AlertDialog.Builder(this)
                     .setTitle(name)
-                    .setItems(arrayOf("Öffnen", "Ordner im Dateimanager zeigen", "Aus Liste entfernen", "Löschen")) { _, was ->
+                    .setItems(arrayOf(Texte.t("oeffnen"), Texte.t("im_ordner"), Texte.t("aus_liste"), Texte.t("loeschen"))) { _, was ->
                         if (was == 0) {
                             oeffneExtern(uri, when (stuecke[0]) {
                                 "pdf-aus" -> "application/pdf"
@@ -955,11 +955,11 @@ class MainActivity : AppCompatActivity() {
                             loescheErgebnis(uri, name)
                         }
                     }
-                    .setNegativeButton("Abbrechen", null)
+                    .setNegativeButton(Texte.t("abbrechen"), null)
                     .show()
             }
             .setNeutralButton("Liste leeren") { _, _ -> listeLeeren() }
-            .setNegativeButton("Schließen", null)
+            .setNegativeButton(Texte.t("schliessen"), null)
             .show()
     }
 
@@ -968,20 +968,20 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Löschen?")
             .setMessage(name + "\n\nDie Datei wird endgültig entfernt.")
-            .setPositiveButton("Löschen") { _, _ ->
+            .setPositiveButton(Texte.t("loeschen")) { _, _ ->
                 try {
                     contentResolver.delete(uri, null, null)
                     val alt = verlauf.getStringSet("dateien", emptySet())?.toMutableSet()
                         ?: mutableSetOf<String>()
                     alt.removeAll { it.contains(uri.toString()) }
                     verlauf.edit().putStringSet("dateien", alt).apply()
-                    Toast.makeText(this, "Gelöscht: " + name, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, Texte.t("geloescht") + name, Toast.LENGTH_SHORT).show()
                 } catch (fehler: Throwable) {
-                    Toast.makeText(this, "Löschen nicht möglich: " + fehler.message,
+                    Toast.makeText(this, Texte.t("loeschen_nein") + fehler.message,
                                    Toast.LENGTH_LONG).show()
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -1032,7 +1032,7 @@ class MainActivity : AppCompatActivity() {
             return
         } catch (fehler: Throwable) {
         }
-        Toast.makeText(this, "Ordner nicht auffindbar", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, Texte.t("ordner_fehlt"), Toast.LENGTH_LONG).show()
     }
 
     /** Ordner-URI zur Datei — Dokumente oder Medien-Speicher. */
@@ -1092,7 +1092,7 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(absicht)
         } catch (fehler: Exception) {
-            Toast.makeText(this, "Keine App zum Öffnen", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, Texte.t("keine_app"), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -1133,12 +1133,12 @@ class MainActivity : AppCompatActivity() {
             setPadding(24, 24, 24, 24)
         }
         val titel = TextView(this).apply {
-            text = "Text schwärzen"
+            text = Texte.t("titel")
             textSize = 22f
         }
         bericht = TextView(this).apply {
             setTextColor(Darstellung.farben(this@MainActivity).text)
-            text = "Ein Bild wählen — erkannt wird der Text darauf, nicht das Bild."
+            text = Texte.t("start_hinweis")
             textSize = 15f
             setPadding(0, 12, 0, 12)
         }
@@ -1158,7 +1158,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         bildWaehlen = Button(this).apply {
-            text = "Datei wählen"
+            text = Texte.t("datei_waehlen")
             // Ein Knopf für Bild, PDF und Text (Julius, 24.11.2026). Die Art wird an
             // Inhalt und Endung erkannt; deshalb sind alle Typen zugelassen.
             setOnClickListener {
@@ -1169,7 +1169,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         val letzteKnopf = Button(this).apply {
-            text = "Letzte Dateien"
+            text = Texte.t("letzte_dateien")
             setOnClickListener { letzteZeigen() }
         }
         val ergebnisKnopf = Button(this).apply {
@@ -1182,37 +1182,37 @@ class MainActivity : AppCompatActivity() {
                 // In diesem Block ist "this" der Knopf — für den Dialog braucht es die Activity.
                 val schriften = Erkennung.Schrift.values()
                 AlertDialog.Builder(this@MainActivity)
-                    .setTitle("Schriftsystem wählen")
+                    .setTitle(Texte.t("schriftsystem"))
                     .setItems(schriften.map { it.anzeige }.toTypedArray()) { _, welcher ->
                         erkennung.setzeSchrift(schriften[welcher])
                         this.text = "Schrift: " + schriften[welcher].anzeige.substringBefore(" ")
                         bericht.text = "Schrift: " + schriften[welcher].anzeige
                     }
-                    .setNegativeButton("Abbrechen", null)
+                    .setNegativeButton(Texte.t("abbrechen"), null)
                     .show()
             }
         }
         val selbsttest = Button(this).apply {
-            text = "Selbsttest"
+            text = Texte.t("selbsttest")
             setOnClickListener { selbsttestLaufen() }
         }
         val darstellungKnopf = Button(this).apply {
-            text = "Darstellung"
+            text = Texte.t("darstellung")
             setOnClickListener { darstellungWaehlen() }
         }
         val infoKnopf = Button(this).apply {
-            text = "Info"
+            text = Texte.t("info")
             setOnClickListener { infoZeigen() }
         }
         val beenden = Button(this).apply {
-            text = "Beenden"
+            text = Texte.t("beenden")
             setOnClickListener {
                 threads.shutdown()
                 finish()
             }
         }
         speichern = Button(this).apply {
-            text = "Speichern"
+            text = Texte.t("speichern")
             isEnabled = false
             visibility = android.view.View.GONE
             setOnClickListener { speichere() }
@@ -1298,7 +1298,7 @@ class MainActivity : AppCompatActivity() {
                 ablage.setPrimaryClip(android.content.ClipData.newPlainText("Absturz", text))
                 Toast.makeText(this, "In die Zwischenablage kopiert", Toast.LENGTH_SHORT).show()
             }
-            .setNeutralButton("Teilen") { _, _ ->
+            .setNeutralButton(Texte.t("teilen")) { _, _ ->
                 val absicht = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
                     putExtra(Intent.EXTRA_SUBJECT, "Absturz Text schwärzen")
@@ -1306,7 +1306,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 startActivity(Intent.createChooser(absicht, "Absturz schicken"))
             }
-            .setNegativeButton("Löschen") { _, _ -> datei.delete() }
+            .setNegativeButton(Texte.t("loeschen")) { _, _ -> datei.delete() }
             .show()
     }
 
@@ -1314,8 +1314,8 @@ class MainActivity : AppCompatActivity() {
     private fun mehrZeigen() {
         AlertDialog.Builder(this)
             .setTitle("Mehr")
-            .setItems(arrayOf("Schrift wählen", "Darstellung", "Selbsttest", "Info",
-                              "Nach Updates sehen", "Beenden")) { _, was ->
+            .setItems(arrayOf(Texte.t("schrift_waehlen"), Texte.t("darstellung"), Texte.t("selbsttest"), Texte.t("info"),
+                              Texte.t("update"), Texte.t("beenden"))) { _, was ->
                 when (was) {
                     0 -> schriftWaehlen()
                     1 -> darstellungWaehlen()
@@ -1325,19 +1325,19 @@ class MainActivity : AppCompatActivity() {
                     else -> { threads.shutdown(); finish() }
                 }
             }
-            .setNegativeButton("Schließen", null)
+            .setNegativeButton(Texte.t("schliessen"), null)
             .show()
     }
 
     private fun schriftWaehlen() {
         val schriften = Erkennung.Schrift.values()
         AlertDialog.Builder(this)
-            .setTitle("Schriftsystem wählen")
+            .setTitle(Texte.t("schriftsystem"))
             .setItems(schriften.map { it.anzeige }.toTypedArray()) { _, welcher ->
                 erkennung.setzeSchrift(schriften[welcher])
                 bericht.text = "Schrift: " + schriften[welcher].anzeige
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -1348,7 +1348,7 @@ class MainActivity : AppCompatActivity() {
                                   Darstellung.Modus.DUNKEL)
         val jetzt = reihenfolge.indexOf(Darstellung.modus(this)).coerceAtLeast(0)
         AlertDialog.Builder(this)
-            .setTitle("Darstellung")
+            .setTitle(Texte.t("darstellung"))
             .setItems(arrayOf("Farbschema: " + namen[jetzt],
                               "Stil: " + Darstellung.stil(this).anzeige)) { _, was ->
                 if (was == 0) {
@@ -1358,7 +1358,7 @@ class MainActivity : AppCompatActivity() {
                             Darstellung.setzeModus(this, reihenfolge[welcher])
                             recreate()
                         }
-                        .setNegativeButton("Abbrechen", null)
+                        .setNegativeButton(Texte.t("abbrechen"), null)
                         .show()
                 } else {
                     val stile = Darstellung.Stil.values()
@@ -1368,11 +1368,11 @@ class MainActivity : AppCompatActivity() {
                             Darstellung.setzeStil(this, stile[welcher])
                             recreate()
                         }
-                        .setNegativeButton("Abbrechen", null)
+                        .setNegativeButton(Texte.t("abbrechen"), null)
                         .show()
                 }
             }
-            .setNegativeButton("Schließen", null)
+            .setNegativeButton(Texte.t("schliessen"), null)
             .show()
     }
 
@@ -1389,13 +1389,13 @@ class MainActivity : AppCompatActivity() {
             "?"
         }
         AlertDialog.Builder(this)
-            .setTitle("Nach Updates sehen")
+            .setTitle(Texte.t("update"))
             .setMessage(
                 "Diese App ist Fassung " + fassung + ".\n\n" +
                 "Neue Fassungen stehen auf der Veröffentlichungsseite. Die App selbst " +
                 "schickt nichts ins Netz — dieser Knopf öffnet nur den Browser."
             )
-            .setPositiveButton("Im Browser öffnen") { _, _ ->
+            .setPositiveButton(Texte.t("im_browser")) { _, _ ->
                 try {
                     startActivity(Intent(Intent.ACTION_VIEW,
                         android.net.Uri.parse("https://github.com/Suilui1/text-schwaerzen/releases")))
@@ -1408,7 +1408,7 @@ class MainActivity : AppCompatActivity() {
                         .show()
                 }
             }
-            .setNegativeButton("Schließen", null)
+            .setNegativeButton(Texte.t("schliessen"), null)
             .show()
     }
 
@@ -1447,7 +1447,7 @@ class MainActivity : AppCompatActivity() {
             Quelltext: github.com/Suilui1/text-schwaerzen
         """.trimIndent()
         AlertDialog.Builder(this)
-            .setTitle("Info")
+            .setTitle(Texte.t("info"))
             .setMessage(text)
             .setPositiveButton("OK", null)
             .show()
@@ -1457,9 +1457,9 @@ class MainActivity : AppCompatActivity() {
     private fun bildGewaehlt() {
         if (original == null) return
         AlertDialog.Builder(this)
-            .setTitle("Wie stark schwärzen?")
-            .setItems(arrayOf("Nur Adressen und Namen", "Alles", "Bereich ziehen",
-                              "Wörter ankreuzen")) { _, welcher ->
+            .setTitle(Texte.t("wie_stark"))
+            .setItems(arrayOf(Texte.t("gezielt"), Texte.t("alles"), Texte.t("bereich_ziehen"),
+                              Texte.t("woerter_ankreuzen"))) { _, welcher ->
                 when (welcher) {
                     0 -> { modus = "gezielt"; arbeite(original!!) }
                     1 -> { modus = "alles"; arbeite(original!!) }
@@ -1467,19 +1467,19 @@ class MainActivity : AppCompatActivity() {
                     else -> woerterAnkreuzen(original!!)
                 }
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
     private fun schwaezen() {
         val bild = original ?: return
         AlertDialog.Builder(this)
-            .setTitle("Wie stark schwärzen?")
-            .setItems(arrayOf("Nur Adressen und Namen", "Alles")) { _, welcher ->
+            .setTitle(Texte.t("wie_stark"))
+            .setItems(arrayOf(Texte.t("gezielt"), Texte.t("alles"))) { _, welcher ->
                 modus = if (welcher == 0) "gezielt" else "alles"
                 arbeite(bild)
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -1489,7 +1489,7 @@ class MainActivity : AppCompatActivity() {
      * Anlaß (27.11.2026): Julius — alle Fassungen sollen die Funktionen der Mac-Fassung haben.
      */
     private fun woerterAnkreuzen(bild: Bitmap) {
-        bericht.text = "Wörter werden erkannt …"
+        bericht.text = Texte.t("woerter_laufen")
         threads.execute {
             val gefunden = try {
                 erkennung.woerter(bild).map { it.text.trim() }
@@ -1499,21 +1499,21 @@ class MainActivity : AppCompatActivity() {
             }
             runOnUiThread {
                 if (gefunden.isEmpty()) {
-                    bericht.text = "Kein Text erkannt."
-                    Toast.makeText(this, "Kein Text erkannt", Toast.LENGTH_SHORT).show()
+                    bericht.text = Texte.t("kein_text_punkt")
+                    Toast.makeText(this, Texte.t("kein_text"), Toast.LENGTH_SHORT).show()
                     return@runOnUiThread
                 }
                 val angekreuzt = BooleanArray(gefunden.size)
                 bericht.text = "Wörter ankreuzen (" + gefunden.size + ")."
                 AlertDialog.Builder(this)
-                    .setTitle("Welche Wörter schwärzen?")
+                    .setTitle(Texte.t("welche_woerter"))
                     .setMultiChoiceItems(gefunden.toTypedArray(), angekreuzt) { _, i, an ->
                         angekreuzt[i] = an
                     }
-                    .setPositiveButton("Schwärzen") { _, _ ->
+                    .setPositiveButton(Texte.t("schwaerzen")) { _, _ ->
                         val menge = gefunden.filterIndexed { i, _ -> angekreuzt[i] }.toSet()
                         if (menge.isEmpty()) {
-                            Toast.makeText(this, "Nichts angekreuzt", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, Texte.t("nichts_angekreuzt"), Toast.LENGTH_SHORT).show()
                             return@setPositiveButton
                         }
                         gewaehlteWoerter = menge
@@ -1525,7 +1525,7 @@ class MainActivity : AppCompatActivity() {
                         modus = "worte"
                         arbeite(bild)
                     }
-                    .setNegativeButton("Abbrechen", null)
+                    .setNegativeButton(Texte.t("abbrechen"), null)
                     .show()
             }
         }
@@ -1566,15 +1566,15 @@ class MainActivity : AppCompatActivity() {
      * zweites Format.
      */
     private fun speichereUndZeige(bild: Bitmap, meldung: String) {
-        val formate = arrayOf("PNG (scharf, für Screenshots)", "JPEG (klein, für Fotos)",
-                              "PDF (eine Seite, zum Weitergeben)")
+        val formate = arrayOf(Texte.t("format_png"), Texte.t("format_jpeg"),
+                              Texte.t("format_pdf"))
         AlertDialog.Builder(this)
-            .setTitle("In welchem Format speichern?")
+            .setTitle(Texte.t("format_frage"))
             .setItems(formate) { _, welcher ->
                 val endung = when (welcher) { 0 -> "png"; 1 -> "jpg"; else -> "pdf" }
                 speichereBild(bild, meldung, endung)
             }
-            .setNegativeButton("Abbrechen") { _, _ ->
+            .setNegativeButton(Texte.t("abbrechen")) { _, _ ->
                 bericht.text = meldung + "\n\nNicht gespeichert."
             }
             .show()
@@ -1615,7 +1615,7 @@ class MainActivity : AppCompatActivity() {
                 val hinweis = if (ziel != null) "$meldung\n\nGespeichert: $ordner/$name"
                 else "$meldung\n\nSpeichern fehlgeschlagen"
                 bericht.text = hinweis
-                abschlussDialog(if (ziel != null) "Geschwaerzt" else "Fehler", hinweis)
+                abschlussDialog(if (ziel != null) "Geschwaerzt" else Texte.t("fehler"), hinweis)
             }
         }
     }
@@ -1642,10 +1642,10 @@ class MainActivity : AppCompatActivity() {
                 letzterTyp = "image/png"
             }
             runOnUiThread {
-                val text = if (ziel != null) "Gespeichert: Bilder/$name" else "Speichern fehlgeschlagen"
+                val text = if (ziel != null) Texte.t("gespeichert_bilder") else Texte.t("speichern_nein_ohne")
                 bericht.text = text
                 AlertDialog.Builder(this)
-                    .setTitle(if (ziel != null) "Gespeichert" else "Fehler")
+                    .setTitle(if (ziel != null) "Gespeichert" else Texte.t("fehler"))
                     .setMessage(text)
                     .setPositiveButton("Oeffnen") { _, _ -> oeffneLetzte() }
                     .setNegativeButton("OK", null)

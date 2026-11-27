@@ -66,7 +66,7 @@ class MarkierActivity : Activity() {
     private var stempelRahmen = android.graphics.Color.RED
 
     private val werkzeuge = listOf(
-        "schwaerzen" to "Schwärzen",
+        "schwaerzen" to Texte.t("schwaerzen"),
         "markieren" to "Markieren...",
         "pfeil" to "Pfeil…",
         "text" to "Text…",
@@ -142,7 +142,7 @@ class MarkierActivity : Activity() {
                                     ansicht.setzeWerkzeug(werkzeug)
                                     bericht.text = "Werkzeug: " + namen[welcher]
                                 }
-                                .setNegativeButton("Abbrechen", null)
+                                .setNegativeButton(Texte.t("abbrechen"), null)
                                 .show()
                             return@setOnClickListener
                         }
@@ -183,19 +183,19 @@ class MarkierActivity : Activity() {
 
         val unten = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         unten.addView(Button(this).apply {
-            text = "Rückgängig"
+            text = Texte.t("rueckgaengig")
             isSingleLine = true
             textSize = 14f
             setOnClickListener { ansicht.rueckgaengig() }
         }, LinearLayout.LayoutParams(0, -2, 1f))
         unten.addView(Button(this).apply {
-            text = "Abbrechen"
+            text = Texte.t("abbrechen")
             isSingleLine = true
             textSize = 14f
             setOnClickListener { setResult(RESULT_CANCELED); finish() }
         }, LinearLayout.LayoutParams(0, -2, 1f))
         unten.addView(Button(this).apply {
-            text = "Fertig"
+            text = Texte.t("fertig")
             isSingleLine = true
             textSize = 14f
             setOnClickListener { fertig() }
@@ -315,7 +315,7 @@ class MarkierActivity : Activity() {
                 bericht.text = "Pfeil: " + anzeige[gewaehlt[0]] + ", " + dicken[gewaehlt[1]]
                 bericht.text = "Pfeil: " + anzeige[gewaehlt[0]] + ", " + dicken[gewaehlt[1]]
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -362,7 +362,7 @@ class MarkierActivity : Activity() {
                 ansicht.setzeText(stil, groesse, textFarbe)
                 bericht.text = "Text: $stil, Größe ${regler.progress + 1} — jetzt ziehen"
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -422,7 +422,7 @@ class MarkierActivity : Activity() {
                 ansicht.setzeStempel(stempel, stempelGroesse, stil, stempelFarbe, stempelRahmen)
                 bericht.text = "Stempel: $stempel, Größe ${regler.progress + 1}"
             }
-            .setNegativeButton("Abbrechen", null)
+            .setNegativeButton(Texte.t("abbrechen"), null)
             .show()
     }
 
@@ -619,7 +619,7 @@ class MarkierAnsicht(kontext: android.content.Context, bild: Bitmap) : View(kont
             invalidate()
         } catch (fehler: Throwable) {
             android.widget.Toast.makeText(context,
-                "Rückgängig nicht möglich: " + fehler.javaClass.simpleName,
+                Texte.t("rueckgaengig_nein") + fehler.javaClass.simpleName,
                 android.widget.Toast.LENGTH_LONG).show()
         }
     }
@@ -884,7 +884,7 @@ class MarkierAnsicht(kontext: android.content.Context, bild: Bitmap) : View(kont
                                                 textFarbe, textFarbe))
                                 invalidate()
                             }
-                            .setNegativeButton("Abbrechen", null)
+                            .setNegativeButton(Texte.t("abbrechen"), null)
                             .show()
                     } else {
                         val text = when (werkzeug) {

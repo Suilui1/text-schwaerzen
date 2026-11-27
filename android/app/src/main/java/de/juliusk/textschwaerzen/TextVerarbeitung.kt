@@ -81,7 +81,7 @@ object TextVerarbeitung {
 
     fun verarbeite(context: Context, uri: Uri, modus: String, name: String): Ergebnis {
         val inhalt = lesen(context, uri)
-            ?: return Ergebnis("", null, emptyMap(), 0, 0, "Datei nicht lesbar")
+            ?: return Ergebnis("", null, emptyMap(), 0, 0, Texte.t("datei_nicht_lesbar"))
         val zeilen = inhalt.split("\n")
         val zaehler = mutableMapOf<String, Int>()
         var getroffen = 0
@@ -111,7 +111,7 @@ object TextVerarbeitung {
     fun verarbeiteAuswahl(context: Context, uri: Uri, gewaehlt: Set<Int>, name: String): Ergebnis {
         val alle = zeilen(context, uri)
         if (alle.isEmpty()) {
-            return Ergebnis("", null, emptyMap(), 0, 0, "Datei nicht lesbar")
+            return Ergebnis("", null, emptyMap(), 0, 0, Texte.t("datei_nicht_lesbar"))
         }
         val neu = StringBuilder()
         var getroffen = 0
