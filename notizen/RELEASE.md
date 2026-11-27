@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.10
+# Text schwärzen 2.9.0-alpha.11
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,13 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Bearbeitete Dateien heißen jetzt `<name>-bearbeitet`** — in allen Fassungen, im
+  englischen Programm `<name>-edited`. Vorher stand dort `-geschwaerzt` (Regeln, Wörter,
+  Rahmen) oder `-markiert` (Editor): zwei Namen für dieselbe Sache, und im englischen
+  Programm der deutsche Zusatz.
+- Dateien mit den alten Namen gelten weiter als Ergebnisse — wer vorher geschwärzt hat,
+  findet seine Dateien unverändert (sie werden nicht plötzlich zu Originalen erklärt).
 
 - **macOS: die Formatwahl im Speicherdialog ist jetzt wirklich zu sehen.** Die App bot
   PNG/JPEG/PDF schon an, aber `NSSavePanel` zeigt von sich aus keine Auswahl — sie muß als

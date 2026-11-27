@@ -54,6 +54,7 @@ def schwærze_datei(datei: Path, modus: str = "gezielt", ziel: Path | None = Non
     inhalt = lies(datei)
     neu, zaehler, getroffen = schwærze_text(inhalt, modus)
     if ziel is None:
-        ziel = datei.with_name(datei.stem + "-geschwaerzt" + datei.suffix)
+        from . import namen
+        ziel = datei.with_name(datei.stem + namen.zusatz() + datei.suffix)
     ziel.write_text(neu, encoding="utf-8")
     return ziel, zaehler, getroffen

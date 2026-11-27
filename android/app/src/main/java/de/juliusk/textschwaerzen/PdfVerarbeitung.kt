@@ -297,7 +297,7 @@ object PdfVerarbeitung {
     }
 
     private fun speichere(context: Context, dokument: PdfDocument, quellName: String): Uri? {
-        val name = "$quellName-geschwaerzt.pdf"
+        val name = "$quellName-bearbeitet.pdf"
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val werte = ContentValues().apply {
                 put(MediaStore.Downloads.DISPLAY_NAME, name)

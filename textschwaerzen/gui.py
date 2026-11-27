@@ -14,6 +14,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from PIL import Image, ImageTk
 
+from . import namen
 from . import regeln
 from .erkennung import erkenne_worte
 from .masken import schwaeze_datei
@@ -178,7 +179,7 @@ def ist_ergebnis(datei: Path) -> bool:
     macOS-App: <name>-geschwaerzt.* oder <name>-markiert.* — Originale nie (25.11.2026).
     """
     name = datei.stem.lower()
-    return "-geschwaerzt" in name or "-markiert" in name
+    return namen.ist_bearbeitet(name)
 
 
 def sprache_waehlen() -> str:
@@ -472,7 +473,8 @@ class App:
                 ordner = Path.home() / "Bilder"
             if not ordner.exists():
                 ordner = Path.home() / "Desktop"
-        treffer = sorted(Path(ordner).glob("*-geschwaerzt.*"), key=lambda p: p.stat().st_mtime,
+        treffer = sorted([p for p in Path(ordner).glob("*")
+                          if namen.ist_bearbeitet(p.name)], key=lambda p: p.stat().st_mtime,
                          reverse=True)[:20] if Path(ordner).exists() else []
         if not treffer:
             messagebox.showinfo(self.t.get("k_ergebnisse", "Ergebnisse"),

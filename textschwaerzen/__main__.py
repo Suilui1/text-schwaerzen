@@ -6,6 +6,7 @@ import json
 import sys
 from pathlib import Path
 
+from . import namen
 from . import regeln
 from .masken import schwaeze_datei
 from .pdf import schwaeze_pdf
@@ -30,10 +31,19 @@ def speichere_einstellungen(daten: dict) -> None:
         pass
 
 
+def oberflaechen_sprache() -> str:
+    """Deutsch oder Englisch — für Namen wie „-bearbeitet" / „-edited".
+
+    Nicht zu verwechseln mit `--sprache` (Tesseract, „deu"/„eng").
+    """
+    from .gui import sprache_waehlen
+    return sprache_waehlen()
+
+
 def ziel_pfad(quelle: Path, endung: str | None = None) -> Path:
     """Ergebnis neben dem Original oder im gewählten Ablageordner."""
     endung = endung or ("pdf" if quelle.suffix.lower() == ".pdf" else "png")
-    name = quelle.stem + "-geschwaerzt." + endung
+    name = quelle.stem + namen.zusatz(oberflaechen_sprache()) + "." + endung
     ablage = lade_einstellungen().get("ablage")
     if ablage:
         ordner = Path(ablage)
@@ -127,7 +137,7 @@ def befehlszeile(argumente: list[str]) -> int:
         from .textdatei import schwærze_datei
         quelle = Path(a.text)
         ziel = Path(a.aus) if a.aus else quelle.with_name(
-            quelle.stem + "-geschwaerzt" + quelle.suffix)
+            quelle.stem + namen.zusatz(oberflaechen_sprache()) + quelle.suffix)
         try:
             ziel, zahlen, getroffen = schwærze_datei(quelle, a.modus, ziel)
         except Exception as fehler:  # noqa: BLE001

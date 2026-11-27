@@ -16,6 +16,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
 
+from . import namen
 from .markieren import ARTEN, STILE, STEMPEL, Form, baue_pdf, speichere, zeichne_formen
 
 FARBEN = {"kasten": (0, 0, 0), "markieren": (255, 235, 0), "unterstreichen": (0, 0, 0),
@@ -370,7 +371,7 @@ class Editor:
         ziel = filedialog.asksaveasfilename(
             parent=self.fenster, title="Speichern als", defaultextension=endung,
             filetypes=arten,
-            initialfile=self.dokument.pfad.stem + "-markiert" + endung)
+            initialfile=self.dokument.pfad.stem + namen.zusatz(self.sprache) + endung)
         if not ziel:
             return
         if self.dokument.ist_pdf:

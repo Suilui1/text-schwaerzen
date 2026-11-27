@@ -337,7 +337,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         letzteDatei = ergebnis.datei
                         letzterTyp = "text/plain"
-                        merken(ergebnis.datei ?: uri, name + "-geschwaerzt", "text-aus")
+                        merken(ergebnis.datei ?: uri, name + "-bearbeitet", "text-aus")
                         val teile = if (ergebnis.zaehler.isEmpty()) "nichts Sensibles gefunden"
                         else ergebnis.zaehler.entries.joinToString(", ") {
                             Regeln.bezeichnung(it.key) + " " + it.value
@@ -381,7 +381,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         letzteDatei = ergebnis.datei
                         letzterTyp = "text/plain"
-                        merken(ergebnis.datei ?: uri, name + "-geschwaerzt", "text-aus")
+                        merken(ergebnis.datei ?: uri, name + "-bearbeitet", "text-aus")
                         val text = ergebnis.geschwaerzt.toString() + " Zeile(n) geschwaerzt"
                         bericht.text = text
                         abschlussDialog("Text geschwaerzt", text)
@@ -530,7 +530,7 @@ class MainActivity : AppCompatActivity() {
                     letzteDatei = ergebnis.datei
                     letzterTyp = "application/pdf"
                     if (ergebnis.datei != null) {
-                        merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                        merken(ergebnis.datei, nameDerDatei(pdf) + "-bearbeitet", "pdf-aus")
                         // Vorschau aus dem ERGEBNIS — sonst zeigt sie das Bild der vorigen
                         // Bearbeitung, und ein Tippen öffnet etwas anderes (27.11.2026).
                         val vorschau = PdfVerarbeitung.vorschau(this, ergebnis.datei)
@@ -576,7 +576,7 @@ class MainActivity : AppCompatActivity() {
                 letzteDatei = ergebnis.datei
                 letzterTyp = "application/pdf"
                 if (ergebnis.datei != null) {
-                    merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                    merken(ergebnis.datei, nameDerDatei(pdf) + "-bearbeitet", "pdf-aus")
                     // Vorschau aus dem ERGEBNIS — sonst zeigt sie das Bild der vorigen
                     // Bearbeitung, und ein Tippen öffnet etwas anderes (27.11.2026).
                     val vorschau = PdfVerarbeitung.vorschau(this, ergebnis.datei)
@@ -627,7 +627,7 @@ class MainActivity : AppCompatActivity() {
                     letzteDatei = ergebnis.datei
                     letzterTyp = "application/pdf"
                     if (ergebnis.datei != null) {
-                        merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                        merken(ergebnis.datei, nameDerDatei(pdf) + "-bearbeitet", "pdf-aus")
                         // Vorschau aus dem ERGEBNIS — sonst zeigt sie das Bild der vorigen
                         // Bearbeitung, und ein Tippen öffnet etwas anderes (27.11.2026).
                         val vorschau = PdfVerarbeitung.vorschau(this, ergebnis.datei)
@@ -757,7 +757,7 @@ class MainActivity : AppCompatActivity() {
                 letzteDatei = ergebnis.datei
                 letzterTyp = "application/pdf"
                 if (ergebnis.datei != null) {
-                    merken(ergebnis.datei, quelleName + "-geschwaerzt", "pdf-aus")
+                    merken(ergebnis.datei, quelleName + "-bearbeitet", "pdf-aus")
                 }
                 bildWaehlen.isEnabled = true
                 bildWaehlen.isEnabled = true
@@ -891,11 +891,11 @@ class MainActivity : AppCompatActivity() {
                 when (was) {
                     0 -> {
                         if (letzterTyp == "application/pdf") {
-                            speichernPdf.launch("geschwaerzt.pdf")
+                            speichernPdf.launch("bearbeitet.pdf")
                         } else if (letzterTyp == "text/plain") {
                             speichernText.launch("geschwaerzt.txt")
                         } else {
-                            speichernBild.launch("geschwaerzt.png")
+                            speichernBild.launch("bearbeitet.png")
                         }
                     }
                     1 -> teileLetzte()
@@ -1531,7 +1531,7 @@ class MainActivity : AppCompatActivity() {
     /** Schreibt das Bild im gewählten Format in die Mediathek (oder als PDF). */
     private fun speichereBild(bild: Bitmap, meldung: String, endung: String) {
         threads.execute {
-            val name = "$quelName-geschwaerzt.$endung"
+            val name = "$quelName-bearbeitet.$endung"
             val istPdf = endung == "pdf"
             val mime = if (istPdf) "application/pdf" else "image/" + endung
             val sammlung = if (istPdf) MediaStore.Files.getContentUri("external")
@@ -1573,7 +1573,7 @@ class MainActivity : AppCompatActivity() {
         speichereUndZeige(bild, "Geschwaerzt")
         if (true) return
         threads.execute {
-            val name = "$quelName-geschwaerzt.png"
+            val name = "$quelName-bearbeitet.png"
             val werte = ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, name)
                 put(MediaStore.Images.Media.MIME_TYPE, "image/png")
