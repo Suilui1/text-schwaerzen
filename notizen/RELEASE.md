@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.17
+# Text schwärzen 2.9.0-alpha.18
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,16 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Die Rechner-Fassung spricht jetzt fünf Sprachen** wie die Mac-App: Deutsch, Englisch,
+  Französisch, Spanisch, Chinesisch. Sie folgt der Systemsprache; alle Texte sind übersetzt,
+  auch die Meldungen der Update-Prüfung.
+- **Linux: zwei leicht installierbare Wege** (jetzt wirklich am Release):
+  `Text-schwaerzen-linux-installer.tar.gz` — entpacken, `./installieren.sh`, fertig.
+  `Text-schwaerzen-linux.deb` — `sudo apt install ./Text-schwaerzen-linux.deb`.
+  Beide benutzen das Python des Systems; die mitgelieferte Bibliothek hatte auf einem
+  Rechner mit Signal 4 abgestürzt.
+- **Android: „Wörter ankreuzen"** — die letzte Funktion, die nur die Mac-Fassung hatte.
 
 - **Android: „Wörter ankreuzen"** — wie in der Mac-Fassung und der Rechner-Fassung:
   der erkannte Text wird als Liste mit Kästchen gezeigt, angekreuzte Wörter werden
