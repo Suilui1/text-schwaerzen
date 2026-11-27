@@ -63,6 +63,11 @@ class Dokument:
 
 class Editor:
     def __init__(self, pfad: Path, sprache: str = "de"):
+        # Die Sprache wird für den Dateinamen gebraucht (-bearbeitet / -edited).
+        # Sie fehlte hier (27.11.2026): der Speichern-Knopf warf eine Ausnahme, und im
+        # Windows-Paket ohne Konsole blieb „kein Speicherdialog sichtbar" — ohne Meldung,
+        # weil stderr ins Leere schreibt.
+        self.sprache = sprache
         self.dokument = Dokument(pfad)
         self.seite = 0
         self.werkzeug = "kasten"

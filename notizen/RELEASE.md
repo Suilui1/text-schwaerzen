@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.12
+# Text schwärzen 2.9.0-alpha.13
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,11 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Behoben: der Speichern-Knopf der Rechner-Fassung tat nichts.** Beim Öffnen des Editors
+  fehlte eine Eigenschaft (die Sprache für den Dateinamen), und der Klick darauf warf eine
+  Ausnahme — im Windows-Paket ohne Konsole unsichtbar, also „kein Speicherdialog sichtbar".
+  Jetzt kommt der Dialog, und der Weg ist geprüft (schreiben, abbrechen, Ausnahme).
 
 - **Farbe und Dicke wählbar** in der Rechner-Fassung (Windows, Linux, macOS): vorher war
   die Farbe je Werkzeug fest verdrahtet, eine Strichdicke gab es gar nicht. Beide Felder
