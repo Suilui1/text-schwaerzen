@@ -151,11 +151,22 @@ def zeichne_formen(bild: Image.Image, formen: list[Form]) -> Image.Image:
 
 
 def speichere(bild: Image.Image, ziel: Path) -> Path:
-    """Als PNG oder PDF speichern — PDF als Bildseite (nicht durchsuchbar)."""
-    if ziel.suffix.lower() == ".pdf":
+    """Speichert im Format der Endung: PNG, JPEG oder PDF.
+
+    Anlaß (27.11.2026): Julius — „bearbeitete bilder und texte, formate beim speichern
+    anbieten". PNG für Screenshots (scharf, verlustfrei), JPEG für Fotos (klein), PDF
+    zum Weitergeben (eine Bildseite, nicht durchsuchbar).
+    """
+    endung = ziel.suffix.lower()
+    if endung == ".pdf":
         bild.convert("RGB").save(ziel, "PDF", resolution=150.0)
+    elif endung in (".jpg", ".jpeg"):
+        # Hohe Qualität: die Schwärzung soll scharf bleiben, gespart wird am Foto.
+        bild.convert("RGB").save(ziel, "JPEG", quality=92, optimize=True)
+    elif endung == ".png":
+        bild.save(ziel, "PNG", optimize=True)
     else:
-        bild.save(ziel)
+        raise ValueError("Unbekanntes Format: " + (endung or "(ohne Endung)"))
     return ziel
 
 

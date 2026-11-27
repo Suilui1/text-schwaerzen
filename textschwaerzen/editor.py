@@ -363,9 +363,13 @@ class Editor:
 
     def speichern(self) -> None:
         endung = ".pdf" if self.dokument.ist_pdf else ".png"
+        # Bei Bildern drei Formate zur Wahl (Julius, 27.11.2026). Bei PDFs bleibt es PDF —
+        # eine mehrseitige Markierung als JPEG wäre keine Markierung mehr.
+        arten = ([("PDF", "*.pdf")] if self.dokument.ist_pdf
+                 else [("PNG-Bild", "*.png"), ("JPEG-Bild", "*.jpg *.jpeg"), ("PDF", "*.pdf")])
         ziel = filedialog.asksaveasfilename(
             parent=self.fenster, title="Speichern als", defaultextension=endung,
-            filetypes=[("PDF", "*.pdf"), ("PNG-Bild", "*.png")],
+            filetypes=arten,
             initialfile=self.dokument.pfad.stem + "-markiert" + endung)
         if not ziel:
             return

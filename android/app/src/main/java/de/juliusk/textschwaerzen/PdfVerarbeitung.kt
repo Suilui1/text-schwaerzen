@@ -27,6 +27,21 @@ object PdfVerarbeitung {
     data class Ergebnis(val seiten: Int, val datei: Uri?, val zaehler: Map<String, Int>,
                         val fehler: String = "", val woerter: Int = 0)
 
+    /** Schreibt ein einzelnes Bild als einseitiges PDF (Format-Wahl beim Speichern). */
+    fun einseitigPdf(bild: Bitmap, aus: java.io.OutputStream): Boolean = try {
+        val dokument = PdfDocument()
+        val info = PdfDocument.PageInfo.Builder(bild.width, bild.height, 1).create()
+        val seite = dokument.startPage(info)
+        seite.canvas.drawColor(Color.WHITE)
+        seite.canvas.drawBitmap(bild, 0f, 0f, null)
+        dokument.finishPage(seite)
+        dokument.writeTo(aus)
+        dokument.close()
+        true
+    } catch (fehler: Throwable) {
+        false
+    }
+
     /** Erste Seite eines PDF als Vorschaubild — auch aus einer MediaStore-Adresse.
      *
      * Anlaß (27.11.2026): Julius — „wenn ich im startfenster auf das letzte angezeigte bild

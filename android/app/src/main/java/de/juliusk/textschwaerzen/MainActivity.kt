@@ -1507,28 +1507,60 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Speichert das Bild und zeigt danach denselben Dialog wie beim PDF. */
+    /** Fragt nach dem Format und speichert dann (Julius, 27.11.2026).
+     *
+     * PNG für Screenshots (scharf, verlustfrei), JPEG für Fotos (klein), PDF zum
+     * Weitergeben (eine Bildseite). Textdateien bleiben TXT — dort gibt es kein sinnvolles
+     * zweites Format.
+     */
     private fun speichereUndZeige(bild: Bitmap, meldung: String) {
+        val formate = arrayOf("PNG (scharf, für Screenshots)", "JPEG (klein, für Fotos)",
+                              "PDF (eine Seite, zum Weitergeben)")
+        AlertDialog.Builder(this)
+            .setTitle("In welchem Format speichern?")
+            .setItems(formate) { _, welcher ->
+                val endung = when (welcher) { 0 -> "png"; 1 -> "jpg"; else -> "pdf" }
+                speichereBild(bild, meldung, endung)
+            }
+            .setNegativeButton("Abbrechen") { _, _ ->
+                bericht.text = meldung + "\n\nNicht gespeichert."
+            }
+            .show()
+    }
+
+    /** Schreibt das Bild im gewählten Format in die Mediathek (oder als PDF). */
+    private fun speichereBild(bild: Bitmap, meldung: String, endung: String) {
         threads.execute {
-            val name = "$quelName-geschwaerzt.png"
+            val name = "$quelName-geschwaerzt.$endung"
+            val istPdf = endung == "pdf"
+            val mime = if (istPdf) "application/pdf" else "image/" + endung
+            val sammlung = if (istPdf) MediaStore.Files.getContentUri("external")
+            else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             val werte = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, name)
-                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                put(MediaStore.MediaColumns.MIME_TYPE, mime)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH,
+                        if (istPdf) Environment.DIRECTORY_DOCUMENTS else Environment.DIRECTORY_PICTURES)
                 }
             }
-            val ziel = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, werte)
+            val ziel = contentResolver.insert(sammlung, werte)
             if (ziel != null) {
                 contentResolver.openOutputStream(ziel)?.use { strom ->
-                    bild.compress(Bitmap.CompressFormat.PNG, 100, strom)
+                    when (endung) {
+                        "jpg" -> bild.compress(Bitmap.CompressFormat.JPEG, 92, strom)
+                        "pdf" -> PdfVerarbeitung.einseitigPdf(bild, strom)
+                        else -> bild.compress(Bitmap.CompressFormat.PNG, 100, strom)
+                    }
                 }
                 letzteDatei = ziel
-                letzterTyp = "image/png"
+                letzterTyp = mime
                 merken(ziel, name, "bild-aus")
             }
             runOnUiThread {
                 if (isFinishing || isDestroyed) return@runOnUiThread
-                val hinweis = if (ziel != null) "$meldung\n\nGespeichert: Bilder/$name"
+                val ordner = if (endung == "pdf") "Dokumente" else "Bilder"
+                val hinweis = if (ziel != null) "$meldung\n\nGespeichert: $ordner/$name"
                 else "$meldung\n\nSpeichern fehlgeschlagen"
                 bericht.text = hinweis
                 abschlussDialog(if (ziel != null) "Geschwaerzt" else "Fehler", hinweis)
