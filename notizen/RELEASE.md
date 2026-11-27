@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.18
+# Text schwärzen 2.9.0-alpha.19
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,13 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Android spricht jetzt fünf Sprachen** wie die Mac-App: Deutsch, Englisch, Französisch,
+  Spanisch, Chinesisch — die Texte liegen in einer Tabelle (`Texte.kt`) und werden nach der
+  Systemsprache gewählt, mit Englisch als Rückfall.
+  **Noch deutsch bleiben:** der lange Info-Text, die Namen der Erkennungsregeln im Bericht
+  (E-Mail, Name, Telefon …) und einige Statuszeilen im Editor („Bild geladen.",
+  „Erkennung läuft …"). Das ist der Rest, den ich als nächstes nachziehe.
 
 - **Die Rechner-Fassung spricht jetzt fünf Sprachen** wie die Mac-App: Deutsch, Englisch,
   Französisch, Spanisch, Chinesisch. Sie folgt der Systemsprache; alle Texte sind übersetzt,
