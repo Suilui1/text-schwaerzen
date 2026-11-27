@@ -123,7 +123,15 @@ class Erkennung(private val context: android.content.Context) {
 data class SchwaeerzErgebnis(val bild: Bitmap, val zaehler: Map<String, Int>, val woerter: Int)
 
 /** Schwärzt je nach Modus: passende Zeilen oder alle. */
-fun schwaerzen(bild: Bitmap, erkennung: Erkennung, modus: String): SchwaeerzErgebnis {
+/**
+ * Schwärzt Text im Bild.
+ *
+ * `worte` gilt nur bei `modus == "worte"`: dann werden genau diese Wörter geschwärzt —
+ * wie in der Mac-Fassung („Nur markierte Wörter"). Anlaß (27.11.2026): Julius' Wunsch,
+ * daß alle Fassungen die Funktionen der Mac-Fassung haben; auf Android fehlte sie.
+ */
+fun schwaerzen(bild: Bitmap, erkennung: Erkennung, modus: String,
+               worte: Set<String> = emptySet()): SchwaeerzErgebnis {
     val kopie = bild.copy(Bitmap.Config.ARGB_8888, true)
     val zeichner = Canvas(kopie)
     val stift = Paint().apply { color = Color.BLACK; style = Paint.Style.FILL }
@@ -150,17 +158,32 @@ fun schwaerzen(bild: Bitmap, erkennung: Erkennung, modus: String): SchwaeerzErge
     }
     if (codeZahl > 0) zaehler["barcode"] = codeZahl
 
-    for (zeile in zeilen) {
-        val text = zeile.joinToString(" ") { it.text }
-        val arten = Regeln.treffer(text, modus)
-        if (arten.isEmpty()) continue
-        for (wort in zeile) {
+    if (modus == "worte") {
+        // Nur die angekreuzten Wörter — Wort für Wort, nicht zeilenweise.
+        val gesucht = worte.map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+        var treffer = 0
+        for (wort in woerter) {
+            if (wort.text.trim().lowercase() !in gesucht) continue
             zeichner.drawRect(
                 (wort.links - 2).toFloat(), (wort.oben - 4).toFloat(),
                 (wort.rechts + 2).toFloat(), (wort.unten + 4).toFloat(), stift
             )
+            treffer++
         }
-        for (art in arten) zaehler[art] = (zaehler[art] ?: 0) + 1
+        if (treffer > 0) zaehler["wort"] = treffer
+    } else {
+        for (zeile in zeilen) {
+            val text = zeile.joinToString(" ") { it.text }
+            val arten = Regeln.treffer(text, modus)
+            if (arten.isEmpty()) continue
+            for (wort in zeile) {
+                zeichner.drawRect(
+                    (wort.links - 2).toFloat(), (wort.oben - 4).toFloat(),
+                    (wort.rechts + 2).toFloat(), (wort.unten + 4).toFloat(), stift
+                )
+            }
+            for (art in arten) zaehler[art] = (zaehler[art] ?: 0) + 1
+        }
     }
     return SchwaeerzErgebnis(kopie, zaehler, woerter.size)
 }

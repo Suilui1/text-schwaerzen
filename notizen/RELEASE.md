@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.16
+# Text schwärzen 2.9.0-alpha.17
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,16 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Android: „Wörter ankreuzen"** — wie in der Mac-Fassung und der Rechner-Fassung:
+  der erkannte Text wird als Liste mit Kästchen gezeigt, angekreuzte Wörter werden
+  geschwärzt, dazu ein Knopf „Alle". Das war die letzte fehlende Funktion.
+- **Linux: zwei leicht installierbare Wege.**
+  `Text-schwaerzen-linux-installer.tar.gz` — entpacken, `./installieren.sh`, fertig
+  (Eintrag im Menü, Startbefehl `text-schwaerzen`). Und `Text-schwaerzen-linux.deb` für
+  Debian/Ubuntu: `sudo apt install ./Text-schwaerzen-linux.deb`.
+  Beide benutzen das **Python des Systems** statt einer mitgelieferten Bibliothek — genau
+  die hatte auf einem Rechner mit Signal 4 abgestürzt.
 
 - **macOS: die Liste „Zuletzt bearbeitet" ist jetzt gefüllt.** Sie suchte nur nach
   `-geschwaerzt` (der alte Name) und nur in einem Ordner; seit der Umbenennung blieb sie

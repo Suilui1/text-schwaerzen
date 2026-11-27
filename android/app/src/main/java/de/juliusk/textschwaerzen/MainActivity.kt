@@ -47,6 +47,8 @@ class MainActivity : AppCompatActivity() {
     private var letzterTyp: String = "image/png"
     private var fertig: Bitmap? = null
     private var modus = "gezielt"
+    /// Angekreuzte Wörter für den Modus „worte" (Julius, 27.11.2026).
+    private var gewaehlteWoerter: Set<String> = emptySet()
     @Volatile private var abbrechenGewuenscht = false
     private val verlauf by lazy { getSharedPreferences("verlauf", MODE_PRIVATE) }
 
@@ -1456,11 +1458,13 @@ class MainActivity : AppCompatActivity() {
         if (original == null) return
         AlertDialog.Builder(this)
             .setTitle("Wie stark schwärzen?")
-            .setItems(arrayOf("Nur Adressen und Namen", "Alles", "Bereich ziehen")) { _, welcher ->
+            .setItems(arrayOf("Nur Adressen und Namen", "Alles", "Bereich ziehen",
+                              "Wörter ankreuzen")) { _, welcher ->
                 when (welcher) {
                     0 -> { modus = "gezielt"; arbeite(original!!) }
                     1 -> { modus = "alles"; arbeite(original!!) }
-                    else -> rahmenZiehen()
+                    2 -> rahmenZiehen()
+                    else -> woerterAnkreuzen(original!!)
                 }
             }
             .setNegativeButton("Abbrechen", null)
@@ -1479,11 +1483,59 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * „Wörter ankreuzen": erkennt den Text, zeigt die Wörter mit Kästchen und schwärzt die
+     * angekreuzten — wie in der Mac-Fassung („Nur markierte Wörter").
+     * Anlaß (27.11.2026): Julius — alle Fassungen sollen die Funktionen der Mac-Fassung haben.
+     */
+    private fun woerterAnkreuzen(bild: Bitmap) {
+        bericht.text = "Wörter werden erkannt …"
+        threads.execute {
+            val gefunden = try {
+                erkennung.woerter(bild).map { it.text.trim() }
+                    .filter { it.isNotEmpty() }.distinct().sorted()
+            } catch (fehler: Throwable) {
+                emptyList()
+            }
+            runOnUiThread {
+                if (gefunden.isEmpty()) {
+                    bericht.text = "Kein Text erkannt."
+                    Toast.makeText(this, "Kein Text erkannt", Toast.LENGTH_SHORT).show()
+                    return@runOnUiThread
+                }
+                val angekreuzt = BooleanArray(gefunden.size)
+                bericht.text = "Wörter ankreuzen (" + gefunden.size + ")."
+                AlertDialog.Builder(this)
+                    .setTitle("Welche Wörter schwärzen?")
+                    .setMultiChoiceItems(gefunden.toTypedArray(), angekreuzt) { _, i, an ->
+                        angekreuzt[i] = an
+                    }
+                    .setPositiveButton("Schwärzen") { _, _ ->
+                        val menge = gefunden.filterIndexed { i, _ -> angekreuzt[i] }.toSet()
+                        if (menge.isEmpty()) {
+                            Toast.makeText(this, "Nichts angekreuzt", Toast.LENGTH_SHORT).show()
+                            return@setPositiveButton
+                        }
+                        gewaehlteWoerter = menge
+                        modus = "worte"
+                        arbeite(bild)
+                    }
+                    .setNeutralButton("Alle") { _, _ ->
+                        gewaehlteWoerter = gefunden.toSet()
+                        modus = "worte"
+                        arbeite(bild)
+                    }
+                    .setNegativeButton("Abbrechen", null)
+                    .show()
+            }
+        }
+    }
+
     private fun arbeite(bild: Bitmap) {
         bericht.text = "Erkennung läuft …"
         bildWaehlen.isEnabled = false
         threads.execute {
-            val ergebnisBild = schwaerzen(bild, erkennung, modus)
+            val ergebnisBild = schwaerzen(bild, erkennung, modus, gewaehlteWoerter)
             val neu = ergebnisBild.bild
             val zaehler = ergebnisBild.zaehler
             runOnUiThread {

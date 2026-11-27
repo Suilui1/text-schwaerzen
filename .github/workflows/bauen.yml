@@ -165,6 +165,59 @@ jobs:
           cp -r tessdata paket/ && cp README.md paket/
           tar -czf "${{ matrix.paket }}" -C paket .
 
+      # Zwei leicht installierbare Linux-Fassungen (Julius, 27.11.2026). Beide benutzen das
+      # PYTHON DES SYSTEMS — damit gibt es nichts Mitgeliefertes, das zum Prozessor nicht
+      # paßt (das PyInstaller-Paket stürzte auf seinem Rechner mit Signal 4 ab).
+      - name: Linux-Installer bauen
+        if: matrix.system == 'linux'
+        run: |
+          set -e
+          ORDNER="Text-schwaerzen-Linux-Installer"
+          rm -rf "$ORDNER" && mkdir -p "$ORDNER"
+          cp linux/installieren.sh "$ORDNER/"
+          cp -R textschwaerzen start.py README.md LICENSE "$ORDNER/" 2>/dev/null || true
+          cp vorlage/symbol.png "$ORDNER/symbol.png" 2>/dev/null || true
+          tar -czf "Text-schwaerzen-linux-installer.tar.gz" "$ORDNER"
+          echo "Installer: $(du -h Text-schwaerzen-linux-installer.tar.gz | cut -f1)"
+
+      - name: Linux-Debian-Paket bauen
+        if: matrix.system == 'linux'
+        run: |
+          set -e
+          rm -rf deb
+          mkdir -p deb/DEBIAN deb/usr/lib/text-schwaerzen deb/usr/bin deb/usr/share/applications
+          cp -R textschwaerzen start.py README.md LICENSE deb/usr/lib/text-schwaerzen/ 2>/dev/null || true
+          cat > deb/usr/bin/text-schwaerzen <<'START'
+          #!/bin/sh
+          cd /usr/lib/text-schwaerzen || exit 1
+          exec python3 -m textschwaerzen "$@"
+          START
+          chmod 755 deb/usr/bin/text-schwaerzen
+          cat > deb/usr/share/applications/text-schwaerzen.desktop <<'MENUE'
+          [Desktop Entry]
+          Type=Application
+          Name=Text schwärzen
+          Comment=Text in Bildern, PDFs und Textdateien unkenntlich machen
+          Exec=text-schwaerzen
+          Terminal=false
+          Categories=Utility;Graphics;
+          MENUE
+          cat > deb/DEBIAN/control <<'CONTROL'
+          Package: text-schwaerzen
+          Version: 2.9.0
+          Section: utils
+          Priority: optional
+          Architecture: all
+          Depends: python3 (>= 3.10), python3-tk, python3-pil, tesseract-ocr
+          Recommends: python3-pymupdf, tesseract-ocr-deu
+          Maintainer: Julius Krause <suilui@julius-k.de>
+          Description: Text in Bildern, PDFs und Textdateien unkenntlich machen
+           Schwärzt erkannten Text auf dem Gerät, ohne Netz und ohne Konto.
+           PDFs werden seitenweise als Bild neu geschrieben.
+          CONTROL
+          dpkg-deb --build deb "Text-schwaerzen-linux.deb"
+          echo "Debian-Paket: $(du -h Text-schwaerzen-linux.deb | cut -f1)"
+
       - name: Zusammenpacken (macOS)
         if: matrix.system == 'macos'
         run: |
@@ -299,6 +352,8 @@ jobs:
           files: |
             pakete/Text-schwaerzen-*.zip
             pakete/Text-schwaerzen-linux.tar.gz
+            pakete/Text-schwaerzen-linux-installer.tar.gz
+            pakete/Text-schwaerzen-linux.deb
             pakete/Text-schwaerzen-android.apk
           body_path: notizen/RELEASE.md
 
