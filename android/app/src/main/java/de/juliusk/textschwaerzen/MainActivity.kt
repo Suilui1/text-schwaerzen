@@ -1642,7 +1642,8 @@ class MainActivity : AppCompatActivity() {
                 letzterTyp = "image/png"
             }
             runOnUiThread {
-                val text = if (ziel != null) Texte.t("gespeichert_bilder") else Texte.t("speichern_nein_ohne")
+                val text = if (ziel != null) String.format(Texte.t("gespeichert_bilder"), name)
+                    else Texte.t("speichern_nein_ohne")
                 bericht.text = text
                 AlertDialog.Builder(this)
                     .setTitle(if (ziel != null) "Gespeichert" else Texte.t("fehler"))
