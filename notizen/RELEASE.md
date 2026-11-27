@@ -29,6 +29,13 @@ macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung
 
+> **Mac-Dateien am 27.11. erneuert:** Die App blätterte in mehrseitigen PDFs nicht —
+> der Seitenzähler lief mit, das Bild blieb auf Seite 1. Die Ansicht hielt eine
+> verkleinerte Anzeigekopie und baute sie nur bei geänderter Größe neu; PDF-Seiten sind
+> immer gleich groß. Behoben, und die Pfeile sind an den Enden jetzt ausgegraut.
+> Die drei Mac-Dateien (`.dmg`, `.pkg`, `.zip`) wurden dafür ersetzt; alle anderen
+> Pakete sind unverändert.
+
 - **Android verwischt jetzt weich statt zu verpixeln.** Ergebnis und Vorschau zeichnen mit
   einem echten Weichzeichner (zwei Kastenfilter-Durchgänge, Radius ein Achtel der kurzen
   Seite) — dieselbe Anmutung wie in der Mac-App. Vorher hinterließ „Verwischen" harte Blöcke.
