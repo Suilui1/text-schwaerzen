@@ -30,9 +30,9 @@ Android   2.9.0 (versionCode 30) · ML Kit, fünf Schriftsysteme
 Rechner   2.9.0 (Tk + Tesseract) · Windows, Linux, macOS-ZIP
 macOS-App 2.9.0 (Swift, Vision) · eigenes Bündel, nicht im ZIP
 
-Veröffentlichung: v2.9.0-alpha.8 (Vorab-Fassung, 26.11.2026), acht Dateien —
+Veröffentlichung: v2.9.0-alpha.9 (Vorab-Fassung, 26.11.2026), acht Dateien —
 nur diese eine; die früheren Veröffentlichungen wurden entfernt, ihre Kennzeichen bleiben.
-Vorhergehende Veröffentlichung: v2.9.0-alpha.8 (Vorab-Fassung, 26.11.2026), acht Dateien:
+Vorhergehende Veröffentlichung: v2.9.0-alpha.9 (Vorab-Fassung, 26.11.2026), acht Dateien:
   Text-schwaerzen-android.apk · -windows.zip · -linux.tar.gz · -macos.zip · -alle-systeme.zip
 Hinweise dazu: notizen/RELEASE.md (der Bau zieht den Text von dort).
 Fassung bleibt 2.9.0 — die Kennzeichnung unterscheidet (alpha.1, alpha.2).

@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.8
+# Text schwärzen 2.9.0-alpha.9
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,11 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Formate beim Speichern.** Bearbeitete Bilder lassen sich jetzt als **PNG** (scharf,
+  für Screenshots), **JPEG** (klein, für Fotos) oder **PDF** (eine Seite, zum Weitergeben)
+  speichern — in allen drei Fassungen. Textdateien bleiben TXT; bei Zeilen-Schwärzung gibt
+  es kein sinnvolles zweites Format.
 
 - **Android: die Vorschau im Startfenster zeigt jetzt das letzte Ergebnis.** Nach einer
   PDF-Bearbeitung stand dort noch das Bild der vorigen Bearbeitung — ein Tippen darauf
