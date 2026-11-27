@@ -234,7 +234,9 @@ object PdfVerarbeitung {
                 Ergebnis(abgebrochenBei, null, emptyMap(), "abgebrochen")
             } else {
                 val ziel = speichere(context, neuesPdf, name)
-                Ergebnis(seitenAnzahl, ziel, mapOf("formen" to formen.size), "")
+                // Anzahl der gezeichneten Formen über alle Seiten.
+                val anzahl = (0 until seitenAnzahl).sumOf { markenFuer(it).size }
+                Ergebnis(seitenAnzahl, ziel, mapOf("formen" to anzahl), "")
             }
         } catch (fehler: Throwable) {
             Ergebnis(0, null, emptyMap(), "${fehler.javaClass.simpleName}: ${fehler.message}")
