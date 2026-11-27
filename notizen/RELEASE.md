@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.7
+# Text schwärzen 2.9.0-alpha.8
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,11 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Android: die Vorschau im Startfenster zeigt jetzt das letzte Ergebnis.** Nach einer
+  PDF-Bearbeitung stand dort noch das Bild der vorigen Bearbeitung — ein Tippen darauf
+  öffnete deshalb etwas anderes als das Angezeigte. Die Vorschau kommt jetzt aus der
+  ersten Seite des Ergebnis-PDF.
 
 - **Blättern in mehrseitigen PDFs** — in allen Fassungen.
   In der Mac-App lief der Seitenzähler mit, während das Bild auf Seite 1 stehenblieb
