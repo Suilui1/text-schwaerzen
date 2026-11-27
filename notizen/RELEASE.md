@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.13
+# Text schwärzen 2.9.0-alpha.14
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,10 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Pfeil-Stile** in der Rechner-Fassung: „Pfeil rechts", „Pfeil links", „Beidseitig",
+  „Nur Linie" — für den Notfall auch eine Linie ohne Spitze. Das Feld ist nur beim Pfeil
+  bedienbar. Bisher gab es genau eine Form: Spitze am Ende.
 
 - **Behoben: der Speichern-Knopf der Rechner-Fassung tat nichts.** Beim Öffnen des Editors
   fehlte eine Eigenschaft (die Sprache für den Dateinamen), und der Klick darauf warf eine

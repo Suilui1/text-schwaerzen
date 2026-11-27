@@ -17,7 +17,8 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from PIL import Image, ImageTk
 
 from . import namen
-from .markieren import ARTEN, STILE, STEMPEL, Form, baue_pdf, speichere, zeichne_formen
+from .markieren import (ARTEN, PFEIL_STILE, STILE, STEMPEL, Form, baue_pdf, speichere,
+                        zeichne_formen)
 
 WAHL_FARBEN = {"Schwarz": (0, 0, 0), "Rot": (200, 30, 30), "Gelb": (255, 235, 0),
               "Blau": (30, 90, 200), "Grün": (20, 140, 60), "Weiß": (255, 255, 255)}
@@ -115,6 +116,13 @@ class Editor:
 
         # Farbe und Dicke (Julius, 27.11.2026: „keine optionen bei pfeil ect."). Vorher war
         # die Farbe je Werkzeug fest verdrahtet, eine Dicke gab es gar nicht.
+        # Pfeil-Stil (Julius, 27.11.2026: „pfeilstile fehlen") — nur beim Pfeil bedienbar.
+        ttk.Label(extras, text="Pfeil:").pack(side="left", padx=(16, 4))
+        self.pfeil_stil = tk.StringVar(value=PFEIL_STILE["rechts"])
+        self.feld_pfeil = ttk.Combobox(extras, textvariable=self.pfeil_stil,
+                                       values=list(PFEIL_STILE.values()), width=13, state="readonly")
+        self.feld_pfeil.pack(side="left", padx=(0, 12))
+
         ttk.Label(extras, text="Farbe:").pack(side="left", padx=(16, 4))
         self.farbe_wahl = tk.StringVar(value="wie Werkzeug")
         self.feld_farbe = ttk.Combobox(extras, textvariable=self.farbe_wahl,
@@ -191,6 +199,7 @@ class Editor:
                  (getattr(self, "feld_dicke", None),
                   self.werkzeug in ("kasten", "linie", "pfeil", "ellipse", "unterstreichen",
                                     "durchstreichen")),
+                 (getattr(self, "feld_pfeil", None), self.werkzeug == "pfeil"),
                  (getattr(self, "feld_stempel", None), self.werkzeug == "stempel"))
         for feld, an in paare:
             if feld is None:
@@ -336,6 +345,9 @@ class Editor:
         except (TypeError, ValueError):
             dicke = 4
         feld = {"groesse": int(self.groesse.get() or 18), "dicke": dicke}
+        if self.werkzeug == "pfeil":
+            umkehr = {v: k for k, v in PFEIL_STILE.items()}
+            feld["richtung"] = umkehr.get(self.pfeil_stil.get(), "rechts")
         if self.werkzeug == "verwischen":
             umkehr = {v: k for k, v in STILE.items()}
             feld["stil"] = umkehr.get(self.stil.get(), "weich")

@@ -67,14 +67,30 @@ def _schrift(groesse: int):
     return ImageFont.load_default()
 
 
+# Pfeil-Stile wie in der Mac- und Android-Fassung (Julius, 27.11.2026: „pfeilstile fehlen").
+PFEIL_STILE = {"rechts": "Pfeil rechts", "links": "Pfeil links",
+               "beide": "Beidseitig", "linie": "Nur Linie"}
+
+
 def _pfeilspitze(zeichner: ImageDraw.ImageDraw, form: Form) -> None:
+    """Setzt die Spitze(n) je Stil: rechts, links, beidseitig oder gar keine."""
     import math
-    winkel = math.atan2(form.y2 - form.y1, form.x2 - form.x1)
+    stil = form.feld.get("richtung", "rechts")
+    if stil == "linie":
+        return
     laenge = max(8, form.dicke * 4)
-    for versatz in (0.45, -0.45):
-        x = form.x2 - laenge * math.cos(winkel - versatz)
-        y = form.y2 - laenge * math.sin(winkel - versatz)
-        zeichner.line((form.x2, form.y2, x, y), fill=form.farbe + (255,), width=max(1, form.dicke))
+    winkel = math.atan2(form.y2 - form.y1, form.x2 - form.x1)
+    enden = []
+    if stil in ("rechts", "beide"):
+        enden.append((form.x2, form.y2, winkel))
+    if stil in ("links", "beide"):
+        enden.append((form.x1, form.y1, winkel + math.pi))
+    for x0, y0, richtung in enden:
+        for versatz in (0.45, -0.45):
+            x = x0 - laenge * math.cos(richtung - versatz)
+            y = y0 - laenge * math.sin(richtung - versatz)
+            zeichner.line((x0, y0, x, y), fill=form.farbe + (255,),
+                          width=max(1, form.dicke))
 
 
 def _verwischen(bild: Image.Image, form: Form) -> Image.Image:
