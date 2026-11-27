@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.14
+# Text schwärzen 2.9.0-alpha.15
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,13 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Das Fenster heißt jetzt „Zuletzt bearbeitet"** (englisch „Recently edited") — vorher
+  stand dort „Ergebnisse" mit dem Satz „Noch keine geschwärzte Datei in der Ablage".
+- **Die bearbeiteten Dateien erscheinen dort wirklich.** Die Suche sah nur einen Ordner
+  (Ablage oder Bilder); die Ergebnisse liegen aber neben dem Original. Jetzt werden die
+  Ordner der zuletzt geöffneten Dateien mit durchsucht, und jedes Ergebnis kommt zusätzlich
+  in die Liste „Letzte Dateien".
 
 - **Pfeil-Stile** in der Rechner-Fassung: „Pfeil rechts", „Pfeil links", „Beidseitig",
   „Nur Linie" — für den Notfall auch eine Linie ohne Spitze. Das Feld ist nur beim Pfeil

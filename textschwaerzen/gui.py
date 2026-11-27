@@ -5,6 +5,7 @@ und macht das spätere Paket klein.
 """
 from __future__ import annotations
 
+import json
 import queue
 import threading
 from pathlib import Path
@@ -22,7 +23,7 @@ from .pdf import schwaeze_pdf
 from .__main__ import lade_einstellungen, speichere_einstellungen, ziel_pfad, bericht
 
 TEXTE = {
-    "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_zeigen": "Im Dateimanager zeigen", "k_ergebnisse": "Ergebnisse", "keine_ergebnisse": "Noch keine geschwärzte Datei in der Ablage.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info",
+    "de": {"k_oeffnen": "Öffnen", "k_loeschen": "Löschen", "k_zeigen": "Im Dateimanager zeigen", "k_ergebnisse": "Zuletzt bearbeitet", "keine_ergebnisse": "Noch keine bearbeitete Datei.", "loeschen_frage": "Endgültig entfernen?", "k_datei": "Datei wählen", "k_letzte": "Letzte Dateien", "keine_letzte": "Noch keine Datei geöffnet", "k_text": "Textdatei schwärzen", "k_info": "Info",
            "k_entfernen": "Aus Liste entfernen",
            "k_update": "Nach Updates sehen",
            "update_titel": "Update-Prüfung",
@@ -71,7 +72,7 @@ Quelltext: github.com/Suilui1/text-schwaerzen""", "titel": "Text schwärzen",
            "rahmen_titel": "Rahmen um das ziehen, was LESBAR bleiben soll — Enter schwärzt den Rest",
            "seite": "Seite", "von": "von", "fertig": "Fertig",
            "bild_waehlen": "Welches Bild oder PDF schwärzen?"},
-    "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_zeigen": "Show in file manager", "k_ergebnisse": "Results", "keine_ergebnisse": "No redacted file in the folder yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info",
+    "en": {"k_oeffnen": "Open", "k_loeschen": "Delete", "k_zeigen": "Show in file manager", "k_ergebnisse": "Recently edited", "keine_ergebnisse": "No edited file yet.", "loeschen_frage": "Remove permanently?", "k_datei": "Choose file", "k_letzte": "Recent files", "keine_letzte": "No file opened yet", "k_text": "Redact a text file", "k_info": "Info",
            "k_entfernen": "Remove from list",
            "k_update": "Check for updates",
            "update_titel": "Update check",
@@ -461,7 +462,7 @@ class App:
         self.aus_liste_entfernen(datei, zeile)
 
     def ergebnisse_zeigen(self) -> None:
-        """Zeigt die geschwärzten Dateien in der Ablage und erlaubt Löschen."""
+        """Zeigt die zuletzt bearbeiteten Dateien — auch die neben dem Original."""
         # Ablage aus den Einstellungen; ohne Angabe liegt alles neben dem Original,
         # dann suchen wir im Bilder-Ordner des Benutzers.
         eingestellt = lade_einstellungen().get("ablage")
@@ -473,9 +474,28 @@ class App:
                 ordner = Path.home() / "Bilder"
             if not ordner.exists():
                 ordner = Path.home() / "Desktop"
-        treffer = sorted([p for p in Path(ordner).glob("*")
-                          if namen.ist_bearbeitet(p.name)], key=lambda p: p.stat().st_mtime,
-                         reverse=True)[:20] if Path(ordner).exists() else []
+        # Anlaß (27.11.2026): Julius — „sie werden auch nicht in der liste angezeigt".
+        # Die Suche sah nur EINEN Ordner (Ablage oder Bilder); die Ergebnisse liegen aber
+        # neben dem Original. Deshalb: Merkliste der geöffneten Dateien mitnehmen und in
+        # deren Ordnern nach bearbeiteten Dateien sehen.
+        kandidaten: list[Path] = []
+        if Path(ordner).exists():
+            kandidaten += [p for p in Path(ordner).glob("*") if namen.ist_bearbeitet(p.name)]
+        try:
+            gemerkt = json.loads(self._letzte_datei().read_text(encoding="utf-8"))
+        except Exception:
+            gemerkt = []
+        for eintrag in gemerkt:
+            alt_datei = Path(eintrag)
+            if not alt_datei.parent.exists():
+                continue
+            kandidaten += [p for p in alt_datei.parent.glob(alt_datei.stem + "*")
+                           if namen.ist_bearbeitet(p.name) and p.is_file()]
+        # Doppelte raus, neueste zuerst
+        gesehen: dict[str, Path] = {}
+        for p in kandidaten:
+            gesehen[str(p)] = p
+        treffer = sorted(gesehen.values(), key=lambda p: p.stat().st_mtime, reverse=True)[:20]
         if not treffer:
             messagebox.showinfo(self.t.get("k_ergebnisse", "Ergebnisse"),
                                 self.t.get("keine_ergebnisse",
@@ -563,6 +583,7 @@ class App:
         except Exception as fehler:  # noqa: BLE001 — Meldung statt Absturz
             messagebox.showerror(self.t.get("k_text", "Textdatei schwärzen"), str(fehler))
             return
+        self.merke_datei(ziel)          # Ergebnis gehört in die Liste (27.11.2026)
         teile = ", ".join("%s %d" % (self.t.get("art_" + art, art), zahl)
                           for art, zahl in zaehler.items()) or self.t.get("nichts", "nichts")
         messagebox.showinfo(self.t["titel"],
@@ -795,6 +816,7 @@ class App:
             self.zeige_fortschritt(quelle, ziel, modus, worte, behalten)
         else:
             zahlen = schwaeze_datei(quelle, ziel, modus, worte, behalten)
+            self.merke_datei(ziel)      # Ergebnis gehört in die Liste (27.11.2026)
             messagebox.showinfo(self.t["fertig"], self.berichts_text(ziel, zahlen))
 
     def berichts_text(self, ziel: Path, zahlen: dict) -> str:
@@ -845,6 +867,8 @@ class App:
             else:
                 fenster.destroy()
                 seiten, zahlen = ergebnis.get("wert", (0, {}))
+                if ziel.exists():
+                    self.merke_datei(ziel)   # Ergebnis gehört in die Liste (27.11.2026)
                 messagebox.showinfo(self.t["fertig"], self.berichts_text(ziel, zahlen))
 
         fenster.after(120, nachsehen)
