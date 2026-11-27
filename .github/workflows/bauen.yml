@@ -218,6 +218,17 @@ jobs:
           dpkg-deb --build deb "Text-schwaerzen-linux.deb"
           echo "Debian-Paket: $(du -h Text-schwaerzen-linux.deb | cut -f1)"
 
+      # Die zwei neuen Linux-Dateien müssen als Artefakt bereitliegen, sonst kommen sie
+      # nicht in die Veröffentlichung (der Veröffentlichungs-Auftrag sammelt `pakete/`).
+      - uses: actions/upload-artifact@v4
+        if: matrix.system == 'linux'
+        with:
+          name: Text-schwaerzen-linux-installer.tar.gz
+          path: |
+            Text-schwaerzen-linux-installer.tar.gz
+            Text-schwaerzen-linux.deb
+          retention-days: 1
+
       - name: Zusammenpacken (macOS)
         if: matrix.system == 'macos'
         run: |
