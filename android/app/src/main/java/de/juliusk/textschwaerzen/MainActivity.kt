@@ -234,6 +234,19 @@ class MainActivity : AppCompatActivity() {
             return@registerForActivityResult
         }
         val d = ergebnis.data ?: return@registerForActivityResult
+        // PDF aus dem Editor: Formen JE SEITE (27.11.2026).
+        val jeSeite = d.getStringExtra("seiten")
+        if (jeSeite != null) {
+            val pdfUri = d.getStringExtra("pdf")?.let { android.net.Uri.parse(it) } ?: pdfMitRahmen
+            pdfMitRahmen = null
+            val seitenFormen = Formen.jeSeiteVonJson(jeSeite)
+            if (pdfUri != null && seitenFormen.isNotEmpty()) {
+                pdfMitFormenJeSeite(pdfUri, seitenFormen)
+            } else {
+                bildWaehlen.isEnabled = true
+            }
+            return@registerForActivityResult
+        }
         // Der Markier-Editor liefert eine Liste von Formen (Whiteout-Werkzeuge).
         val formen = Formen.vonJson(d.getStringExtra("formen"))
         val pdf = pdfMitRahmen
@@ -527,6 +540,47 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
+    /** Formen je Seite auf ein PDF anwenden — jede Seite bekommt IHRE Marken. */
+    private fun pdfMitFormenJeSeite(pdf: android.net.Uri, jeSeite: Map<Int, List<Form>>) {
+        bericht.text = "PDF wird verarbeitet …"
+        bildWaehlen.isEnabled = false
+        threads.execute {
+            runOnUiThread { fortschrittZeigen(0) }
+            val ergebnis = PdfVerarbeitung.verarbeiteFormenJeSeite(
+                this, pdf, nameDerDatei(pdf), jeSeite,
+                stand = { seite, gesamt ->
+                    runOnUiThread {
+                        fortschrittBalken?.max = gesamt
+                        fortschrittBalken?.progress = seite
+                        fortschrittText?.text = "Seite $seite von $gesamt"
+                    }
+                },
+                abgebrochen = { abbrechenGewuenscht }
+            )
+            runOnUiThread { fortschrittSchliessen() }
+            if (abbrechenGewuenscht) {
+                runOnUiThread {
+                    bildWaehlen.isEnabled = true
+                    bericht.text = "Abgebrochen."
+                    Toast.makeText(this, "Abgebrochen — nichts gespeichert", Toast.LENGTH_LONG).show()
+                }
+                return@execute
+            }
+            runOnUiThread {
+                bildWaehlen.isEnabled = true
+                letzteDatei = ergebnis.datei
+                letzterTyp = "application/pdf"
+                if (ergebnis.datei != null) {
+                    merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                }
+                val meldung = if (ergebnis.fehler.isNotEmpty()) "Fehler: " + ergebnis.fehler
+                else ergebnis.seiten.toString() + " Seite(n) bearbeitet"
+                bericht.text = meldung
+                abschlussDialog("PDF geschwaerzt", meldung)
+            }
+        }
+    }
+
     private fun bereichSchwaerzen(x0: Float, y0: Float, x1: Float, y1: Float) {
         // Kam der Aufruf aus dem PDF-Weg, wird der Rahmen auf jede Seite angewendet.
         val pdf = pdfMitRahmen
@@ -589,25 +643,20 @@ class MainActivity : AppCompatActivity() {
 
     private var pdfMitRahmen: android.net.Uri? = null
 
+    /**
+     * PDF im Markier-Editor öffnen — MIT Seiten (27.11.2026).
+     *
+     * Vorher wurde nur die erste Seite als Bild übergeben; der Editor kannte keine Seiten,
+     * und die Marken landeten auf jeder Seite („android lässt auch nicht im pdf blättern").
+     * Jetzt bekommt der Editor das PDF selbst und blättert darin.
+     */
     private fun pdfRahmenZiehen(uri: android.net.Uri) {
         pdfMitRahmen = uri
-        bericht.text = "Erste Seite wird vorbereitet …"
-        threads.execute {
-            val bild = PdfVerarbeitung.ersteSeiteAlsBild(this, uri)
-            runOnUiThread {
-                if (bild == null) {
-                    bericht.text = "PDF nicht lesbar."
-                    AlertDialog.Builder(this).setTitle("Fehler")
-                        .setMessage("Die erste Seite konnte nicht gelesen werden.")
-                        .setPositiveButton("OK", null).show()
-                    return@runOnUiThread
-                }
-                bericht.text = ""
-                val absicht = Intent(this, MarkierActivity::class.java)
-                absicht.putExtra("datei", bild.absolutePath)
-                bereichAuswahl.launch(absicht)
-            }
-        }
+        bericht.text = ""
+        val absicht = Intent(this, MarkierActivity::class.java)
+        absicht.putExtra("pdf", uri.toString())
+        absicht.putExtra("name", nameDerDatei(uri))
+        bereichAuswahl.launch(absicht)
     }
 
     /** Fortschritt mit „Abbrechen" — bei 91 Seiten unverzichtbar. */

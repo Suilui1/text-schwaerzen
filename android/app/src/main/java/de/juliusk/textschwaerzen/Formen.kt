@@ -29,6 +29,34 @@ data class Form(
 
 object Formen {
 
+    /** Eine Form als JSON — Gegenstück zu [vonJson]. */
+    fun alsJson(f: Form): org.json.JSONObject = org.json.JSONObject().apply {
+        put("typ", f.typ)
+        put("x0", f.x0.toDouble()); put("y0", f.y0.toDouble())
+        put("x1", f.x1.toDouble()); put("y1", f.y1.toDouble())
+        put("text", f.text)
+        put("groesse", f.groesse.toDouble())
+        put("stil", f.stil)
+        put("dicke", f.dicke.toDouble())
+        put("richtung", f.richtung)
+        put("farbe", f.farbe)
+        put("rahmenFarbe", f.rahmenFarbe)
+    }
+
+    /** Formen je Seite aus JSON: {"0":[...],"1":[...]} → Map. */
+    fun jeSeiteVonJson(roh: String?): Map<Int, List<Form>> {
+        if (roh.isNullOrBlank()) return emptyMap()
+        return try {
+            val ganz = org.json.JSONObject(roh)
+            ganz.keys().asSequence().mapNotNull { schluessel ->
+                val nummer = schluessel.toIntOrNull() ?: return@mapNotNull null
+                nummer to vonJson(ganz.optJSONArray(schluessel)?.toString())
+            }.toMap()
+        } catch (fehler: Throwable) {
+            emptyMap()
+        }
+    }
+
     fun vonJson(roh: String?): List<Form> {
         if (roh.isNullOrBlank()) return emptyList()
         return try {

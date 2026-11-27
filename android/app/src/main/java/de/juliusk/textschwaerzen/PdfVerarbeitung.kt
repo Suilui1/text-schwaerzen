@@ -167,10 +167,30 @@ object PdfVerarbeitung {
      * geschrieben, weil die Formen am PDF-Weg vorbeigingen. Dieselbe Schleife wie oben,
      * nur ohne Texterkennung: es wird gezeichnet, was im Editor gezeichnet wurde.
      */
+    /** Formen für ALLE Seiten (Rahmen-Weg: ein Rahmen gilt überall). */
     fun verarbeiteFormen(context: Context, uri: Uri, erkennung: Erkennung, name: String,
                          formen: List<Form>,
                          stand: ((Int, Int) -> Unit)? = null,
-                         abgebrochen: (() -> Boolean)? = null): Ergebnis {
+                         abgebrochen: (() -> Boolean)? = null): Ergebnis =
+        formenVerarbeiten(context, uri, name, { formen }, stand, abgebrochen)
+
+    /** Formen JE SEITE (Markier-Editor an einem mehrseitigen PDF).
+     *
+     * Anlaß (27.11.2026): Julius — „android lässt auch nicht im pdf blättern". Im Editor
+     * gab es keine Seiten, und die Marken einer Seite landeten auf allen. Was man auf
+     * Seite 2 malt, gehört auf Seite 2 — hier wird das angewendet.
+     */
+    fun verarbeiteFormenJeSeite(context: Context, uri: Uri, name: String,
+                                jeSeite: Map<Int, List<Form>>,
+                                stand: ((Int, Int) -> Unit)? = null,
+                                abgebrochen: (() -> Boolean)? = null): Ergebnis =
+        formenVerarbeiten(context, uri, name, { nummer -> jeSeite[nummer] ?: emptyList() },
+                          stand, abgebrochen)
+
+    private fun formenVerarbeiten(context: Context, uri: Uri, name: String,
+                                  markenFuer: (Int) -> List<Form>,
+                                  stand: ((Int, Int) -> Unit)?,
+                                  abgebrochen: (() -> Boolean)?): Ergebnis {
         val zwischen = File(context.cacheDir, "quelle-formen.pdf")
         var descriptor: ParcelFileDescriptor? = null
         var renderer: PdfRenderer? = null
@@ -200,7 +220,8 @@ object PdfVerarbeitung {
                 seite.render(bild, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                 seite.close()
 
-                Formen.zeichne(bild, formen)
+                val marken = markenFuer(nummer)
+                if (marken.isNotEmpty()) Formen.zeichne(bild, marken)
 
                 val info = PdfDocument.PageInfo.Builder(breite, hoehe, nummer + 1).create()
                 val neueSeite = neuesPdf.startPage(info)

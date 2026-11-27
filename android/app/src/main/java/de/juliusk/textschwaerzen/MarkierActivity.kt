@@ -41,6 +41,19 @@ class MarkierActivity : Activity() {
 
     private lateinit var bild: Bitmap
     private lateinit var ansicht: MarkierAnsicht
+    // PDF-Betrieb (27.11.2026): Julius — „android lässt auch nicht im pdf blättern".
+    // Jetzt bleibt der Renderer offen, die Seiten werden auf Abruf gerendert, und jede
+    // Seite behält ihre eigenen Marken.
+    private var pdfQuelle: android.net.Uri? = null
+    private var pdfName: String = "dokument"
+    private var renderer: android.graphics.pdf.PdfRenderer? = null
+    private var descriptor: android.os.ParcelFileDescriptor? = null
+    private var seite = 0
+    private var seitenZahl = 0
+    private val formenJeSeite = mutableMapOf<Int, MutableList<Form>>()
+    private var seitenText: TextView? = null
+    private var seiteZurueck: Button? = null
+    private var seiteVor: Button? = null
     private lateinit var bericht: TextView
     private var werkzeug = "schwaerzen"
     private var stempel = "GEPRÜFT"
@@ -66,17 +79,38 @@ class MarkierActivity : Activity() {
         super.onCreate(savedInstanceState)
         val direkt = uebergebenesBild
         uebergebenesBild = null
+        val pdfText = intent.getStringExtra("pdf")
         val datei = intent.getStringExtra("datei")
-        val geladen = direkt ?: try {
-            if (datei == null) null else BitmapFactory.decodeFile(datei)
-        } catch (fehler: Throwable) {
-            null
+        val geladen: Bitmap? = if (pdfText != null) {
+            // PDF: Renderer öffnen und die erste Seite zeichnen.
+            pdfQuelle = android.net.Uri.parse(pdfText)
+            pdfName = intent.getStringExtra("name") ?: "dokument"
+            try {
+                val zwischen = java.io.File(cacheDir, "editor-quelle.pdf")
+                contentResolver.openInputStream(pdfQuelle!!)?.use { quelle ->
+                    zwischen.outputStream().use { ziel -> quelle.copyTo(ziel) }
+                }
+                descriptor = android.os.ParcelFileDescriptor.open(
+                    zwischen, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+                renderer = android.graphics.pdf.PdfRenderer(descriptor!!)
+                seitenZahl = renderer?.pageCount ?: 0
+                if (seitenZahl > 0) seiteBild(0) else null
+            } catch (fehler: Throwable) {
+                null
+            }
+        } else {
+            direkt ?: try {
+                if (datei == null) null else BitmapFactory.decodeFile(datei)
+            } catch (fehler: Throwable) {
+                null
+            }
         }
         if (geladen == null) {
             setResult(RESULT_CANCELED); finish(); return
         }
         bild = geladen
         ansicht = MarkierAnsicht(this, bild)
+        if (pdfQuelle != null) formenJeSeite[0] = ansicht.formen
 
         val rahmen = FrameLayout(this)
         rahmen.addView(ansicht, FrameLayout.LayoutParams(
@@ -135,6 +169,18 @@ class MarkierActivity : Activity() {
         berichtRahmen.topMargin = 130
         rahmen.addView(bericht, berichtRahmen)
 
+        // Seitenleiste nur bei PDF — bei einem Bild gibt es nichts zu blättern.
+        if (pdfQuelle != null) {
+            val leisteSeiten = seitenLeiste()
+            val seitenRahmen = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL)
+            seitenRahmen.bottomMargin = 90
+            rahmen.addView(leisteSeiten, seitenRahmen)
+            // Bericht nach unten, damit er die Seitenleiste nicht überdeckt.
+            berichtRahmen.topMargin = 130
+        }
+
         val unten = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         unten.addView(Button(this).apply {
             text = "Rückgängig"
@@ -160,6 +206,14 @@ class MarkierActivity : Activity() {
 
         setContentView(rahmen)
         Darstellung.anwenden(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try { renderer?.close() } catch (fehler: Throwable) { }
+        try { descriptor?.close() } catch (fehler: Throwable) { }
+        renderer = null
+        descriptor = null
     }
 
     private fun beschreibung(wert: String) = when (wert) {
@@ -372,8 +426,85 @@ class MarkierActivity : Activity() {
             .show()
     }
 
+    /** Rendert eine Seite in ein Bild (Breite 1400 — genug zum Arbeiten, wenig Speicher). */
+    private fun seiteBild(nummer: Int): Bitmap? {
+        val r = renderer ?: return null
+        if (nummer < 0 || nummer >= r.pageCount) return null
+        val p = r.openPage(nummer)
+        val breite = 1400
+        val hoehe = (breite.toFloat() * p.height / p.width).toInt().coerceAtLeast(1)
+        val bild = Bitmap.createBitmap(breite, hoehe, Bitmap.Config.ARGB_8888)
+        android.graphics.Canvas(bild).drawColor(android.graphics.Color.WHITE)
+        p.render(bild, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+        p.close()
+        return bild
+    }
+
+    /** Zeigt Seite `nummer`; die Marken der bisherigen Seite bleiben erhalten. */
+    private fun zeigeSeite(nummer: Int) {
+        if (renderer == null) return
+        val neu = nummer.coerceIn(0, maxOf(0, seitenZahl - 1))
+        formenJeSeite[seite] = ansicht.formen
+        seite = neu
+        val bild = seiteBild(seite) ?: return
+        val marken = formenJeSeite.getOrPut(seite) { mutableListOf() }
+        ansicht.setzeSeite(bild, marken)
+        seitenText?.text = "Seite " + (seite + 1) + " von " + seitenZahl
+        // An den Enden ist ein Pfeil sinnlos — ausgegraut statt ins Leere klickbar.
+        seiteZurueck?.isEnabled = seite > 0
+        seiteVor?.isEnabled = seite < seitenZahl - 1
+    }
+
+    private fun seitenLeiste(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        setPadding(24, 8, 24, 8)
+        seiteZurueck = Button(this@MarkierActivity).apply {
+            text = "◀"
+            isSingleLine = true
+            setOnClickListener { zeigeSeite(seite - 1) }
+        }
+        seiteVor = Button(this@MarkierActivity).apply {
+            text = "▶"
+            isSingleLine = true
+            setOnClickListener { zeigeSeite(seite + 1) }
+        }
+        seitenText = TextView(this@MarkierActivity).apply {
+            text = "Seite 1 von " + seitenZahl
+            textSize = 14f
+            setPadding(24, 0, 24, 0)
+        }
+        addView(seiteZurueck)
+        addView(seitenText)
+        addView(seiteVor)
+        seiteZurueck?.isEnabled = false
+        seiteVor?.isEnabled = seitenZahl > 1
+    }
+
     private fun fertig() {
         val formen = ansicht.formen
+        if (pdfQuelle != null) {
+            // PDF: alle Seiten mit ihren Marken zurückgeben.
+            formenJeSeite[seite] = formen
+            val gesamt = org.json.JSONObject()
+            var anzahl = 0
+            for ((nummer, marken) in formenJeSeite) {
+                if (marken.isEmpty()) continue
+                val reihe = org.json.JSONArray()
+                for (f in marken) reihe.put(Formen.alsJson(f))
+                gesamt.put(nummer.toString(), reihe)
+                anzahl += marken.size
+            }
+            if (anzahl == 0) {
+                setResult(RESULT_CANCELED); finish(); return
+            }
+            val daten = Intent()
+            daten.putExtra("seiten", gesamt.toString())
+            daten.putExtra("pdf", pdfQuelle.toString())
+            daten.putExtra("name", pdfName)
+            setResult(RESULT_OK, daten)
+            finish()
+            return
+        }
         if (formen.isEmpty()) {
             setResult(RESULT_CANCELED); finish(); return
         }
@@ -404,9 +535,25 @@ class MarkierActivity : Activity() {
 }
 
 /** Zeigt das Bild, nimmt Formen auf und zeichnet sie sofort. */
-class MarkierAnsicht(kontext: android.content.Context, private val bild: Bitmap) : View(kontext) {
+class MarkierAnsicht(kontext: android.content.Context, bild: Bitmap) : View(kontext) {
 
-    val formen = mutableListOf<Form>()
+    /** Das Bild der aktuellen Seite — beim Blättern ausgetauscht (27.11.2026). */
+    var bild: Bitmap = bild
+        set(wert) {
+            field = wert
+            ausgewaehlt = null
+            invalidate()
+        }
+
+    /** Die Marken der aktuellen Seite — beim Blättern ausgetauscht. */
+    var formen: MutableList<Form> = mutableListOf()
+
+    /** Alles verwerfen, wenn die Seite wechselt. */
+    fun setzeSeite(neuesBild: Bitmap, neueFormen: MutableList<Form>) {
+        bild = neuesBild
+        formen = neueFormen
+        invalidate()
+    }
 
     private var startX = 0f
     private var startY = 0f
