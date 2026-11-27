@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.6
+# Text schwärzen 2.9.0-alpha.7
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -27,42 +27,17 @@ keinen Tesseract, kein Python.
 Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs unterhalb von
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
-## Neu in dieser Fassung
+## Neu in dieser Fassung## Neu in dieser Fassung
 
-> **Mac-Dateien am 27.11. erneuert:** Die App blätterte in mehrseitigen PDFs nicht —
-> der Seitenzähler lief mit, das Bild blieb auf Seite 1. Die Ansicht hielt eine
-> verkleinerte Anzeigekopie und baute sie nur bei geänderter Größe neu; PDF-Seiten sind
-> immer gleich groß. Behoben, und die Pfeile sind an den Enden jetzt ausgegraut.
-> Die drei Mac-Dateien (`.dmg`, `.pkg`, `.zip`) wurden dafür ersetzt; alle anderen
-> Pakete sind unverändert.
-
-- **Android verwischt jetzt weich statt zu verpixeln.** Ergebnis und Vorschau zeichnen mit
-  einem echten Weichzeichner (zwei Kastenfilter-Durchgänge, Radius ein Achtel der kurzen
-  Seite) — dieselbe Anmutung wie in der Mac-App. Vorher hinterließ „Verwischen" harte Blöcke.
-
-- **Behoben: die Befehlszeile stürzte ab.** Durch einen Namenskonflikt in der
-  Programmdatei scheiterte jede Schwärzung über die Befehlszeile (`--bild`, `--text`,
-  `--pdf`) — also auch `selbsttest.bat` — mit „UnboundLocalError". Betroffen war nur
-  alpha.4; diese Fassung ist wieder in Ordnung.
-- **Behoben: die Update-Prüfung scheiterte unter Windows mit Zertifikatsfehler**
-  (`CERTIFICATE_VERIFY_FAILED`). Die Zertifikatsliste fehlte im gepackten Programm; sie
-  wird jetzt mitgeliefert.
-
-- **Die Update-Prüfung sagt jetzt, woran es lag.** Statt „braucht eine Internetverbindung"
-  steht der echte Grund (z. B. `URLError`, `CERTIFICATE_VERIFY_FAILED`, Ratenbegrenzung von
-  GitHub) — und es wird angeboten, die Veröffentlichungsseite trotzdem im Browser zu öffnen.
-- **Windows-Paket mit ausdrücklich eingebundenen Netzmodulen** (`ssl`, `_ssl`, `http.client`):
-  fehlte eines davon, scheiterte die Abfrage und sah wie ein Netzfehler aus.
-- **Neuer Prüfweg:** `Text-schwaerzen.exe --updatepruefung` schreibt den Befund nach
-  `update-bericht.txt` neben das Programm.
-
-- **Update-Prüfung in der Rechner-Fassung** (Windows, Linux, macOS): unter „Info" fragt
-  ein Knopf bei GitHub nach einer neueren Fassung — nur auf Klick, sonst kein Netzverkehr.
-- **Android: „Nach Updates sehen"** unter „Mehr…" — zeigt die Fassung und öffnet die
-  Veröffentlichungsseite im Browser. Die App selbst hat weiterhin kein Netzrecht.
-- **macOS-Installer:** `.dmg` zum Ziehen und `.pkg` zum Doppelklicken (installiert selbst
-  und entfernt die Sperre). Die Mac-App läuft ab macOS 13 und auf Apple Silicon wie Intel.
-
+- **Blättern in mehrseitigen PDFs** — in allen Fassungen.
+  In der Mac-App lief der Seitenzähler mit, während das Bild auf Seite 1 stehenblieb
+  (die Ansicht hielt eine verkleinerte Anzeigekopie und baute sie nur bei geänderter
+  Größe neu). Behoben, die Pfeile sind an den Enden jetzt ausgegraut.
+- **Marken je Seite** in der Mac-App und in der Android-App: was man auf Seite 2 malt,
+  erscheint nicht mehr auf jeder Seite; beim Speichern bekommt jede Seite ihre Marken.
+- **Android kann jetzt im PDF blättern:** der Markier-Editor bekommt das PDF selbst,
+  zeigt eine Seitenleiste und speichert seitenweise.
+- Die Rechner-Fassung (Windows, Linux) konnte das bereits — nachgemessen, nicht geändert.
 ## Neu in der vorigen Fassung (alpha.2)
 
 - **Zwei Schritte statt vier Knöpfe auf einmal:** erst „Wie vorgehen?" (Automatisch
