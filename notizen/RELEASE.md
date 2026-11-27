@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.15
+# Text schwärzen 2.9.0-alpha.16
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,14 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **macOS: die Liste „Zuletzt bearbeitet" ist jetzt gefüllt.** Sie suchte nur nach
+  `-geschwaerzt` (der alte Name) und nur in einem Ordner; seit der Umbenennung blieb sie
+  leer. Jetzt erkennt sie alle Namen, durchsucht die Ablage **und** die Ordner der zuletzt
+  geöffneten Dateien, und jedes Ergebnis landet auch unter „Letzte Dateien".
+- **Der Dateiname folgt der Sprache der App** — die macOS-App kennt fünf:
+  `-bearbeitet` (de) · `-edited` (en) · `-modifie` (fr) · `-editado` (es) · `-已编辑` (zh).
+  Die Ergebnis-Erkennung nimmt weiterhin alle alten Namen mit.
 
 - **Das Fenster heißt jetzt „Zuletzt bearbeitet"** (englisch „Recently edited") — vorher
   stand dort „Ergebnisse" mit dem Satz „Noch keine geschwärzte Datei in der Ablage".
