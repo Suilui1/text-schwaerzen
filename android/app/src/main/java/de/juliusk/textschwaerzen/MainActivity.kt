@@ -531,6 +531,11 @@ class MainActivity : AppCompatActivity() {
                     letzterTyp = "application/pdf"
                     if (ergebnis.datei != null) {
                         merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                        // Vorschau aus dem ERGEBNIS — sonst zeigt sie das Bild der vorigen
+                        // Bearbeitung, und ein Tippen öffnet etwas anderes (27.11.2026).
+                        val vorschau = PdfVerarbeitung.vorschau(this, ergebnis.datei)
+                        if (vorschau != null) bildAnzeige.setImageBitmap(vorschau)
+                        else bildAnzeige.setImageDrawable(null)
                     }
                     val meldung = if (ergebnis.fehler.isNotEmpty()) "Fehler: " + ergebnis.fehler
                     else ergebnis.seiten.toString() + " Seite(n) bearbeitet"
@@ -572,6 +577,11 @@ class MainActivity : AppCompatActivity() {
                 letzterTyp = "application/pdf"
                 if (ergebnis.datei != null) {
                     merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                    // Vorschau aus dem ERGEBNIS — sonst zeigt sie das Bild der vorigen
+                    // Bearbeitung, und ein Tippen öffnet etwas anderes (27.11.2026).
+                    val vorschau = PdfVerarbeitung.vorschau(this, ergebnis.datei)
+                    if (vorschau != null) bildAnzeige.setImageBitmap(vorschau)
+                    else bildAnzeige.setImageDrawable(null)
                 }
                 val meldung = if (ergebnis.fehler.isNotEmpty()) "Fehler: " + ergebnis.fehler
                 else ergebnis.seiten.toString() + " Seite(n) bearbeitet"
@@ -618,6 +628,11 @@ class MainActivity : AppCompatActivity() {
                     letzterTyp = "application/pdf"
                     if (ergebnis.datei != null) {
                         merken(ergebnis.datei, nameDerDatei(pdf) + "-geschwaerzt", "pdf-aus")
+                        // Vorschau aus dem ERGEBNIS — sonst zeigt sie das Bild der vorigen
+                        // Bearbeitung, und ein Tippen öffnet etwas anderes (27.11.2026).
+                        val vorschau = PdfVerarbeitung.vorschau(this, ergebnis.datei)
+                        if (vorschau != null) bildAnzeige.setImageBitmap(vorschau)
+                        else bildAnzeige.setImageDrawable(null)
                     }
                     val meldung = if (ergebnis.fehler.isNotEmpty()) "Fehler: " + ergebnis.fehler
                     else ergebnis.seiten.toString() + " Seite(n) mit Rahmen geschwaerzt"

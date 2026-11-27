@@ -27,6 +27,39 @@ object PdfVerarbeitung {
     data class Ergebnis(val seiten: Int, val datei: Uri?, val zaehler: Map<String, Int>,
                         val fehler: String = "", val woerter: Int = 0)
 
+    /** Erste Seite eines PDF als Vorschaubild — auch aus einer MediaStore-Adresse.
+     *
+     * Anlaß (27.11.2026): Julius — „wenn ich im startfenster auf das letzte angezeigte bild
+     * klicke öffnet sich etwas anderes". Der Bildweg setzt die Vorschau, der PDF-Weg nicht:
+     * dort stand noch das Bild der vorigen Bearbeitung, geöffnet wurde aber das PDF.
+     */
+    fun vorschau(context: Context, uri: Uri, breite: Int = 800): Bitmap? {
+        val zwischen = File(context.cacheDir, "vorschau.pdf")
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { quelle ->
+                zwischen.outputStream().use { ziel -> quelle.copyTo(ziel) }
+            } ?: return null
+            val descriptor = ParcelFileDescriptor.open(zwischen, ParcelFileDescriptor.MODE_READ_ONLY)
+            descriptor.use {
+                PdfRenderer(it).use { renderer ->
+                    if (renderer.pageCount < 1) return null
+                    renderer.openPage(0).use { seite ->
+                        val hoehe = (breite.toFloat() * seite.height / seite.width).toInt()
+                            .coerceAtLeast(1)
+                        val bild = Bitmap.createBitmap(breite, hoehe, Bitmap.Config.ARGB_8888)
+                        Canvas(bild).drawColor(Color.WHITE)
+                        seite.render(bild, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        bild
+                    }
+                }
+            }
+        } catch (fehler: Throwable) {
+            null
+        } finally {
+            zwischen.delete()
+        }
+    }
+
     /** Erste Seite als Bilddatei — für den Rahmen-Editor. */
     fun ersteSeiteAlsBild(context: Context, uri: Uri): File? {
         val zwischen = File(context.cacheDir, "pdf-seite1.pdf")
