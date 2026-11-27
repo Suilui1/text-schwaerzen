@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.9
+# Text schwärzen 2.9.0-alpha.10
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,11 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **macOS: die Formatwahl im Speicherdialog ist jetzt wirklich zu sehen.** Die App bot
+  PNG/JPEG/PDF schon an, aber `NSSavePanel` zeigt von sich aus keine Auswahl — sie muß als
+  Zusatzleiste ins Fenster. Jetzt steht dort „Format: PNG · JPEG · PDF", und die Endung im
+  Dateinamen zieht mit.
 
 - **Formate beim Speichern.** Bearbeitete Bilder lassen sich jetzt als **PNG** (scharf,
   für Screenshots), **JPEG** (klein, für Fotos) oder **PDF** (eine Seite, zum Weitergeben)
