@@ -19,6 +19,8 @@ from PIL import Image, ImageTk
 from . import namen
 from .markieren import ARTEN, STILE, STEMPEL, Form, baue_pdf, speichere, zeichne_formen
 
+WAHL_FARBEN = {"Schwarz": (0, 0, 0), "Rot": (200, 30, 30), "Gelb": (255, 235, 0),
+              "Blau": (30, 90, 200), "Grün": (20, 140, 60), "Weiß": (255, 255, 255)}
 FARBEN = {"kasten": (0, 0, 0), "markieren": (255, 235, 0), "unterstreichen": (0, 0, 0),
           "durchstreichen": (200, 30, 30), "linie": (0, 0, 0), "pfeil": (30, 90, 200),
           "ellipse": (200, 30, 30), "text": (200, 30, 30), "stempel": (200, 30, 30),
@@ -106,6 +108,25 @@ class Editor:
                                          width=14, state="readonly")
         self.feld_stempel.pack(side="left")
 
+        # Farbe und Dicke (Julius, 27.11.2026: „keine optionen bei pfeil ect."). Vorher war
+        # die Farbe je Werkzeug fest verdrahtet, eine Dicke gab es gar nicht.
+        ttk.Label(extras, text="Farbe:").pack(side="left", padx=(16, 4))
+        self.farbe_wahl = tk.StringVar(value="wie Werkzeug")
+        self.feld_farbe = ttk.Combobox(extras, textvariable=self.farbe_wahl,
+                                       values=["wie Werkzeug"] + list(WAHL_FARBEN.keys()),
+                                       width=14, state="readonly")
+        self.feld_farbe.pack(side="left", padx=(0, 12))
+        ttk.Label(extras, text="Dicke:").pack(side="left", padx=(0, 4))
+        self.dicke_wahl = tk.StringVar(value="4")
+        self.feld_dicke = ttk.Combobox(extras, textvariable=self.dicke_wahl,
+                                       values=["2", "4", "8", "12", "20"],
+                                       width=5, state="readonly")
+        self.feld_dicke.pack(side="left", padx=(0, 12))
+        ttk.Label(extras, text="Anzeige:").pack(side="left", padx=(0, 4))
+        self.zoom_text = tk.StringVar(value="100 %")
+        ttk.Label(extras, textvariable=self.zoom_text, width=7).pack(side="left")
+        ttk.Button(extras, text="Einpassen", command=self.einpassen).pack(side="left", padx=4)
+
         unten = ttk.Frame(self.fenster, padding=6)
         unten.pack(fill="x")
         ttk.Button(unten, text="Rückgängig", command=self.rueckgaengig).pack(side="left", padx=2)
@@ -128,6 +149,11 @@ class Editor:
         rahmen.pack(fill="both", expand=True)
         self.leinwand = tk.Canvas(rahmen, background="#222222", highlightthickness=0)
         self.leinwand.pack(side="left", fill="both", expand=True)
+        # Mausrad zoomt (Windows/macOS: <MouseWheel>, Linux: Button-4/5) — ohne Rad wäre
+        # ein großes Foto nur über die kleinen Knöpfe unten zu skalieren (27.11.2026).
+        self.leinwand.bind("<MouseWheel>", self.rad_zoomen)
+        self.leinwand.bind("<Button-4>", lambda e: self.zoome(1.25) or self.zeichne())
+        self.leinwand.bind("<Button-5>", lambda e: self.zoome(1 / 1.25) or self.zeichne())
         balken = ttk.Scrollbar(rahmen, orient="vertical", command=self.leinwand.yview)
         balken.pack(side="right", fill="y")
         self.leinwand.configure(yscrollcommand=balken.set)
@@ -140,6 +166,8 @@ class Editor:
 
         self.felder_schalten()
         self.zeichne()
+        # Großes Bild (Foto) gleich ganz zeigen — sonst sieht man nur einen Ausschnitt.
+        self.einpassen()
         self.fenster.wait_window()
 
     # ---------------------------------------------------------------- Werkzeug
@@ -152,6 +180,12 @@ class Editor:
         """
         paare = ((getattr(self, "feld_stil", None), self.werkzeug == "verwischen"),
                  (getattr(self, "feld_groesse", None), self.werkzeug in ("text", "stempel")),
+                 # Farbe wirkt überall außer beim Verwischen; die Dicke nur bei Strichen
+                 # und Rahmen (Text und Stempel haben ihre Schriftgröße).
+                 (getattr(self, "feld_farbe", None), self.werkzeug != "verwischen"),
+                 (getattr(self, "feld_dicke", None),
+                  self.werkzeug in ("kasten", "linie", "pfeil", "ellipse", "unterstreichen",
+                                    "durchstreichen")),
                  (getattr(self, "feld_stempel", None), self.werkzeug == "stempel"))
         for feld, an in paare:
             if feld is None:
@@ -165,8 +199,33 @@ class Editor:
         self.werkzeug = wert
         self.felder_schalten()
 
+    def rad_zoomen(self, ereignis) -> None:
+        """Mausrad: hoch = größer, runter = kleiner."""
+        schritt = 1.25 if getattr(ereignis, "delta", 0) > 0 else 1 / 1.25
+        self.zoome(schritt)
+        self.zeichne()
+
+    def einpassen(self) -> None:
+        """Bild so groß machen, daß es ganz ins Fenster paßt.
+
+        Anlaß (27.11.2026): Julius — „geladenes jpeg nicht skalierbar". Ein Foto aus der
+        Kamera ist größer als das Fenster; bei 100 % sah man nur einen Ausschnitt, und ohne
+        Mausrad wirkte es, als ließe sich nichts skalieren.
+        """
+        bild = self.dokument.seiten[self.seite]
+        try:
+            self.fenster.update_idletasks()
+            platz_b = max(200, self.leinwand.winfo_width() - 24)
+            platz_h = max(200, self.leinwand.winfo_height() - 24)
+        except Exception:
+            platz_b, platz_h = 800, 600
+        if bild.width <= 0 or bild.height <= 0:
+            return
+        self.zoom = max(0.05, min(5.0, min(platz_b / bild.width, platz_h / bild.height)))
+        self.zeichne()
+
     def zoome(self, faktor: float) -> None:
-        self.zoom = max(0.2, min(5.0, self.zoom * faktor))
+        self.zoom = max(0.05, min(5.0, self.zoom * faktor))
         self.zeichne()
 
     def blaettern(self, richtung: int) -> None:
@@ -264,7 +323,14 @@ class Editor:
         if abs(x2 - x1) < 3 and abs(y2 - y1) < 3:
             return
         farbe = FARBEN.get(self.werkzeug, (0, 0, 0))
-        feld = {"groesse": int(self.groesse.get() or 18)}
+        gewaehlt = WAHL_FARBEN.get(self.farbe_wahl.get())
+        if gewaehlt and self.werkzeug != "verwischen":
+            farbe = gewaehlt
+        try:
+            dicke = int(self.dicke_wahl.get())
+        except (TypeError, ValueError):
+            dicke = 4
+        feld = {"groesse": int(self.groesse.get() or 18), "dicke": dicke}
         if self.werkzeug == "verwischen":
             umkehr = {v: k for k, v in STILE.items()}
             feld["stil"] = umkehr.get(self.stil.get(), "weich")
@@ -272,17 +338,17 @@ class Editor:
             text = self.stempel_wahl.get()
             self.dokument.formen[self.seite].append(
                 Form("stempel", min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2),
-                     text=text, farbe=farbe, dicke=4, feld=feld))
+                     text=text, farbe=farbe, dicke=dicke, feld=feld))
         elif self.werkzeug == "text":
             text = simpledialog.askstring("Text", "Welcher Text?", parent=self.fenster)
             if not text:
                 return
             self.dokument.formen[self.seite].append(
                 Form("text", min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2),
-                     text=text, farbe=farbe, dicke=4, feld=feld))
+                     text=text, farbe=farbe, dicke=dicke, feld=feld))
         else:
             self.dokument.formen[self.seite].append(
-                Form(self.werkzeug, x1, y1, x2, y2, farbe=farbe, dicke=4, feld=feld))
+                Form(self.werkzeug, x1, y1, x2, y2, farbe=farbe, dicke=dicke, feld=feld))
         self.zeichne()
 
     def entferne_auswahl(self, _ereignis=None) -> None:
@@ -331,6 +397,8 @@ class Editor:
     # ---------------------------------------------------------------- Anzeige
 
     def zeichne(self) -> None:
+        if getattr(self, "zoom_text", None) is not None:
+            self.zoom_text.set("%d %%" % round(self.zoom * 100))
         bild = self.dokument.seiten[self.seite]
         breite = max(1, int(bild.width * self.zoom))
         hoehe = max(1, int(bild.height * self.zoom))
@@ -338,7 +406,7 @@ class Editor:
         formen = [
             Form(f.art, int(f.x1 * self.zoom), int(f.y1 * self.zoom),
                  int(f.x2 * self.zoom), int(f.y2 * self.zoom),
-                 text=f.text, farbe=f.farbe, dicke=4, feld=dict(f.feld))
+                 text=f.text, farbe=f.farbe, dicke=f.dicke, feld=dict(f.feld))
             for f in self.dokument.formen[self.seite]
         ]
         markiert = zeichne_formen(klein, formen)

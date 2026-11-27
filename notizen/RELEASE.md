@@ -1,4 +1,4 @@
-# Text schwärzen 2.9.0-alpha.11
+# Text schwärzen 2.9.0-alpha.12
 
 **Vorab-Fassung** — die Android-App und die Rechner-Fassung sind weitgehend geprüft,
 die macOS-App ist neu und noch nicht von einer zweiten Person getestet.
@@ -28,6 +28,15 @@ Die **Rechner-Fassung** (`Text-schwaerzen-macos-rechner.zip`) bleibt für Macs u
 macOS 14 — sie braucht Tesseract (`brew install tesseract`).
 
 ## Neu in dieser Fassung## Neu in dieser Fassung
+
+- **Farbe und Dicke wählbar** in der Rechner-Fassung (Windows, Linux, macOS): vorher war
+  die Farbe je Werkzeug fest verdrahtet, eine Strichdicke gab es gar nicht. Beide Felder
+  sind ausgegraut, wo sie nichts bewirken (Dicke nicht beim Verwischen, Farbe nicht beim
+  Verwischen).
+- **Große Bilder werden beim Öffnen eingepaßt.** Ein Foto aus der Kamera (3000 × 2000 und
+  größer) erschien bei 100 % als Ausschnitt; jetzt paßt es ins Fenster, und die Anzeige
+  zeigt den Maßstab („29 %"). Dazu: **Mausrad zoomt**, und ein Knopf „Einpassen" holt das
+  ganze Bild zurück.
 
 - **Bearbeitete Dateien heißen jetzt `<name>-bearbeitet`** — in allen Fassungen, im
   englischen Programm `<name>-edited`. Vorher stand dort `-geschwaerzt` (Regeln, Wörter,
